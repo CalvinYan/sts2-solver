@@ -4,7 +4,7 @@ from typing import ClassVar
 
 from core import Character
 from fight import Fight
-from util import Action
+from util.core import Action
 
 @dataclass
 class Intent:

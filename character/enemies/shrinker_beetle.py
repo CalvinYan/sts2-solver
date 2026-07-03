@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from enemy import Enemy, Intent
-from util import Action
+from util.core import Action
 from util.effects import Shrink
 
 @dataclass

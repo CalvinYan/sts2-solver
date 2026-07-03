@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from random import random
 
 from enemy import Enemy, Intent
-from util import Action
+from util.core import Action
 from util.effects import Strength, Weak
 
 @dataclass
