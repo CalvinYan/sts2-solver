@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from enemy import Enemy, Intent
+from character.enemy import Enemy, Intent
 from util.core import Action
 from util.effects import Shrink
 

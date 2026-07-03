@@ -1,4 +1,4 @@
-from enemies import FuzzyWurmCrawler, Nibbit, Seapunk, ShrinkerBeetle, SludgeSpinner
+from character.enemies import FuzzyWurmCrawler, Nibbit, Seapunk, ShrinkerBeetle, SludgeSpinner
 
 def fuzzy_wurm_crawler(): return [FuzzyWurmCrawler()]
 
