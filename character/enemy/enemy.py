@@ -1,5 +1,9 @@
 from dataclasses import dataclass, field
 from random import randint
+from typing import ClassVar
+
+from character import Character
+from util import Intent
 
 @dataclass
 class Enemy(Character):
