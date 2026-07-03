@@ -3,6 +3,7 @@ from random import randint
 from typing import ClassVar
 
 from core import Character
+from fight import Fight
 from util import Action
 
 @dataclass
@@ -28,10 +29,10 @@ class Enemy(Character):
     def __post_init__(self):
         self.hp = randint(self.min_hp, self.max_hp)
 
-    def resolve_turn(self) -> None:
+    def resolve_turn(self, fight: Fight) -> None:
         for action in self.intent.actions:
             self.act(target=self.target, action=action) # Doesn't handle dying mid-turn but that will never happen Floor 2
 
-    def resolve_end_of_turn(self) -> None:
-        super().resolve_end_of_turn()
+    def resolve_end_of_turn(self, fight: Fight) -> None:
+        super().resolve_end_of_turn(fight)
         self.intent = self.intent.next()

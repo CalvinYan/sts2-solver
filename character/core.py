@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 
+from fight import Fight
 from util.core import Action, Effect, Move
 
 @dataclass
@@ -27,13 +28,13 @@ class Character:
                     return
             self.debuffs.append(debuff_incoming)
 
-    def resolve_start_of_turn(self) -> None:
+    def resolve_start_of_turn(self, fight: Fight) -> None:
         pass
 
-    def resolve_turn(self) -> None:
+    def resolve_turn(self, fight: Fight) -> None:
         pass
 
-    def resolve_end_of_turn(self) -> None:
+    def resolve_end_of_turn(self, fight: Fight) -> None:
         self.block = 0
 
         new_buffs = []

@@ -65,10 +65,10 @@ class Player(Character):
         self.energy = 3
         self.draw(5)
 
-    def resolve_turn(self) -> None:
-        self.player_turn_callback(self)
+    def resolve_turn(self, fight: Fight) -> None:
+        self.player_turn_callback(fight)
 
-    def resolve_end_of_turn(self) -> None:
-        super().resolve_end_of_turn()
+    def resolve_end_of_turn(self, fight: Fight) -> None:
+        super().resolve_end_of_turn(fight)
         self.discard_pile += self.hand
         self.hand = Counter()
