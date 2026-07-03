@@ -28,6 +28,10 @@ class Enemy(Character):
     def __post_init__(self):
         self.hp = randint(self.min_hp, self.max_hp)
 
+    def resolve_turn(self) -> None:
+        for action in self.intent.actions:
+            self.act(target=self.target, action=action) # Doesn't handle dying mid-turn but that will never happen Floor 2
+
     def resolve_end_of_turn(self) -> None:
         super().resolve_end_of_turn()
         self.intent = self.intent.next()

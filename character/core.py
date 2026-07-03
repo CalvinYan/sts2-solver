@@ -30,6 +30,9 @@ class Character:
     def resolve_start_of_turn(self) -> None:
         pass
 
+    def resolve_turn(self) -> None:
+        pass
+
     def resolve_end_of_turn(self) -> None:
         self.block = 0
 

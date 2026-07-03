@@ -2,9 +2,11 @@ import random
 
 from collections import Counter
 from dataclasses import dataclass
+from typing import Callable
 
 from card import Card
 from character.core import Character
+from fight import Fight
 
 @dataclass
 class Player(Character):
@@ -18,6 +20,8 @@ class Player(Character):
     hand: Counter[Card] = Counter()
     draw_pile: Counter[Card]
     discard_pile: Counter[Card] = Counter()
+
+    player_turn_callback: Callable[[Fight], None]
 
     def draw(self, cards: int) -> None:
         for _ in range(cards):
@@ -60,6 +64,9 @@ class Player(Character):
         super().resolve_start_of_turn()
         self.energy = 3
         self.draw(5)
+
+    def resolve_turn(self) -> None:
+        self.player_turn_callback(self)
 
     def resolve_end_of_turn(self) -> None:
         super().resolve_end_of_turn()
