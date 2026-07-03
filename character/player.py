@@ -4,7 +4,7 @@ from collections import Counter
 from dataclasses import dataclass
 from typing import Callable
 
-from card import Card
+from card import AscendersBane, Bash, Card, Defend, Strike
 from character.core import Character
 from fight import Fight
 
@@ -72,3 +72,11 @@ class Player(Character):
         super().resolve_end_of_turn(fight)
         self.discard_pile += self.hand
         self.hand = Counter()
+
+class Ironclad(Player):
+    draw_pile: Counter[Card] = Counter({
+        Strike(): 5,
+        Defend(): 5,
+        Bash(): 1,
+        AscendersBane(): 1,
+    })
