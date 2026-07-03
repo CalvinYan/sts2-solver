@@ -21,7 +21,7 @@ class Player(Character):
     draw_pile: Counter[Card]
     discard_pile: Counter[Card] = Counter()
 
-    player_turn_callback: Callable[[Fight], None]
+    player_turn_callback: Callable[[Fight], bool]
 
     def draw(self, cards: int) -> None:
         for _ in range(cards):
@@ -65,8 +65,8 @@ class Player(Character):
         self.energy = 3
         self.draw(5)
 
-    def resolve_turn(self, fight: Fight) -> None:
-        self.player_turn_callback(fight)
+    def resolve_turn(self, fight: Fight) -> bool:
+        return self.player_turn_callback(fight)
 
     def resolve_end_of_turn(self, fight: Fight) -> None:
         super().resolve_end_of_turn(fight)

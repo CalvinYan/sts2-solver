@@ -32,6 +32,7 @@ class Enemy(Character):
     def resolve_turn(self, fight: Fight) -> None:
         for action in self.intent.actions:
             self.act(target=self.target, action=action) # Doesn't handle dying mid-turn but that will never happen Floor 2
+        return True
 
     def resolve_end_of_turn(self, fight: Fight) -> None:
         super().resolve_end_of_turn(fight)

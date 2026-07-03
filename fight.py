@@ -15,7 +15,8 @@ class Fight:
         self.turn += 1
 
         self.player.resolve_start_of_turn(self)
-        self.resolve_turn(self)
+        while not self.player.resolve_turn(self):
+            pass
         self.player.resolve_end_of_turn(self)
 
         self.enemies = [enemy for enemy in self.enemies if enemy.hp > 0]

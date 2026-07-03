@@ -29,12 +29,15 @@ class Character:
                     return
             self.debuffs.append(debuff_incoming)
 
+    # Resolve all start-of-turn effects for the character.
     def resolve_start_of_turn(self, fight: Fight) -> None:
         pass
 
-    def resolve_turn(self, fight: Fight) -> None:
-        pass
+    # Resolve the character's turn. Returns whether or not the character has ended their turn.
+    def resolve_turn(self, fight: Fight) -> bool:
+        return True
 
+    # Resolve all end-of-turn effects for the character.
     def resolve_end_of_turn(self, fight: Fight) -> None:
         self.block = 0
 
