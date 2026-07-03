@@ -1,0 +1,46 @@
+from dataclasses import dataclass
+
+@dataclass
+class Character:
+    """Represents a player or enemy in the fight."""
+    hp: int
+    block: int
+    buffs: list[Effect]
+    debuffs: list[Effect]
+
+    def take_damage(self, damage: int) -> None:
+        self.hp -= max(0, damage - self.block)
+
+    def receive_buffs(self, buffs: list[Effect]) -> None:
+        for buff_incoming in buffs:
+            for buff_current in self.buffs:
+                if buff_current.stack(buff_incoming):
+                    return
+            self.buffs.append(buff_incoming)
+
+    def receive_debuffs(self, debuffs: list[Effect]) -> None:
+        for debuff_incoming in debuffs:
+            for debuff_current in self.debuffs:
+                if debuff_current.stack(debuff_incoming):
+                    return
+            self.debuffs.append(debuff_incoming)
+
+    def resolve_start_of_turn(self) -> None:
+        pass
+
+    def resolve_end_of_turn(self) -> None:
+        self.block = 0
+
+        new_buffs = []
+        new_debuffs = []
+        for buff in self.buffs:
+            if buff.duration is not None:
+                buff.duration -= 1
+            if buff.duration != 0:
+                new_buffs.append(buff)
+
+        for debuff in self.debuffs:
+            if debuff.duration is not None:
+                debuff.duration -= 1
+            if debuff.duration != 0:
+                new_debuffs.append(debuff)
