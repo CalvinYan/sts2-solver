@@ -1,5 +1,7 @@
 from dataclasses import dataclass
 
+from util.core import Action, Effect, Move
+
 @dataclass
 class Character:
     """Represents a player or enemy in the fight."""
@@ -44,3 +46,16 @@ class Character:
                 debuff.duration -= 1
             if debuff.duration != 0:
                 new_debuffs.append(debuff)
+
+    def act(self, target: Character, action: Action) -> None:
+        move = Move(action=action, actor=self, target=target)
+
+        for buff in self.buffs:
+            buff.resolve(move, is_target=False)
+        for debuff in target.debuffs:
+            debuff.resolve(move, is_target=True)
+
+        target.take_damage(move.action.damage)
+        self.block += move.action.block
+        self.receive_buffs(move.action.buffs)
+        target.receive_debuffs(move.action.debuffs)
