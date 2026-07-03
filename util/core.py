@@ -10,6 +10,9 @@ class Action:
     buffs: list[Effect] = field(default_factory=list)
     debuffs: list[Effect] = field(default_factory=list)
 
+    def __hash__(self):
+        return hash((self.damage, self.block, tuple(self.buffs), tuple(self.debuffs)))
+
 @dataclass
 class Effect:
     """
@@ -32,6 +35,10 @@ class Effect:
             self.duration += other.duration
 
         return True
+
+    def __hash__(self):
+        return hash((type(self), self.power, self.duration))
+
 
 @dataclass
 class Move:

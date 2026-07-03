@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from copy import deepcopy
 from dataclasses import dataclass, field
 
 from util.core import Action, Effect, Move
@@ -58,7 +59,7 @@ class Character:
 
     def act(self, target: Character, action: Action) -> None:
         print(f"{self.name} uses {action} on {target.name}")
-        move = Move(action=action, actor=self, target=target)
+        move = Move(action=deepcopy(action), actor=self, target=target)
 
         for buff in self.buffs:
             buff.resolve(move, is_target=False)
