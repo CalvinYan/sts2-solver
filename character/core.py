@@ -58,15 +58,22 @@ class Character:
                 new_debuffs.append(debuff)
 
     def act(self, target: Character, action: Action) -> None:
-        print(f"{self.name} uses {action} on {target.name}")
+        if target:
+            print(f"{self.name} uses {action} on {target.name}")
+        else:
+            print(f"{self.name} uses {action}")
+
         move = Move(action=deepcopy(action), actor=self, target=target)
 
         for buff in self.buffs:
             buff.resolve(move, is_target=False)
-        for debuff in target.debuffs:
-            debuff.resolve(move, is_target=True)
 
-        target.take_damage(move.action.damage)
+        if target:
+            for debuff in target.debuffs:
+                debuff.resolve(move, is_target=True)
+
+            target.take_damage(move.action.damage)
+            target.receive_debuffs(move.action.debuffs)
+
         self.block += move.action.block
         self.receive_buffs(move.action.buffs)
-        target.receive_debuffs(move.action.debuffs)

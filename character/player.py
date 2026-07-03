@@ -26,7 +26,7 @@ class Player(Character):
 
     def draw(self, cards: int) -> None:
         for _ in range(cards):
-            if self.hand.total >= 10:
+            if self.hand.total() >= 10:
                 print("Hand is full")
                 return
 
@@ -61,8 +61,8 @@ class Player(Character):
 
         self.discard_pile[card] += 1
 
-    def resolve_start_of_turn(self) -> None:
-        super().resolve_start_of_turn()
+    def resolve_start_of_turn(self, fight: "Fight") -> None:
+        super().resolve_start_of_turn(fight)
         self.energy = 3
         self.draw(5)
 
