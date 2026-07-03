@@ -14,7 +14,7 @@ class Intent:
     def next(self) -> Intent:
         pass
 
-@dataclass
+@dataclass(kw_only=True)
 class Enemy(Character):
     """
     A hostile non-player character with an intent and a range of possible hp values.

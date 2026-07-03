@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 
 from util.core import Action, Effect, Move
 
-@dataclass
+@dataclass(kw_only=True)
 class Character:
     """Represents a player or enemy in the fight."""
     name: str
