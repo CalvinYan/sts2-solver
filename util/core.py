@@ -1,5 +1,15 @@
 from dataclasses import dataclass
 
+from character.core import Character
+
+@dataclass
+class Action:
+    """An atomic decision with a particular outcome."""
+    damage: int = 0
+    block: int = 0
+    buffs: list[Effect] = []
+    debuffs: list[Effect] = []
+
 @dataclass
 class Effect:
     """
@@ -22,3 +32,10 @@ class Effect:
             self.duration += other.duration
 
         return True
+
+@dataclass
+class Move:
+    """An action by one character upon another (can be themselves). Used for both player card plays and enemy turns."""
+    action: Action
+    actor: Character
+    target: Character
