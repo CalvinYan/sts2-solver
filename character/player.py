@@ -1,6 +1,7 @@
+from __future__ import annotations
+
 import random
 
-from __future__ import annotations
 from collections import Counter
 from dataclasses import dataclass
 from typing import Callable
