@@ -3,7 +3,7 @@ from __future__ import annotations
 import random
 
 from collections import Counter
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Callable
 
 from card import AscendersBane, Bash, Card, Defend, Strike
@@ -16,11 +16,11 @@ class Player(Character):
     Each fight has exactly one player.
     """
     # We don't care about the player's HP, only how much they lose during the fight
-    hp = 0
-    energy = 3
-    hand: Counter[Card] = Counter()
+    hp: int = 0
+    energy: int = 3
+    hand: Counter[Card] = field(default_factory=Counter)
     draw_pile: Counter[Card]
-    discard_pile: Counter[Card] = Counter()
+    discard_pile: Counter[Card] = field(default_factory=Counter)
 
     player_turn_callback: Callable[["Fight"], bool]
 
@@ -76,9 +76,9 @@ class Player(Character):
 
 @dataclass
 class Ironclad(Player):
-    draw_pile: Counter[Card] = Counter({
+    draw_pile: Counter[Card] = field(default_factory=lambda: Counter({
         Strike(): 5,
         Defend(): 5,
         Bash(): 1,
         AscendersBane(): 1,
-    })
+    }))

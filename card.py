@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 
 from util.core import Action
@@ -21,27 +21,27 @@ class Card:
 
 @dataclass
 class Strike(Card):
-    action = Action(damage=6)
-    cost = 1
-    targeting = Targeting.ENEMY_SINGLE
+    action: Action = field(default_factory=lambda: Action(damage=6))
+    cost: int = 1
+    targeting: Targeting = Targeting.ENEMY_SINGLE
 
 @dataclass
 class Defend(Card):
-    action = Action(block=5)
-    cost = 1
-    targeting = Targeting.NONE
+    action: Action = field(default_factory=lambda: Action(block=5))
+    cost: int = 1
+    targeting: Targeting = Targeting.NONE
 
 @dataclass
 class Bash(Card):
-    action = Action(damage=8, debuffs=[Vulnerable(duration=2)])
-    cost = 2
-    targeting = Targeting.ENEMY_SINGLE
+    action: Action = field(default_factory=lambda: Action(damage=8, debuffs=[Vulnerable(duration=2)]))
+    cost: int = 2
+    targeting: Targeting = Targeting.ENEMY_SINGLE
 
 @dataclass
 class AscendersBane(Card):
-    action = Action()
-    cost = None
-    targeting = Targeting.NONE
+    action: Action = field(default_factory=lambda: Action())
+    cost: int = None
+    targeting: Targeting = Targeting.NONE
 
     def playable(self, energy: int) -> bool:
         return False
