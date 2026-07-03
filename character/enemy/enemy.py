@@ -21,5 +21,5 @@ class Enemy(Character):
         self.hp = randint(self.min_hp, self.max_hp)
 
     def resolve_end_of_turn(self) -> None:
-        super().resolve_end_of_turn(self)
+        super().resolve_end_of_turn()
         self.intent = self.intent.next()
