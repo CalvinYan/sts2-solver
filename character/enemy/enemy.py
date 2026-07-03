@@ -16,5 +16,6 @@ class Enemy(Character):
     def __post_init__(self):
         self.hp = randint(self.min_hp, self.max_hp)
 
-    def resolve_start_of_turn(self) -> None:
+    def resolve_end_of_turn(self) -> None:
+        super().resolve_end_of_turn(self)
         self.intent = self.intent.next()
