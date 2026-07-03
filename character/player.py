@@ -41,9 +41,6 @@ class Player(Character):
 
             self.hand[card] += 1
 
-    def can_play(self, card: Card) -> bool:
-        return self.energy >= card.cost
-
     def play(self, card: Card, target: Character = None) -> None:
         if self.hand[card] == 0:
             print("Card not in hand")
