@@ -12,3 +12,13 @@ class Effect:
     # Resolve the effect on the given move, depending on whether or not the effect belongs to the actor or target
     def resolve(self, move: Move, is_target: bool) -> None:
         pass
+
+    # Stack this effect with another one of the same class
+    def stack(self, other: Effect) -> bool:
+        if type(self) != type(other): return False
+        if self.power is not None and other.power is not None:
+            self.power += other.power
+        if self.duration is not None and other.duration is not None:
+            self.duration += other.duration
+
+        return True
