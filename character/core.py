@@ -1,6 +1,6 @@
+from __future__ import annotations
 from dataclasses import dataclass
 
-from fight import Fight
 from util.core import Action, Effect, Move
 
 @dataclass
@@ -30,15 +30,15 @@ class Character:
             self.debuffs.append(debuff_incoming)
 
     # Resolve all start-of-turn effects for the character.
-    def resolve_start_of_turn(self, fight: Fight) -> None:
+    def resolve_start_of_turn(self, fight: "Fight") -> None:
         pass
 
     # Resolve the character's turn. Returns whether or not the character has ended their turn.
-    def resolve_turn(self, fight: Fight) -> bool:
+    def resolve_turn(self, fight: "Fight") -> bool:
         return True
 
     # Resolve all end-of-turn effects for the character.
-    def resolve_end_of_turn(self, fight: Fight) -> None:
+    def resolve_end_of_turn(self, fight: "Fight") -> None:
         self.block = 0
 
         new_buffs = []

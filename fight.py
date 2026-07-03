@@ -1,6 +1,5 @@
 """Represents a single combat in Slay the Spire 2."""
 from dataclasses import dataclass
-from typing import Callable
 
 from character.enemy import Enemy
 from character.player import Player
