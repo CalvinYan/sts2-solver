@@ -1,14 +1,8 @@
 from dataclasses import dataclass
 
-from character.enemy import Enemy, Intent
+from enemy import Enemy, Intent
 from util import Action
 from util.effects import Strength
-
-@dataclass
-class Nibbit(Enemy):
-    intent = Butt()
-    min_hp = 44
-    max_hp = 48
 
 @dataclass
 class Butt(Intent):
@@ -30,3 +24,9 @@ class Hiss(Intent):
     
     def next(self) -> Intent:
         return Butt()
+
+@dataclass
+class Nibbit(Enemy):
+    intent = Butt()
+    min_hp = 44
+    max_hp = 48

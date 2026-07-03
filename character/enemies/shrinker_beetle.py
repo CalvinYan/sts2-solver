@@ -1,14 +1,8 @@
 from dataclasses import dataclass
 
-from character.enemy import Enemy, Intent
+from enemy import Enemy, Intent
 from util import Action
 from util.effects import Shrink
-
-@dataclass
-class ShrinkerBeetle(Enemy):
-    intent = Shrinker()
-    min_hp = 40
-    max_hp = 42
 
 @dataclass
 class Shrinker(Intent):
@@ -30,3 +24,9 @@ class Stomp(Intent):
     
     def next(self) -> Intent:
         return Chomp()
+
+@dataclass
+class ShrinkerBeetle(Enemy):
+    intent = Shrinker()
+    min_hp = 40
+    max_hp = 42

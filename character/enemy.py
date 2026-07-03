@@ -2,8 +2,16 @@ from dataclasses import dataclass, field
 from random import randint
 from typing import ClassVar
 
-from character import Character
-from util import Intent
+from core import Character
+from util import Action
+
+@dataclass
+class Intent:
+    """A sequence of actions that an enemy will perform on a given turn, with a random variable determining its next intent."""
+    actions: list[Action]
+
+    def next(self) -> Intent:
+        pass
 
 @dataclass
 class Enemy(Character):

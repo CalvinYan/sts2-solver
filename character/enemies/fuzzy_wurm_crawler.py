@@ -1,14 +1,8 @@
 from dataclasses import dataclass
 
-from character.enemy import Enemy, Intent
+from enemy import Enemy, Intent
 from util import Action
 from util.effects import Strength
-
-@dataclass
-class FuzzyWurmCrawler(Enemy):
-    intent = AcidGoop1()
-    min_hp = 58
-    max_hp = 59
 
 @dataclass
 class AcidGoop1(Intent):
@@ -30,3 +24,9 @@ class AcidGoop2(Intent):
     
     def next(self) -> Intent:
         return AcidGoop1()
+
+@dataclass
+class FuzzyWurmCrawler(Enemy):
+    intent = AcidGoop1()
+    min_hp = 58
+    max_hp = 59

@@ -1,15 +1,9 @@
 from dataclasses import dataclass
 from random import random
 
-from character.enemy import Enemy, Intent
+from enemy import Enemy, Intent
 from util import Action
 from util.effects import Strength, Weak
-
-@dataclass
-class SludgeSpinner(Enemy):
-    intent = OilSpray()
-    min_hp = 41
-    max_hp = 42
 
 @dataclass
 class OilSpray(Intent):
@@ -31,3 +25,9 @@ class Rage(Intent):
     
     def next(self) -> Intent:
         return OilSpray() if random() < 0.5 else Slam()
+
+@dataclass
+class SludgeSpinner(Enemy):
+    intent = OilSpray()
+    min_hp = 41
+    max_hp = 42

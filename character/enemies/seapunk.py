@@ -1,14 +1,8 @@
 from dataclasses import dataclass
 
-from character.enemy import Enemy, Intent
+from enemy import Enemy, Intent
 from util import Action
 from util.effects import Strength
-
-@dataclass
-class Seapunk(Enemy):
-    intent = SeaKick()
-    min_hp = 47
-    max_hp = 49
 
 @dataclass
 class SeaKick(Intent):
@@ -30,3 +24,9 @@ class BubbleBurp(Intent):
     
     def next(self) -> Intent:
         return SeaKick()
+
+@dataclass
+class Seapunk(Enemy):
+    intent = SeaKick()
+    min_hp = 47
+    max_hp = 49
