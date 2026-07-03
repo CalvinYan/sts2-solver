@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum
 
-from character.core import Player
 from util.core import Action
 from util.effects import Vulnerable
 
@@ -17,8 +16,8 @@ class Card:
     cost: int
     targeting: Targeting
 
-    def playable(self, player: Player) -> bool:
-        return player.energy >= self.cost
+    def playable(self, energy: int) -> bool:
+        return energy >= self.cost
 
 @dataclass
 class Strike(Card):
@@ -44,5 +43,5 @@ class AscendersBane(Card):
     cost = None
     targeting = Targeting.NONE
 
-    def playable(self, player: Player) -> bool:
+    def playable(self, energy: int) -> bool:
         return False
