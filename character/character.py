@@ -4,9 +4,9 @@ from dataclasses import dataclass
 class Character:
     """Represents a player or enemy in the fight."""
     hp: int
-    block: int
-    buffs: list[Effect]
-    debuffs: list[Effect]
+    block: int = 0
+    buffs: list[Effect] = []
+    debuffs: list[Effect] = []
 
     def take_damage(self, damage: int) -> None:
         self.hp -= max(0, damage - self.block)
