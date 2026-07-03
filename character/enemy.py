@@ -7,7 +7,7 @@ from typing import ClassVar
 from character.core import Character
 from util.core import Action
 
-@dataclass
+@dataclass(repr=False)
 class Intent:
     """A sequence of actions that an enemy will perform on a given turn, with a random variable determining its next intent."""
     actions: list[Action]
@@ -15,7 +15,10 @@ class Intent:
     def next(self) -> Intent:
         pass
 
-@dataclass(kw_only=True)
+    def __repr__(self) -> str:
+        return type(self).__name__
+
+@dataclass(kw_only=True, repr=False)
 class Enemy(Character):
     """
     A hostile non-player character with an intent and a range of possible hp values.
@@ -38,3 +41,6 @@ class Enemy(Character):
     def resolve_end_of_turn(self, fight: "Fight") -> None:
         super().resolve_end_of_turn(fight)
         self.intent = self.intent.next()
+
+    def __repr__(self) -> str:
+        return f"{self.name} (HP: {self.hp}, Intent: {self.intent})"
