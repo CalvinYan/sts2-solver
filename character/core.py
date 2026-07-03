@@ -1,5 +1,5 @@
 from __future__ import annotations
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from util.core import Action, Effect, Move
 
@@ -9,8 +9,8 @@ class Character:
     name: str
     hp: int
     block: int = 0
-    buffs: list[Effect] = []
-    debuffs: list[Effect] = []
+    buffs: list[Effect] = field(default_factory=list)
+    debuffs: list[Effect] = field(default_factory=list)
 
     def take_damage(self, damage: int) -> None:
         self.hp -= max(0, damage - self.block)

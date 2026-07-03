@@ -1,13 +1,13 @@
 from __future__ import annotations
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 @dataclass
 class Action:
     """An atomic decision with a particular outcome."""
     damage: int = 0
     block: int = 0
-    buffs: list[Effect] = []
-    debuffs: list[Effect] = []
+    buffs: list[Effect] = field(default_factory=list)
+    debuffs: list[Effect] = field(default_factory=list)
 
 @dataclass
 class Effect:
