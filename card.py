@@ -37,3 +37,12 @@ class Bash(Card):
     action = Action(damage=8, debuffs=[Vulnerable(duration=2)])
     cost = 2
     targeting = Targeting.ENEMY_SINGLE
+
+@dataclass
+class AscendersBane(Card):
+    action = Action()
+    cost = None
+    targeting = Targeting.NONE
+
+    def playable(self, player: Player) -> bool:
+        return False
