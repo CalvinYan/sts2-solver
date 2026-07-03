@@ -6,6 +6,7 @@ from util.core import Action, Effect, Move
 @dataclass
 class Character:
     """Represents a player or enemy in the fight."""
+    name: str
     hp: int
     block: int = 0
     buffs: list[Effect] = []
@@ -52,6 +53,7 @@ class Character:
                 new_debuffs.append(debuff)
 
     def act(self, target: Character, action: Action) -> None:
+        print(f"{self.name} uses {action} on {target.name}")
         move = Move(action=action, actor=self, target=target)
 
         for buff in self.buffs:
