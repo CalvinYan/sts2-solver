@@ -33,3 +33,8 @@ class Fight:
 
     def __str__(self) -> str:
         return f"Turn {self.turn}\nPlayer: {self.player}\nEnemies: {self.enemies}\nHP lost: {self.player.hp}"
+
+    def start(self) -> None:
+        while not self.is_over():
+            self.loop()
+        print(f"Fight ended after {self.turn} turns. Player HP loss: {self.player.hp}")
