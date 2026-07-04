@@ -41,3 +41,6 @@ class Enemy(Character):
     def resolve_end_of_turn(self, fight: "Fight") -> None:
         super().resolve_end_of_turn(fight)
         self.intent = self.intent.next()
+
+    def __repr__(self):
+        return super().__repr__() + f" {self.intent}"
