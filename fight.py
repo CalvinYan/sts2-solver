@@ -44,7 +44,8 @@ class Fight:
     def start(self) -> None:
         while not self.is_over():
             self.loop()
-        print(f"Fight ended after {self.turn} turns. Player HP loss: {self.player.hp}")
+        if self.verbose:
+            print(f"Fight ended after {self.turn} turns. Player HP loss: {self.player.hp}")
 
     def __repr__(self) -> str:
         return f"\nTurn {self.turn}\nPlayer: {self.player}\nEnemies: {'\n'.join(repr(enemy) for enemy in self.enemies)}\n"

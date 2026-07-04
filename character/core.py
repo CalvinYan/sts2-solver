@@ -13,6 +13,7 @@ class Character:
     block: int = 0
     buffs: list[Effect] = field(default_factory=list)
     debuffs: list[Effect] = field(default_factory=list)
+    verbose: bool = False
 
     def take_damage(self, damage: int) -> None:
         self.hp -= max(0, damage - self.block)
@@ -61,10 +62,11 @@ class Character:
         self.debuffs = new_debuffs
 
     def act(self, target: Character, action: Action) -> None:
-        if target:
-            print(f"{self.name} uses {action} on {target.name}")
-        else:
-            print(f"{self.name} uses {action}")
+        if self.verbose:
+            if target:
+                print(f"{self.name} uses {action} on {target.name}")
+            else:
+                print(f"{self.name} uses {action}")
 
         move = Move(action=deepcopy(action), actor=self, target=target)
 
