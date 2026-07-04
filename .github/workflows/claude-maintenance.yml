@@ -1,0 +1,56 @@
+name: Claude Code Maintenance
+
+# Triggers:
+#  - push to main: scan the new state of the codebase for bugs/improvements
+#  - PR comments: respond to @claude mentions from maintainers
+#  - workflow_dispatch: manual trigger for testing
+on:
+  push:
+    branches: [main]
+  pull_request_review_comment:
+    types: [created]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  claude:
+    runs-on: ubuntu-latest
+
+    # Guard rails:
+    #  - Don't let Claude's own commits (or other bots) re-trigger this workflow
+    #  - On comment-triggered events, only react if the comment actually mentions @claude
+    #  - On comment-triggered events, only allow users with write access (default action
+    #    behavior) — do NOT widen this with allowed_non_write_users unless you mean to
+    #    let arbitrary public users trigger runs against your quota/API key.
+    if: >
+      github.actor != 'github-actions[bot]' &&
+      github.actor != 'claude[bot]' &&
+      (
+        github.event_name != 'issue_comment' ||
+        contains(github.event.comment.body, '@claude')
+      ) &&
+      (
+        github.event_name != 'pull_request_review_comment' ||
+        contains(github.event.comment.body, '@claude')
+      )
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            You are performing autonomous maintenance on this repository.
+
+            See CLAUDE.md for further instructions.
+
+          claude_args: |
+            --max-turns 30
+            --allowedTools Read,Edit,Write,Bash(git:*),Bash(npm test:*),Bash(pytest:*),Grep,Glob
+
