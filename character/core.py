@@ -50,11 +50,15 @@ class Character:
             if buff.duration != 0:
                 new_buffs.append(buff)
 
+        self.buffs = new_buffs
+
         for debuff in self.debuffs:
             if debuff.duration is not None:
                 debuff.duration -= 1
             if debuff.duration != 0:
                 new_debuffs.append(debuff)
+
+        self.debuffs = new_debuffs
 
     def act(self, target: Character, action: Action) -> None:
         if target:
@@ -66,8 +70,12 @@ class Character:
 
         for buff in self.buffs:
             buff.resolve(move, is_target=False)
+        for debuff in self.debuffs:
+            debuff.resolve(move, is_target=False)
 
         if target:
+            for buff in target.buffs:
+                buff.resolve(move, is_target=True)
             for debuff in target.debuffs:
                 debuff.resolve(move, is_target=True)
 
