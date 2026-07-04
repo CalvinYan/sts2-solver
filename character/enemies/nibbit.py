@@ -6,7 +6,7 @@ from util.effects import Strength
 
 @dataclass(repr=False)
 class Butt(Intent):
-    actions: list = field(default_factory=lambda: [Action(damage=13, block=0)])
+    actions: list = field(default_factory=lambda: [Action(damage=13)])
     
     def next(self) -> Intent:
         return HesitantSlice()
@@ -20,7 +20,7 @@ class HesitantSlice(Intent):
 
 @dataclass(repr=False)
 class Hiss(Intent):
-    actions: list = field(default_factory=lambda: [Action(damage=0, block=0, buffs=[Strength(power=3)])])
+    actions: list = field(default_factory=lambda: [Action(buffs=[Strength(power=3)])])
     
     def next(self) -> Intent:
         return Butt()

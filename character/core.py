@@ -79,10 +79,14 @@ class Character:
             for debuff in target.debuffs:
                 debuff.resolve(move, is_target=True)
 
-            target.take_damage(move.action.damage)
+            if move.action.damage:
+                target.take_damage(move.action.damage)
+
             target.receive_debuffs(move.action.debuffs)
 
-        self.block += move.action.block
+        if move.action.block:
+            self.block += move.action.block
+
         self.receive_buffs(move.action.buffs)
 
     def __repr__(self) -> str:

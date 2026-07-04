@@ -6,21 +6,21 @@ from util.effects import Shrink
 
 @dataclass(repr=False)
 class Shrinker(Intent):
-    actions: list = field(default_factory=lambda: [Action(damage=0, block=0, debuffs=[Shrink()])])
+    actions: list = field(default_factory=lambda: [Action(debuffs=[Shrink()])])
     
     def next(self) -> Intent:
         return Chomp()
 
 @dataclass(repr=False)
 class Chomp(Intent):
-    actions: list = field(default_factory=lambda: [Action(damage=8, block=0)])
+    actions: list = field(default_factory=lambda: [Action(damage=8)])
     
     def next(self) -> Intent:
         return Stomp()
 
 @dataclass(repr=False)
 class Stomp(Intent):
-    actions: list = field(default_factory=lambda: [Action(damage=14, block=0)])
+    actions: list = field(default_factory=lambda: [Action(damage=14)])
     
     def next(self) -> Intent:
         return Chomp()

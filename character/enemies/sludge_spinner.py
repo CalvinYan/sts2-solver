@@ -7,21 +7,21 @@ from util.effects import Strength, Weak
 
 @dataclass(repr=False)
 class OilSpray(Intent):
-    actions: list = field(default_factory=lambda: [Action(damage=9, block=0, debuffs=[Weak(duration=1)])])
+    actions: list = field(default_factory=lambda: [Action(damage=9, debuffs=[Weak(duration=1)])])
     
     def next(self) -> Intent:
         return Slam() if random() < 0.5 else Rage()
 
 @dataclass(repr=False)
 class Slam(Intent):
-    actions: list = field(default_factory=lambda: [Action(damage=12, block=0)])
+    actions: list = field(default_factory=lambda: [Action(damage=12)])
     
     def next(self) -> Intent:
         return OilSpray() if random() < 0.5 else Rage()
 
 @dataclass(repr=False)
 class Rage(Intent):
-    actions: list = field(default_factory=lambda: [Action(damage=7, block=0, buffs=[Strength(power=3)])])
+    actions: list = field(default_factory=lambda: [Action(damage=7, buffs=[Strength(power=3)])])
     
     def next(self) -> Intent:
         return OilSpray() if random() < 0.5 else Slam()

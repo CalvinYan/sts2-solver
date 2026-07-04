@@ -6,21 +6,21 @@ from util.effects import Strength
 
 @dataclass(repr=False)
 class AcidGoop1(Intent):
-    actions: list = field(default_factory=lambda: [Action(damage=6, block=0)])
+    actions: list = field(default_factory=lambda: [Action(damage=6)])
     
     def next(self) -> Intent:
         return Inhale()
 
 @dataclass(repr=False)
 class Inhale(Intent):
-    actions: list = field(default_factory=lambda: [Action(damage=0, block=0, buffs=[Strength(power=7)])])
+    actions: list = field(default_factory=lambda: [Action(buffs=[Strength(power=7)])])
     
     def next(self) -> Intent:
         return AcidGoop2()
 
 @dataclass(repr=False)
 class AcidGoop2(Intent):
-    actions: list = field(default_factory=lambda: [Action(damage=6, block=0)])
+    actions: list = field(default_factory=lambda: [Action(damage=6)])
     
     def next(self) -> Intent:
         return AcidGoop1()

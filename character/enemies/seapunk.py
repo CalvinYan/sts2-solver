@@ -6,21 +6,21 @@ from util.effects import Strength
 
 @dataclass(repr=False)
 class SeaKick(Intent):
-    actions: list = field(default_factory=lambda: [Action(damage=13, block=0)])
+    actions: list = field(default_factory=lambda: [Action(damage=13)])
     
     def next(self) -> Intent:
         return SpinningKick()
 
 @dataclass(repr=False)
 class SpinningKick(Intent):
-    actions: list = field(default_factory=lambda: [Action(damage=2, block=0) for _ in range(4)])
+    actions: list = field(default_factory=lambda: [Action(damage=2) for _ in range(4)])
     
     def next(self) -> Intent:
         return BubbleBurp()
 
 @dataclass(repr=False)
 class BubbleBurp(Intent):
-    actions: list = field(default_factory=lambda: [Action(damage=0, block=8, buffs=[Strength(power=2)])])
+    actions: list = field(default_factory=lambda: [Action(block=8, buffs=[Strength(power=2)])])
     
     def next(self) -> Intent:
         return SeaKick()
