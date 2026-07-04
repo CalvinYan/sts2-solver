@@ -43,4 +43,4 @@ class Enemy(Character):
         self.intent = self.intent.next()
 
     def __repr__(self) -> str:
-        return f"{self.name} (HP: {self.hp}, Intent: {self.intent})"
+        return f"{self.name} (HP: {self.hp}, Intent: {self.intent}, Buffs: {self.buffs}, Debuffs: {self.debuffs})"
