@@ -23,15 +23,17 @@ class Character:
         for buff_incoming in buffs:
             for buff_current in self.buffs:
                 if buff_current.stack(buff_incoming):
-                    return
-            self.buffs.append(buff_incoming)
+                    break
+            else:
+                self.buffs.append(buff_incoming)
 
     def receive_debuffs(self, debuffs: list[Effect]) -> None:
         for debuff_incoming in debuffs:
             for debuff_current in self.debuffs:
                 if debuff_current.stack(debuff_incoming):
-                    return
-            self.debuffs.append(debuff_incoming)
+                    break
+            else:
+                self.debuffs.append(debuff_incoming)
 
     # Resolve all start-of-turn effects for the character.
     def resolve_start_of_turn(self, fight: "Fight") -> None:
