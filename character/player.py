@@ -82,7 +82,7 @@ class Player(Character):
 class Ironclad(Player):
     draw_pile: Counter[Card] = field(default_factory=lambda: Counter({
         Strike(): 5,
-        Defend(): 5,
+        Defend(): 4,
         Bash(): 1,
         AscendersBane(): 1,
     }))
