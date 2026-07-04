@@ -71,6 +71,10 @@ class Player(Character):
 
     def resolve_end_of_turn(self, fight: "Fight") -> None:
         super().resolve_end_of_turn(fight)
+        
+        if self.hand[AscendersBane()] > 0:
+            del self.hand[AscendersBane()]
+
         self.discard_pile += self.hand
         self.hand = Counter()
 
