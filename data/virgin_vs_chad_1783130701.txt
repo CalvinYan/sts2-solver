@@ -13,3 +13,6 @@ Average HP loss of Balanced against shrinker_beetle: -14.4766
 Average HP loss of Chad against sludge_spinner: -16.519
 Average HP loss of Virgin against sludge_spinner: -19.7309
 Average HP loss of Balanced against sludge_spinner: -17.418
+
+AUTHOR'S NOTE; The ironclad deck was bugged, Ascender's Bane never exhausted and there were five Defends. Interesting
+data nonetheless.

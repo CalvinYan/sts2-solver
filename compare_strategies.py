@@ -1,3 +1,7 @@
+"""
+A basic demo of the simulator. Provides several naive algorithms for Floor 2 fights and benchmarks them against
+different encounters.
+"""
 from copy import deepcopy
 
 from card import Bash, Defend, Strike
