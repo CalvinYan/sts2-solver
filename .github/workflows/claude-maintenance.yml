@@ -55,5 +55,5 @@ jobs:
           show_full_output: true
           claude_args: |
             --max-turns 30
-            --allowedTools "Read,Edit,Write,Bash(git:*),Bash(npm test:*),Bash(pytest:*),Grep,Glob"
+            --allowedTools "Read,Edit,Write,Bash,Grep,Glob"
 
