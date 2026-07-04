@@ -19,8 +19,7 @@ class Fight:
 
         self.player.resolve_start_of_turn(self)
         while not self.player.resolve_turn(self):
-            if self.verbose:
-                print(self)
+            pass
 
         self.player.resolve_end_of_turn(self)
 
