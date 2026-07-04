@@ -15,8 +15,8 @@ class Character:
     debuffs: list[Effect] = field(default_factory=list)
 
     def take_damage(self, damage: int) -> None:
-        self.hp -= damage - self.block
-        self.block -= min(self.block, damage)
+        self.hp -= max(0, damage - self.block)
+        self.block = max(0, self.block - damage)
 
     def receive_buffs(self, buffs: list[Effect]) -> None:
         for buff_incoming in buffs:
