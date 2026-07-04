@@ -33,7 +33,7 @@ class Character:
 
     # Resolve all start-of-turn effects for the character.
     def resolve_start_of_turn(self, fight: "Fight") -> None:
-        pass
+        self.block = 0
 
     # Resolve the character's turn. Returns whether or not the character has ended their turn.
     def resolve_turn(self, fight: "Fight") -> bool:
@@ -41,8 +41,6 @@ class Character:
 
     # Resolve all end-of-turn effects for the character.
     def resolve_end_of_turn(self, fight: "Fight") -> None:
-        self.block = 0
-
         new_buffs = []
         new_debuffs = []
         for buff in self.buffs:
