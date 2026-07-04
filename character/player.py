@@ -9,7 +9,7 @@ from typing import Callable
 from card import AscendersBane, Bash, Card, Defend, Strike
 from character.core import Character
 
-@dataclass(kw_only=True)
+@dataclass(kw_only=True, repr=False)
 class Player(Character):
     """
     A player-controlled character with the cards in their deck distributed between their hand, draw pile, and discard pile.
@@ -74,7 +74,7 @@ class Player(Character):
         self.discard_pile += self.hand
         self.hand = Counter()
 
-@dataclass
+@dataclass(repr=False)
 class Ironclad(Player):
     draw_pile: Counter[Card] = field(default_factory=lambda: Counter({
         Strike(): 5,

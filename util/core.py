@@ -13,7 +13,7 @@ class Action:
     def __hash__(self):
         return hash((self.damage, self.block, tuple(self.buffs), tuple(self.debuffs)))
 
-@dataclass
+@dataclass(repr=False)
 class Effect:
     """
     Any status effect on a character, be it a buff, debuff, or power. Contains some combination of a power (how potent
@@ -39,6 +39,14 @@ class Effect:
     def __hash__(self):
         return hash((type(self), self.power, self.duration))
 
+    def __repr__(self) -> str:
+        retval = f"{type(self).__name__}"
+        if self.power is not None:
+            retval += f" {self.power}"
+        if self.duration is not None:
+            retval += f" {self.duration}"
+
+        return retval
 
 @dataclass
 class Move:

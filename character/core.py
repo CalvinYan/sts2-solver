@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 
 from util.core import Action, Effect, Move
 
-@dataclass(kw_only=True)
+@dataclass(kw_only=True, repr=False)
 class Character:
     """Represents a player or enemy in the fight."""
     name: str
@@ -76,3 +76,12 @@ class Character:
 
         self.block += move.action.block
         self.receive_buffs(move.action.buffs)
+
+    def __repr__(self) -> str:
+        retval = f"{self.name} ({self.block}){self.hp}"
+        for buff in self.buffs:
+            retval += f" ^({buff})"
+        for debuff in self.debuffs:
+            retval += f" v({debuff})"
+
+        return retval
