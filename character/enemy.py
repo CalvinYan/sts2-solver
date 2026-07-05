@@ -16,6 +16,9 @@ class Intent:
     def next(self) -> Intent:
         pass
 
+    def to_vector(self) -> tuple:
+        return (self.id,)
+
     def __repr__(self) -> str:
         return type(self).__name__
 
@@ -42,6 +45,9 @@ class Enemy(Character):
     def resolve_end_of_turn(self, fight: "Fight") -> None:
         super().resolve_end_of_turn(fight)
         self.intent = self.intent.next()
+    
+    def to_vector(self) -> tuple:
+        return super().to_vector() + self.intent.to_vector()
 
     def __repr__(self):
         return super().__repr__() + f" {self.intent}"
