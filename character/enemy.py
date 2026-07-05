@@ -10,6 +10,7 @@ from util.core import Action
 @dataclass(repr=False)
 class Intent:
     """A sequence of actions that an enemy will perform on a given turn, with a random variable determining its next intent."""
+    id: int
     actions: list[Action]
 
     def next(self) -> Intent:
