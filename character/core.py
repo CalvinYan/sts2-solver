@@ -95,6 +95,9 @@ class Character:
 
         self.receive_buffs(move.action.buffs)
 
+    def to_vector(self) -> tuple:
+        return (self.id, self.hp, self.block) + Effect.effects_to_vector(self.buffs) + Effect.effects_to_vector(self.debuffs)
+
     def __repr__(self) -> str:
         retval = f"{self.name} ({self.block}){self.hp}"
         for buff in self.buffs:
