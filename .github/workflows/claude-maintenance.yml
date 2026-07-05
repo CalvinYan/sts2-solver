@@ -57,7 +57,7 @@ jobs:
             See CLAUDE.md for further instructions.
           show_full_output: true
           claude_args: |
-            --max-turns 30
+            --max-turns 120
             --allowedTools "Read,Edit,Write,Bash,Grep,Glob"
 
       # Comment trigger: no fixed prompt, so the action falls back to its default tag-mode
@@ -71,6 +71,6 @@ jobs:
           track_progress: true
           show_full_output: true
           claude_args: |
-            --max-turns 30
+            --max-turns 10
             --allowedTools "Read,Edit,Write,Bash,Grep,Glob"
 
