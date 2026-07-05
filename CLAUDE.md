@@ -37,7 +37,7 @@ They do not include:
 * Writing unit tests
 * Modifying the code's file structure / class structure (unless it is strictly necessary for the above)
 
-For each improvement, raise a pull request according to the following format:
+For each improvement, check if you have an open pull request for the issue, otherwise raise one according to the following format:
 ### What
 What code changes were made in this pull request?
 

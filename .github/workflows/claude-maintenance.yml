@@ -45,13 +45,30 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: anthropics/claude-code-action@v1
+      # Push/manual trigger: run the fixed autonomous-maintenance task and open a PR if warranted.
+      - name: Autonomous maintenance
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        uses: anthropics/claude-code-action@v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           prompt: |
             You are performing autonomous maintenance on this repository.
 
             See CLAUDE.md for further instructions.
+          show_full_output: true
+          claude_args: |
+            --max-turns 30
+            --allowedTools "Read,Edit,Write,Bash,Grep,Glob"
+
+      # Comment trigger: no fixed prompt, so the action falls back to its default tag-mode
+      # behavior (respond to the @claude mention using the comment's own content), and
+      # track_progress posts/updates a reply comment on the thread instead of only reacting.
+      - name: Respond to @claude mentions
+        if: github.event_name == 'issue_comment' || github.event_name == 'pull_request_review_comment'
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          track_progress: true
           show_full_output: true
           claude_args: |
             --max-turns 30
