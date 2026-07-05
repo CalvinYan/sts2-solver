@@ -10,6 +10,7 @@ from util.effect import Effect
 class Character:
     """Represents a player or enemy in the fight."""
     name: str
+    id: int
     hp: int
     block: int = 0
     buffs: list[Effect] = field(default_factory=list)
