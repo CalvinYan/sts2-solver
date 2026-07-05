@@ -4,12 +4,17 @@ from dataclasses import dataclass
 from character.enemy import Enemy
 from character.player import Player
 
+MAX_ENEMIES = 5
+
 @dataclass(repr=False)
 class Fight:
     player: Player
     enemies: list[Enemy]
     turn: int = 0
     verbose: bool = False
+
+    def __post_init__(self):
+        assert len(self.enemies) in range(MAX_ENEMIES + 1)
 
     def loop(self) -> None:
         self.turn += 1
@@ -46,6 +51,17 @@ class Fight:
             self.loop()
         if self.verbose:
             print(f"Fight ended after {self.turn} turns. Player HP loss: {self.player.hp}")
+
+    # Vector representation of a Fight for interpretation by learning models.
+    # The representation is entirely defined by:
+    # - The vector representation of the player
+    # - For n in 1..5: the vector representation of the nth enemy, or all zeroes if it doesn't exist
+    # - The number of the current turn
+    def to_vector(self) -> tuple:
+        enemies_padded = self.enemies + [None] * (MAX_ENEMIES - len(self.enemies))
+        return self.player.to_vector() + \
+            sum(list(map(Enemy.to_vector, enemies_padded)), ()) + \
+            (self.turn,)
 
     def __repr__(self) -> str:
         return f"\nTurn {self.turn}\nPlayer: {self.player}\nEnemies: {'\n'.join(repr(enemy) for enemy in self.enemies)}\n"
