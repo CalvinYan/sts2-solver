@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 
 from character.enemy import Enemy, Intent
 from util.core import Action
-from util.effects import Shrink
+from util.effect import Shrink
 
 @dataclass(repr=False)
 class Shrinker(Intent):

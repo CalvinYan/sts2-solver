@@ -3,7 +3,8 @@ from __future__ import annotations
 from copy import deepcopy
 from dataclasses import dataclass, field
 
-from util.core import Action, Effect, Move
+from util.core import Action, Move
+from util.effect import Effect
 
 @dataclass(kw_only=True, repr=False)
 class Character:

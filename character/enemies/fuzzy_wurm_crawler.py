@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 
 from character.enemy import Enemy, Intent
 from util.core import Action
-from util.effects import Strength
+from util.effect import Strength
 
 @dataclass(repr=False)
 class AcidGoop1(Intent):

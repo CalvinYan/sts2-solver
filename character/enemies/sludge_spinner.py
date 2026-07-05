@@ -3,7 +3,7 @@ from random import random
 
 from character.enemy import Enemy, Intent
 from util.core import Action
-from util.effects import Strength, Weak
+from util.effect import Strength, Weak
 
 @dataclass(repr=False)
 class OilSpray(Intent):
