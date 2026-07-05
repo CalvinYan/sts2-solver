@@ -8,6 +8,7 @@ class Effect:
     Any status effect on a character, be it a buff, debuff, or power. Contains some combination of a power (how potent
     the effect is) and duration (how many turns the effect lasts).
     """
+    id: int
     power: int = None
     duration: int = None
 
@@ -25,18 +26,15 @@ class Effect:
 
         return True
 
-    def id(self) -> int:
-        return EFFECT_TO_ID[type[self]]
-
     def to_vector(self) -> tuple:
         # This positional encoding ensures that the vector of a list of effects is equal to the sum of the vectors of each effect
-        lst = [tuple(0, 0, 0)] * len(EFFECT_TO_ID)
-        lst[self.id()] = (1, self.power if self.power is not None else 0, self.duration if self.duration is not None else 0)
+        lst = [(0, 0, 0)] * len(ID_TO_EFFECT)
+        lst[self.id] = (1, self.power if self.power is not None else 0, self.duration if self.duration is not None else 0)
         
         return sum(lst, ())
 
     def __hash__(self) -> int:
-        return hash((self.id(), self.power, self.duration))
+        return hash((self.id, self.power, self.duration))
 
     def __repr__(self) -> str:
         retval = f"{type(self).__name__}"
@@ -47,43 +45,53 @@ class Effect:
 
         return retval
 
+@dataclass(repr=False, eq=False)
 class Strength(Effect):
+    id: int = 0
     def resolve(self, move: Move, is_target: bool) -> None:
         if not is_target and move.action.damage is not None:
             move.action.damage += self.power
 
+@dataclass(repr=False, eq=False)
 class Thorns(Effect):
+    id: int = 1
     def resolve(self, move: Move, is_target: bool) -> None:
         if is_target and move.action.damage is not None:
             move.actor.take_damage(self.power)
 
+@dataclass(repr=False, eq=False)
 class Vulnerable(Effect):
+    id: int = 2
     def resolve(self, move: Move, is_target: bool) -> None:
         if is_target and move.action.damage is not None:
             move.action.damage = int(move.action.damage * 1.5)
 
+@dataclass(repr=False, eq=False)
 class Weak(Effect):
+    id: int = 3
     def resolve(self, move: Move, is_target: bool) -> None:
         if not is_target and move.action.damage is not None:
             move.action.damage = int(move.action.damage * 0.75)
 
+@dataclass(repr=False, eq=False)
 class Frail(Effect):
+    id: int = 4
     def resolve(self, move: Move, is_target: bool) -> None:
         if not is_target and move.action.block is not None:
             move.action.block = int(move.action.block * 0.75)
 
+@dataclass(repr=False, eq=False)
 class Shrink(Effect):
+    id: int = 5
     def resolve(self, move: Move, is_target: bool) -> None:
         if not is_target and move.action.damage is not None:
             move.action.damage = int(move.action.damage * 0.70)
 
-EFFECT_TO_ID = {
-    Strength: 0,
-    Thorns: 1,
-    Vulnerable: 2,
-    Weak: 3,
-    Frail: 4,
-    Shrink: 5
+ID_TO_EFFECT = {
+    Strength.id: Strength,
+    Thorns.id: Thorns,
+    Vulnerable.id: Vulnerable,
+    Weak.id: Weak,
+    Frail.id: Frail,
+    Shrink.id: Shrink,
 }
-
-ID_TO_EFFECT = {v: k for k, v in EFFECT_TO_ID.items()}
