@@ -28,7 +28,7 @@ class Effect:
 
     def to_vector(self) -> tuple:
         # This positional encoding ensures that the vector of a list of effects is equal to the sum of the vectors of each effect
-        lst = [(0, 0, 0)] * len(ID_TO_EFFECT)
+        lst = [(0, 0, 0)] * (max(ID_TO_EFFECT.keys()) + 1)
         lst[self.id] = (1, self.power if self.power is not None else 0, self.duration if self.duration is not None else 0)
         
         return sum(lst, ())
@@ -44,6 +44,10 @@ class Effect:
             retval += f" {self.duration}"
 
         return retval
+
+    def effects_to_vector(effects: list[Effect]) -> tuple:
+        zeroes = (0,) * 3 * (max(ID_TO_EFFECT.keys()) + 1)
+        return tuple(map(sum, zip(zeroes, *[effect.to_vector() for effect in effects])))
 
 @dataclass(repr=False, eq=False)
 class Strength(Effect):
