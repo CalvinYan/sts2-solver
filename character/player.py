@@ -80,6 +80,7 @@ class Player(Character):
 
 @dataclass(repr=False)
 class Ironclad(Player):
+    id: int = 0
     draw_pile: Counter[Card] = field(default_factory=lambda: Counter({
         Strike(): 5,
         Defend(): 4,
