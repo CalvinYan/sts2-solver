@@ -49,5 +49,7 @@ Anything a human would need to know to continue maintaining the code, such as
 * Necessary follow-up changes
 * Modifications to user interfaces
 * New failure modes introduced
+Leave this section blank (including deleting placeholder text) if you have nothing to add.
 
-This should be blank in most cases.
+There are no limits on how many or how few pull requests you open during a single action, as long as all in-scope issues are addressed.
+
