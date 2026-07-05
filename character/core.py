@@ -96,6 +96,8 @@ class Character:
         self.receive_buffs(move.action.buffs)
 
     def to_vector(self) -> tuple:
+        if self is None:
+            return (0, 0, 0) + Effect.effects_to_vector(list()) + Effect.effects_to_vector(list())
         return (self.id, self.hp, self.block) + Effect.effects_to_vector(self.buffs) + Effect.effects_to_vector(self.debuffs)
 
     def __repr__(self) -> str:

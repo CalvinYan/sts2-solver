@@ -2,7 +2,7 @@ from character.core import Character
 from util.core import Action
 from util.effect import Frail, Strength, Thorns, Vulnerable, Weak
 
-def test_character_encodes_to_tuple():
+def test_character_encodes_to_vector():
     c = Character(name="Test", id=0, hp=80)
 
     # Apply some buffs and debuffs
@@ -14,7 +14,7 @@ def test_character_encodes_to_tuple():
 
     assert expected == got
 
-def test_character_with_no_debuffs_encodes_to_tuple():
+def test_character_with_no_debuffs_encodes_to_vector():
     c = Character(name="Test", id=0, hp=80)
 
     expected = (0, 80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
@@ -22,11 +22,17 @@ def test_character_with_no_debuffs_encodes_to_tuple():
 
     assert expected == got
 
-def test_character_with_negative_hp_encodes_to_tuple():
+def test_character_with_negative_hp_encodes_to_vector():
     c = Character(name="Test", id=0, hp=-15)
 
     expected = (0, -15, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
     got = c.to_vector()
+
+    assert expected == got
+
+def test_no_character_encodes_to_zeroes():
+    expected = (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+    got = Character.to_vector(None)
 
     assert expected == got
 

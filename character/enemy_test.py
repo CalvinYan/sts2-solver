@@ -1,10 +1,11 @@
 from character.enemies import FuzzyWurmCrawler, Nibbit, SludgeSpinner
 from character.enemies.fuzzy_wurm_crawler import AcidGoop1, Inhale, AcidGoop2
+from character.enemy import Enemy
 
 def test_enemy_encodes_to_tuple():
     enemy = Nibbit(name="Tibbin")
 
-    expected = (enemy.id, enemy.hp, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, enemy.intent.id)
+    expected = (1, enemy.id, enemy.hp, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, enemy.intent.id)
     got = enemy.to_vector()
 
     assert expected == got
@@ -25,6 +26,12 @@ def test_enemy_cycles_intents():
     enemy.resolve_end_of_turn(None)
 
     assert type(enemy.intent) == AcidGoop1
+
+def test_no_enemy_encodes_to_zeroes():
+    expected = (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+    got = Enemy.to_vector(None)
+
+    assert expected == got
 
 def test_sludge_spinner_doesnt_repeat_moves():
     enemy = SludgeSpinner(name="Spinner")

@@ -46,8 +46,18 @@ class Enemy(Character):
         super().resolve_end_of_turn(fight)
         self.intent = self.intent.next()
     
+    # Vector representation of an Enemy for interpretation by learning models.
+    # The representation is defined in the following way:
+    # - 0 if the enemy does not exist, 1 if it does. This is necessary because Fight encodes a fixed # of enemies to
+    #   maintain constant vector length
+    # - the Character vector for the enemy
+    # - the id of the enemy's intent
+    #
+    # A nonexistent enemy (None) is encoded as all zeroes.
     def to_vector(self) -> tuple:
-        return super().to_vector() + self.intent.to_vector()
+        if self is None:
+            return (0,) + Character.to_vector(None) + (0,)
+        return (1,) + super().to_vector() + self.intent.to_vector()
 
     def __repr__(self):
         return super().__repr__() + f" {self.intent}"
