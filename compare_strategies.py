@@ -29,69 +29,107 @@ def incoming_damage(fight: Fight) -> int:
 
     return dmg
 
+def has_lethal(fight: Fight) -> bool:
+    # Try playing only strikes
+    clone = deepcopy(fight.player)
+    clone.name = "Clone1"
+    clone.verbose = False
+    enemy = deepcopy(fight.enemies[0])
+    for _ in range(min(clone.hand.cards[Strike()], clone.energy)):
+        clone.play(Strike(), enemy)
+        if enemy.hp <= 0:
+            fight.enemies[0] = enemy
+            return True
+
+    # Try playing bash first
+    clone = deepcopy(fight.player)
+    clone.name = "Clone2"
+    clone.verbose = False
+    enemy = deepcopy(fight.enemies[0])
+    if Bash() in clone.hand.cards:
+        clone.play(Bash(), enemy)
+        if enemy.hp <= 0:
+            fight.enemies[0] = enemy
+            return True
+        for _ in range(min(clone.hand.cards[Strike()], clone.energy)):
+            clone.play(Strike(), enemy)
+            if enemy.hp <= 0:
+                fight.enemies[0] = enemy
+                return True
+
+    return False
+
 # Attack, attack, attack! Prioritize cards in the following order: Bash, Strike, Defend. Spend all energy.
 def unga_bunga_ironclad(fight: Fight) -> bool:
     player = fight.player
+    # print("Draw:", player.draw_pile, "Hand:", player.hand, "Discard:", player.discard_pile)
+    if has_lethal(fight):
+        return True
 
     bash = Bash()
     strike = Strike()
     defend = Defend()
 
-    if player.hand[bash] > 0 and bash.playable(player.energy):
+    if player.hand.cards[bash] > 0 and bash.playable(player.energy):
         player.play(bash, target=fight.enemies[0])
 
-    elif player.hand[strike] > 0 and strike.playable(player.energy):
+    elif player.hand.cards[strike] > 0 and strike.playable(player.energy):
         player.play(strike, target=fight.enemies[0])
 
-    elif player.hand[defend] > 0 and defend.playable(player.energy):
+    elif player.hand.cards[defend] > 0 and defend.playable(player.energy):
         player.play(defend, target=None)
 
-    return player.energy == 0 or player.hand.total() == 0  # End turn if no energy left or hand is empty
+    return player.energy == 0 or player.hand.cards.total() == 0  # End turn if no energy left or hand is empty
 
 # The way an inexperienced player might play - block all incoming damage, then priotize Bash, then Strike.
 def noob_ironclad(fight: Fight) -> bool:
-
     player = fight.player
-    
+    # print("Draw:", player.draw_pile, "Hand:", player.hand, "Discard:", player.discard_pile)
+    if has_lethal(fight):
+        return True
+
     bash = Bash()
     strike = Strike()
     defend = Defend()
 
-    if incoming_damage(fight) > player.block and player.hand[defend] > 0 and defend.playable(player.energy):
+    if incoming_damage(fight) > player.block and player.hand.cards[defend] > 0 and defend.playable(player.energy):
         player.play(defend, target=None)
 
-    elif player.hand[bash] > 0 and bash.playable(player.energy):
+    elif player.hand.cards[bash] > 0 and bash.playable(player.energy):
         player.play(bash, target=fight.enemies[0])
 
-    elif player.hand[strike] > 0 and strike.playable(player.energy):
+    elif player.hand.cards[strike] > 0 and strike.playable(player.energy):
         player.play(strike, target=fight.enemies[0])
 
     else:
         return True  # End turn if no cards can be played
 
-    return player.energy == 0 or player.hand.total() == 0  # End turn if no energy left or hand is empty
+    return player.energy == 0 or player.hand.cards.total() == 0  # End turn if no energy left or hand is empty
 
 # A more balanced approach - Play Bash if it's in hand, then block if it would save 5 HP, otherwise play Strike.
 def balanced_ironclad(fight: Fight) -> bool:
     player = fight.player
+    # print("Draw:", player.draw_pile, "Hand:", player.hand, "Discard:", player.discard_pile)
+    if has_lethal(fight):
+        return True
 
     bash = Bash()
     strike = Strike()
     defend = Defend()
 
-    if player.hand[bash] > 0 and bash.playable(player.energy):
+    if player.hand.cards[bash] > 0 and bash.playable(player.energy):
         player.play(bash, target=fight.enemies[0])
 
-    elif incoming_damage(fight) >= player.block + 5 and player.hand[defend] > 0 and defend.playable(player.energy):
+    elif incoming_damage(fight) >= player.block + 5 and player.hand.cards[defend] > 0 and defend.playable(player.energy):
         player.play(defend, target=None)
 
-    elif player.hand[strike] > 0 and strike.playable(player.energy):
+    elif player.hand.cards[strike] > 0 and strike.playable(player.energy):
         player.play(strike, target=fight.enemies[0])
     
     else:
         return True  # End turn if no cards can be played
 
-    return player.energy == 0 or player.hand.total() == 0  # End turn if no energy left or hand is empty
+    return player.energy == 0 or player.hand.cards.total() == 0  # End turn if no energy left or hand is empty
 
 if __name__ == "__main__":
 
