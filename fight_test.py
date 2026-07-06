@@ -1,3 +1,5 @@
+import numpy as np
+
 from character.enemies import Nibbit
 from character.player import Ironclad
 from fight import Fight, MAX_ENEMIES
@@ -10,10 +12,15 @@ def test_fight_encodes_to_vector():
     fight = Fight(player=player, enemies=[enemy])
 
     enemy_vector = enemy.to_vector()
-    expected = player.to_vector() + enemy_vector + (0,) * len(enemy_vector) * (MAX_ENEMIES - 1) + (fight.turn,)
+    expected = np.concatenate([
+        player.to_vector(),
+        enemy_vector,
+        np.zeros(len(enemy_vector) * (MAX_ENEMIES - 1), dtype=int),
+        [fight.turn],
+    ])
     got = fight.to_vector()
 
-    assert expected == got
+    assert np.array_equal(expected, got)
 
 def test_fight_ends_when_enemies_die():
     player = Ironclad(name="Test", player_turn_callback=lambda fight: True)

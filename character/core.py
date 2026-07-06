@@ -3,6 +3,8 @@ from __future__ import annotations
 from copy import deepcopy
 from dataclasses import dataclass, field
 
+import numpy as np
+
 from util.core import Action, Move
 from util.effect import Effect
 
@@ -95,10 +97,18 @@ class Character:
 
         self.receive_buffs(move.action.buffs)
 
-    def to_vector(self) -> tuple:
+    def to_vector(self) -> np.ndarray:
         if self is None:
-            return (0, 0, 0) + Effect.effects_to_vector(list()) + Effect.effects_to_vector(list())
-        return (self.id, self.hp, self.block) + Effect.effects_to_vector(self.buffs) + Effect.effects_to_vector(self.debuffs)
+            return np.concatenate([
+                [0, 0, 0],
+                Effect.effects_to_vector(list()),
+                Effect.effects_to_vector(list())
+            ])
+        return np.concatenate([
+            [self.id, self.hp, self.block],
+            Effect.effects_to_vector(self.buffs),
+            Effect.effects_to_vector(self.debuffs)
+        ])
 
     def __repr__(self) -> str:
         retval = f"{self.name} ({self.block}){self.hp}"

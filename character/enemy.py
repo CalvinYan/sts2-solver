@@ -4,6 +4,8 @@ from dataclasses import dataclass, field
 from random import randint
 from typing import ClassVar
 
+import numpy as np
+
 from character.core import Character
 from util.core import Action
 
@@ -16,8 +18,8 @@ class Intent:
     def next(self) -> Intent:
         pass
 
-    def to_vector(self) -> tuple:
-        return (self.id,)
+    def to_vector(self) -> np.ndarray:
+        return np.array([self.id])
 
     def __repr__(self) -> str:
         return type(self).__name__
@@ -54,10 +56,10 @@ class Enemy(Character):
     # - the id of the enemy's intent
     #
     # A nonexistent enemy (None) is encoded as all zeroes.
-    def to_vector(self) -> tuple:
+    def to_vector(self) -> np.ndarray:
         if self is None:
-            return (0,) + Character.to_vector(None) + (0,)
-        return (1,) + super().to_vector() + self.intent.to_vector()
+            return np.concatenate([[0], Character.to_vector(None), [0]])
+        return np.concatenate([[1], super().to_vector(), self.intent.to_vector()])
 
     def __repr__(self):
         return super().__repr__() + f" {self.intent}"

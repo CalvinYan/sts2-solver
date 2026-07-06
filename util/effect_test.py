@@ -1,3 +1,5 @@
+import numpy as np
+
 from character.core import Character
 from util.core import Action, Move
 from util.effect import Effect, Frail, Shrink, Strength, Thorns, Vulnerable, Weak
@@ -107,10 +109,10 @@ def test_effects_encode_to_vector():
             (0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0),
         ]
     ):
-        assert expected == effect.to_vector()
+        assert np.array_equal(expected, effect.to_vector())
 
 def test_effects_list_encodes_to_vector():
     effects = [Strength(power=2), Thorns(power=2), Vulnerable(duration=4), Weak(duration=1)]
     expected = (1, 2, 0, 1, 2, 0, 1, 0, 4, 1, 0, 1, 0, 0, 0, 0, 0, 0)
     got = Effect.effects_to_vector(effects)
-    assert expected == got
+    assert np.array_equal(expected, got)

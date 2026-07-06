@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+import numpy as np
+
 from util.core import Move
 
 @dataclass(repr=False)
@@ -28,13 +30,13 @@ class Effect:
 
         return True
 
-    def to_vector(self) -> tuple:
+    def to_vector(self) -> np.ndarray:
         # This positional encoding ensures that the vector of a list of effects is equal to the sum of the vectors of each effect
-        lst = [(0, 0, 0)] * (max(ID_TO_EFFECT.keys()) + 1)
+        arr = np.zeros((max(ID_TO_EFFECT.keys()) + 1, 3), dtype=int)
         if self is not None:
-            lst[self.id] = (1, self.power if self.power is not None else 0, self.duration if self.duration is not None else 0)
-        
-        return sum(lst, ())
+            arr[self.id] = (1, self.power if self.power is not None else 0, self.duration if self.duration is not None else 0)
+
+        return arr.flatten()
 
     def __hash__(self) -> int:
         return hash((self.id, self.power, self.duration))
@@ -48,9 +50,8 @@ class Effect:
 
         return retval
 
-    def effects_to_vector(effects: list[Effect]) -> tuple:
-        zeroes = Effect.to_vector(None)
-        return tuple(map(sum, zip(zeroes, *[effect.to_vector() for effect in effects])))
+    def effects_to_vector(effects: list[Effect]) -> np.ndarray:
+        return sum((effect.to_vector() for effect in effects), start=Effect.to_vector(None))
 
 @dataclass(repr=False, eq=False)
 class Strength(Effect):

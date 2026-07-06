@@ -1,6 +1,8 @@
 """Represents a single combat in Slay the Spire 2."""
 from dataclasses import dataclass
 
+import numpy as np
+
 from character.enemy import Enemy
 from character.player import Player
 
@@ -57,11 +59,13 @@ class Fight:
     # - The vector representation of the player
     # - For n in 1..5: the vector representation of the nth enemy, or all zeroes if it doesn't exist
     # - The number of the current turn
-    def to_vector(self) -> tuple:
+    def to_vector(self) -> np.ndarray:
         enemies_padded = self.enemies + [None] * (MAX_ENEMIES - len(self.enemies))
-        return self.player.to_vector() + \
-            sum(list(map(Enemy.to_vector, enemies_padded)), ()) + \
-            (self.turn,)
+        return np.concatenate([
+            self.player.to_vector(),
+            *[Enemy.to_vector(enemy) for enemy in enemies_padded],
+            [self.turn],
+        ])
 
     def __repr__(self) -> str:
         return f"\nTurn {self.turn}\nPlayer: {self.player}\nEnemies: {'\n'.join(repr(enemy) for enemy in self.enemies)}\n"

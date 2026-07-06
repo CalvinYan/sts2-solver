@@ -1,3 +1,5 @@
+import numpy as np
+
 from character.core import Character
 from util.core import Action
 from util.effect import Frail, Strength, Thorns, Vulnerable, Weak
@@ -12,7 +14,7 @@ def test_character_encodes_to_vector():
     expected = (0, 80, 0, 1, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0)
     got = c.to_vector()
 
-    assert expected == got
+    assert np.array_equal(expected, got)
 
 def test_character_with_no_debuffs_encodes_to_vector():
     c = Character(name="Test", id=0, hp=80)
@@ -20,7 +22,7 @@ def test_character_with_no_debuffs_encodes_to_vector():
     expected = (0, 80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
     got = c.to_vector()
 
-    assert expected == got
+    assert np.array_equal(expected, got)
 
 def test_character_with_negative_hp_encodes_to_vector():
     c = Character(name="Test", id=0, hp=-15)
@@ -28,13 +30,13 @@ def test_character_with_negative_hp_encodes_to_vector():
     expected = (0, -15, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
     got = c.to_vector()
 
-    assert expected == got
+    assert np.array_equal(expected, got)
 
 def test_no_character_encodes_to_zeroes():
     expected = (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
     got = Character.to_vector(None)
 
-    assert expected == got
+    assert np.array_equal(expected, got)
 
 def test_character_buffs_stack():
     c = Character(name="Test", id=0, hp=80)

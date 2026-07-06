@@ -1,5 +1,12 @@
+from __future__ import annotations
+
+import random
+
+from collections import Counter
 from dataclasses import dataclass, field
 from enum import Enum
+
+import numpy as np
 
 from util.core import Action
 from util.effect import Vulnerable
@@ -20,10 +27,10 @@ class Card:
     def playable(self, energy: int) -> bool:
         return energy >= self.cost
 
-    def to_vector(self) -> tuple:
-        base = [0] * (max(ID_TO_CARD.keys()) + 1)
+    def to_vector(self) -> np.ndarray:
+        base = np.zeros(max(ID_TO_CARD.keys()) + 1, dtype=int)
         base[self.id] = 1
-        return tuple(base)
+        return base
 
     def __repr__(self):
         return type(self).__name__
