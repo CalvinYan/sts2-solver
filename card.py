@@ -73,3 +73,34 @@ ID_TO_CARD = {
     Bash.id: Bash,
     AscendersBane.id: AscendersBane
 }
+
+@dataclass()
+class CardPile():
+    cards: Counter[Card] = field(default_factory=Counter)
+
+    def pop(self) -> Card:
+        if not self.cards:
+            return None
+        card = random.choice(list(self.cards.elements()))
+        self.cards[card] -= 1
+        if self.cards[card] == 0:
+            del self.cards[card]
+
+        return card
+
+    def draw(self, source: CardPile):
+        card = source.pop()
+        if card is not None:
+            self.cards[card] += 1
+
+    def to_vector(self) -> np.ndarray:
+        return sum([card.to_vector() * count for card, count in self.cards.items()], start=Card.to_vector(None))
+
+    def __add__(self, other: CardPile):
+        if type(other) is not CardPile:
+            raise TypeError("Cannot add card pile and", type(other))
+
+        return CardPile(cards=self.cards + other.cards)
+
+    def __repr__(self):
+        return list(self.cards.elements()).__repr__()
