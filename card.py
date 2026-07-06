@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import itertools
 import random
 
 from collections import Counter
 from dataclasses import dataclass, field
 from enum import Enum
+from fractions import Fraction
 
 import numpy as np
 
@@ -74,6 +76,7 @@ ID_TO_CARD = {
     AscendersBane.id: AscendersBane
 }
 
+# An abstraction for a pile of cards, such as the player's hand, draw pile, and discard pile.
 @dataclass()
 class CardPile():
     cards: Counter[Card] = field(default_factory=Counter)
@@ -93,9 +96,20 @@ class CardPile():
         if card is not None:
             self.cards[card] += 1
 
+    # Helper method for dp solve. Computes the probability distribution of drawing n cards from this pile.
+    def draw_probabilities(self, cards: int) -> list[CardPile, Fraction]:
+        if cards > self.cards.total():
+            raise ValueError(f"Cannot draw {cards} cards from a pile of {self.cards.total()}")
+
+        # A neat one-liner that determines each possible permutation and the number of ways to reach it
+        combinations = Counter(itertools.combinations(self.cards.elements(), cards))
+
+        # Convert tuples to CardPiles and counts to probabilities
+        return [(CardPile(cards=Counter(k)), Fraction(v, sum(combinations.values()))) for k, v in combinations.items()]
+
     def to_vector(self) -> np.ndarray:
         return sum([card.to_vector() * count for card, count in self.cards.items()], start=Card.to_vector(None))
-
+    
     def __add__(self, other: CardPile):
         if type(other) is not CardPile:
             raise TypeError("Cannot add card pile and", type(other))
