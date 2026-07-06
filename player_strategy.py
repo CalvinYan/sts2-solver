@@ -1,12 +1,13 @@
 """Simulates Floor 2 fights with user input, allowing you to compare how you stack up against algorithms"""
 from copy import deepcopy
 
+import readline # Enabling line editing in user input
+
 from card import Bash, Defend, Strike, Targeting
 from character.encounters import fuzzy_wurm_crawler, nibbit, seapunk, shrinker_beetle, sludge_spinner
 from collections import defaultdict
 from fight import Fight
 from character.player import Ironclad
-from util.core import Move
 
 CARDS = {
     "strike": Strike(),
@@ -18,31 +19,37 @@ CARDS = {
 def user_ironclad(fight: Fight) -> bool:
     player = fight.player
     
+    print(fight)
     print("Hand:", player.hand)
     print("Draw pile:", player.draw_pile)
     print("Discard pile:", player.discard_pile)
 
-    raw_input = input("To play a card in your hand, enter its name\nTo see the game state, type \"state\"\nTo end your turn, type \"end\"\n")
+    cmds = input("To play a card in your hand, enter its name\nTo end your turn, type \"end\"\nFor example: \"bash defend end\"\n").split()
 
     print()
-    
-    if raw_input == "end":
-        return True
-    elif raw_input == "state":
-        print(fight)
-        return False
-    else:
-        if raw_input not in CARDS:
-            print("Invalid card", raw_input)
-            return False # Prompt again
 
-        card = CARDS[raw_input]
+    for i, cmd in enumerate(cmds):
+        if cmd == "end":
+            if i != len(cmds) - 1:
+                print(f"The following cards would not be played after ending your turn: {cmds[i+1:]}")
+                return False
+        else:
+            if cmd not in CARDS:
+                print(f"Invalid command at position {i}: {cmd}")
+                return False # Prompt again
 
-        if player.hand[card] > 0 and card.playable(player.energy):
+    for i, cmd in enumerate(cmds):
+        if cmd == "end":
+            return True
+
+        card = CARDS[cmd]
+        if player.hand.cards[card] > 0 and card.playable(player.energy):
             player.play(card, target=(None if card.targeting == Targeting.NONE else fight.enemies[0]))
         else:
-            print("Card could not be played")
+            print(f"Could not play card {card} at position {i}")
             return False # Prompt again
+
+    return False
     
 
 
