@@ -29,7 +29,8 @@ class Card:
 
     def to_vector(self) -> np.ndarray:
         base = np.zeros(max(ID_TO_CARD.keys()) + 1, dtype=int)
-        base[self.id] = 1
+        if self is not None:
+            base[self.id] = 1
         return base
 
     def __repr__(self):
