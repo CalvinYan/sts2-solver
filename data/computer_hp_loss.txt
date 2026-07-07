@@ -1,0 +1,15 @@
+Average HP loss of Chad against fuzzy_wurm_crawler: -13.2702
+Average HP loss of Virgin against fuzzy_wurm_crawler: -8.0442
+Average HP loss of Balanced against fuzzy_wurm_crawler: -10.4658
+Average HP loss of Chad against nibbit: -16.4929
+Average HP loss of Virgin against nibbit: -8.3993
+Average HP loss of Balanced against nibbit: -9.4765
+Average HP loss of Chad against seapunk: -17.8556
+Average HP loss of Virgin against seapunk: -10.0114
+Average HP loss of Balanced against seapunk: -10.9942
+Average HP loss of Chad against shrinker_beetle: -12.1418
+Average HP loss of Virgin against shrinker_beetle: -7.667
+Average HP loss of Balanced against shrinker_beetle: -9.5986
+Average HP loss of Chad against sludge_spinner: -16.2215
+Average HP loss of Virgin against sludge_spinner: -11.4467
+Average HP loss of Balanced against sludge_spinner: -12.8243
