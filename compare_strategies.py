@@ -2,6 +2,9 @@
 A basic demo of the simulator. Provides several naive algorithms for Floor 2 fights and benchmarks them against
 different encounters.
 """
+import argparse
+import cProfile
+
 from copy import deepcopy
 
 from card import Bash, Defend, Strike
@@ -10,6 +13,7 @@ from collections import defaultdict
 from fight import Fight
 from character.player import Ironclad
 from util.core import Move
+from util.effect import Shrink, Vulnerable, Weak
 
 def incoming_damage(fight: Fight) -> int:
     dmg = 0
@@ -30,33 +34,29 @@ def incoming_damage(fight: Fight) -> int:
     return dmg
 
 def has_lethal(fight: Fight) -> bool:
+    player = fight.player
+    enemy = fight.enemies[0]
+    max_damage = 0
+
+    shrink_multiplier = 0.7 if Shrink() in player.debuffs else 1
+    vuln_multipler = 1.5 if any([debuff in enemy.debuffs for debuff in [Vulnerable(duration=1), Vulnerable(duration=2)]]) else 1
+    weak_multipler = 0.75 if Weak(duration=1) in player.debuffs else 1
+
     # Try playing only strikes
-    clone = deepcopy(fight.player)
-    clone.name = "Clone1"
-    clone.verbose = False
-    enemy = deepcopy(fight.enemies[0])
-    for _ in range(min(clone.hand.cards[Strike()], clone.energy)):
-        clone.play(Strike(), enemy)
-        if enemy.hp <= 0:
-            fight.enemies[0] = enemy
-            return True
+    num_strikes = min(player.hand.cards[Strike()], player.energy)
+    max_damage = num_strikes * int(6 * shrink_multiplier * vuln_multipler * weak_multipler)
 
     # Try playing bash first
-    clone = deepcopy(fight.player)
-    clone.name = "Clone2"
-    clone.verbose = False
-    enemy = deepcopy(fight.enemies[0])
-    if Bash() in clone.hand.cards:
-        clone.play(Bash(), enemy)
-        if enemy.hp <= 0:
-            fight.enemies[0] = enemy
-            return True
-        for _ in range(min(clone.hand.cards[Strike()], clone.energy)):
-            clone.play(Strike(), enemy)
-            if enemy.hp <= 0:
-                fight.enemies[0] = enemy
-                return True
+    if Bash() in player.hand.cards:
+        damage = int(8 * shrink_multiplier * vuln_multipler * weak_multipler)
+        num_strikes = min(player.hand.cards[Strike()], player.energy - 2)
+        damage += num_strikes * int(6 * shrink_multiplier * 1.5 * weak_multipler)
+        max_damage = max(max_damage, damage)
 
+    if enemy.block + enemy.hp <= max_damage:
+        fight.enemies[0].hp = 0
+        return True
+        
     return False
 
 # Attack, attack, attack! Prioritize cards in the following order: Bash, Strike, Defend. Spend all energy.
@@ -131,8 +131,7 @@ def balanced_ironclad(fight: Fight) -> bool:
 
     return player.energy == 0 or player.hand.cards.total() == 0  # End turn if no energy left or hand is empty
 
-if __name__ == "__main__":
-
+def main():
     hp_losses = defaultdict(lambda: defaultdict(list))
 
     for encounter in [fuzzy_wurm_crawler, nibbit, seapunk, shrinker_beetle, sludge_spinner]:
@@ -147,3 +146,13 @@ if __name__ == "__main__":
     for encounter in [fuzzy_wurm_crawler, nibbit, seapunk, shrinker_beetle, sludge_spinner]:
         for name in ["Chad", "Virgin", "Balanced"]:
             print(f"Average HP loss of {name} against {encounter.__name__}: {sum(hp_losses[name][encounter]) / len(hp_losses[name][encounter])}")
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--profile", action="store_true", help="Run main() under cProfile")
+    args = parser.parse_args()
+
+    if args.profile:
+        cProfile.run("main()", sort="cumulative")
+    else:
+        main()
