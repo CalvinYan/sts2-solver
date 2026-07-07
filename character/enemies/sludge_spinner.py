@@ -6,7 +6,7 @@ from character.enemy import Enemy, Intent
 from util.core import Action
 from util.effect import Strength, Weak
 
-@dataclass(repr=False)
+@dataclass
 class OilSpray(Intent):
     id: int = 0
     actions: list = field(default_factory=lambda: [Action(damage=9, debuffs=[Weak(duration=1)])])
@@ -17,7 +17,7 @@ class OilSpray(Intent):
     def next_intents(self) -> list[Intent, Fraction]:
         return [(Slam(), Fraction(1, 2)), (Rage(), Fraction(1, 2))]
 
-@dataclass(repr=False)
+@dataclass
 class Slam(Intent):
     id: int = 1
     actions: list = field(default_factory=lambda: [Action(damage=12)])
@@ -28,7 +28,7 @@ class Slam(Intent):
     def next_intents(self) -> list[Intent, Fraction]:
         return [(OilSpray(), Fraction(1, 2)), (Rage(), Fraction(1, 2))]
 
-@dataclass(repr=False)
+@dataclass
 class Rage(Intent):
     id: int = 2
     actions: list = field(default_factory=lambda: [Action(damage=7, buffs=[Strength(power=3)])])
@@ -39,7 +39,7 @@ class Rage(Intent):
     def next_intents(self) -> list[Intent, Fraction]:
         return [(OilSpray(), Fraction(1, 2)), (Slam(), Fraction(1, 2))]
 
-@dataclass(repr=False)
+@dataclass
 class SludgeSpinner(Enemy):
     id: int = 7
     intent: Intent = field(default_factory=OilSpray)

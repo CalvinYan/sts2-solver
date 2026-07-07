@@ -4,7 +4,7 @@ from character.enemy import Enemy, Intent
 from util.core import Action
 from util.effect import Strength
 
-@dataclass(repr=False)
+@dataclass
 class AcidGoop1(Intent):
     id: int = 0
     actions: list = field(default_factory=lambda: [Action(damage=6)])
@@ -12,7 +12,7 @@ class AcidGoop1(Intent):
     def next(self) -> Intent:
         return Inhale()
 
-@dataclass(repr=False)
+@dataclass
 class Inhale(Intent):
     id: int = 1
     actions: list = field(default_factory=lambda: [Action(buffs=[Strength(power=7)])])
@@ -20,7 +20,7 @@ class Inhale(Intent):
     def next(self) -> Intent:
         return AcidGoop2()
 
-@dataclass(repr=False)
+@dataclass
 class AcidGoop2(Intent):
     id: int = 2
     actions: list = field(default_factory=lambda: [Action(damage=6)])
@@ -28,7 +28,7 @@ class AcidGoop2(Intent):
     def next(self) -> Intent:
         return AcidGoop1()
 
-@dataclass(repr=False)
+@dataclass
 class FuzzyWurmCrawler(Enemy):
     id: int = 1
     intent: Intent = field(default_factory=AcidGoop1)

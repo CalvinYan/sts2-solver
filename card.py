@@ -18,7 +18,7 @@ class Targeting(Enum):
     ENEMY_SINGLE = 1
     ALLY_SINGLE = 2
 
-@dataclass(frozen=True, repr=False)
+@dataclass(frozen=True)
 class Card:
     """An action with an energy cost and a target type."""
     id: int
@@ -35,31 +35,31 @@ class Card:
             base[self.id] = 1
         return base
 
-    def __repr__(self):
+    def __str__(self):
         return type(self).__name__
 
-@dataclass(frozen=True, repr=False)
+@dataclass(frozen=True)
 class Strike(Card):
     id: int = 0
     action: Action = field(default_factory=lambda: Action(damage=6))
     cost: int = 1
     targeting: Targeting = Targeting.ENEMY_SINGLE
 
-@dataclass(frozen=True, repr=False)
+@dataclass(frozen=True)
 class Defend(Card):
     id: int = 1
     action: Action = field(default_factory=lambda: Action(block=5))
     cost: int = 1
     targeting: Targeting = Targeting.NONE
 
-@dataclass(frozen=True, repr=False)
+@dataclass(frozen=True)
 class Bash(Card):
     id: int = 2
     action: Action = field(default_factory=lambda: Action(damage=8, debuffs=[Vulnerable(duration=2)]))
     cost: int = 2
     targeting: Targeting = Targeting.ENEMY_SINGLE
 
-@dataclass(frozen=True, repr=False)
+@dataclass(frozen=True)
 class AscendersBane(Card):
     id: int = 11
     action: Action = field(default_factory=lambda: Action())
@@ -122,5 +122,5 @@ class CardPile():
 
         return CardPile(cards=self.cards - other.cards)
 
-    def __repr__(self):
-        return list(self.cards.elements()).__repr__()
+    def __str__(self):
+        return f"[{" ".join([str(card) for card in self.cards.elements()])}]"

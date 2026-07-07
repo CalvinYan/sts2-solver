@@ -11,7 +11,7 @@ import numpy as np
 from character.core import Character
 from util.core import Action
 
-@dataclass(repr=False)
+@dataclass
 class Intent:
     """A sequence of actions that an enemy will perform on a given turn, with a random variable determining its next intent."""
     id: int
@@ -27,10 +27,10 @@ class Intent:
     def to_vector(self) -> np.ndarray:
         return np.array([self.id])
 
-    def __repr__(self) -> str:
+    def __str__(self) -> str:
         return type(self).__name__
 
-@dataclass(kw_only=True, repr=False)
+@dataclass(kw_only=True)
 class Enemy(Character):
     """
     A hostile non-player character with an intent and a range of possible hp values.
@@ -81,5 +81,5 @@ class Enemy(Character):
             return np.concatenate([[0], Character.to_vector(None), [0]])
         return np.concatenate([[1], super().to_vector(), self.intent.to_vector()])
 
-    def __repr__(self):
-        return super().__repr__() + f" {self.intent}"
+    def __str__(self):
+        return super().__str__() + f" {self.intent}"

@@ -4,7 +4,7 @@ from character.enemy import Enemy, Intent
 from util.core import Action
 from util.effect import Shrink
 
-@dataclass(repr=False)
+@dataclass
 class Shrinker(Intent):
     id: int = 0
     actions: list = field(default_factory=lambda: [Action(debuffs=[Shrink()])])
@@ -12,7 +12,7 @@ class Shrinker(Intent):
     def next(self) -> Intent:
         return Chomp()
 
-@dataclass(repr=False)
+@dataclass
 class Chomp(Intent):
     id: int = 1
     actions: list = field(default_factory=lambda: [Action(damage=8)])
@@ -20,7 +20,7 @@ class Chomp(Intent):
     def next(self) -> Intent:
         return Stomp()
 
-@dataclass(repr=False)
+@dataclass
 class Stomp(Intent):
     id: int = 2
     actions: list = field(default_factory=lambda: [Action(damage=14)])
@@ -28,7 +28,7 @@ class Stomp(Intent):
     def next(self) -> Intent:
         return Chomp()
 
-@dataclass(repr=False)
+@dataclass
 class ShrinkerBeetle(Enemy):
     id: int = 6
     intent: Intent = field(default_factory=Shrinker)

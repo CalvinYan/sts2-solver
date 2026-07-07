@@ -8,7 +8,7 @@ from character.player import Player
 
 MAX_ENEMIES = 5
 
-@dataclass(repr=False)
+@dataclass
 class Fight:
     player: Player
     enemies: list[Enemy]
@@ -67,5 +67,5 @@ class Fight:
             [self.turn],
         ])
 
-    def __repr__(self) -> str:
-        return f"\nTurn {self.turn}\nPlayer: {self.player}\nEnemies: {'\n'.join(repr(enemy) for enemy in self.enemies)}\n"
+    def __str__(self) -> str:
+        return f"\nTurn {self.turn}\n\nEnemies:\n{'\n'.join(str(enemy) for enemy in self.enemies)}\n\nPlayer:\n{self.player}"

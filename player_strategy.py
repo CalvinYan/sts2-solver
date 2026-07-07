@@ -20,10 +20,6 @@ def user_ironclad(fight: Fight) -> bool:
     player = fight.player
     
     print(fight)
-    print("Hand:", player.hand)
-    print("Draw pile:", player.draw_pile)
-    print("Discard pile:", player.discard_pile)
-
     cmds = input("To play a card in your hand, enter its first letter\nTo end your turn, type \"e\"\nFor example: \"b d e\"\n").split()
 
     print()

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-@dataclass(repr=False)
+@dataclass
 class Action:
     """An atomic decision with a particular outcome."""
     damage: int = None
@@ -10,7 +10,7 @@ class Action:
     buffs: list["Effect"] = field(default_factory=list)
     debuffs: list["Effect"] = field(default_factory=list)
 
-    def __repr__(self) -> str:
+    def __str__(self) -> str:
         return f"Action({", ".join(f"{k}={v}" for k, v in self.__dict__.items() if v)})"
 
     def __hash__(self):

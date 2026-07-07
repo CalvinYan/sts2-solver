@@ -103,10 +103,10 @@ class Player(Character):
         
         return result
 
-    def __repr__(self) -> str:
-        return f"{super().__repr__()} Draw: {self.draw_pile} Hand: {self.hand} Discard: {self.discard_pile}"
+    def __str__(self) -> str:
+        return f"{super().__str__()}\nHand: {self.hand}\nDraw: {self.draw_pile}\nDiscard: {self.discard_pile}"
 
-@dataclass(repr=False)
+@dataclass
 class Ironclad(Player):
     id: int = 0
     draw_pile: CardPile = field(

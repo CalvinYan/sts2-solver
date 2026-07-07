@@ -6,7 +6,7 @@ import numpy as np
 
 from util.core import Move
 
-@dataclass(repr=False)
+@dataclass
 class Effect:
     """
     Any status effect on a character, be it a buff, debuff, or power. Contains some combination of a power (how potent
@@ -41,7 +41,7 @@ class Effect:
     def __hash__(self) -> int:
         return hash((self.id, self.power, self.duration))
 
-    def __repr__(self) -> str:
+    def __str__(self) -> str:
         retval = f"{type(self).__name__}"
         if self.power is not None:
             retval += f" {self.power}"

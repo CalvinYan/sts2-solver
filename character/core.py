@@ -8,7 +8,7 @@ import numpy as np
 from util.core import Action, Move
 from util.effect import Effect
 
-@dataclass(kw_only=True, repr=False)
+@dataclass(kw_only=True)
 class Character:
     """Represents a player or enemy in the fight."""
     name: str
@@ -110,7 +110,7 @@ class Character:
             Effect.effects_to_vector(self.debuffs)
         ])
 
-    def __repr__(self) -> str:
+    def __str__(self) -> str:
         retval = f"{self.name} ({self.block}){self.hp}"
         for buff in self.buffs:
             retval += f" ^({buff})"
