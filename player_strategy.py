@@ -10,9 +10,9 @@ from fight import Fight
 from character.player import Ironclad
 
 CARDS = {
-    "strike": Strike(),
-    "defend": Defend(),
-    "bash": Bash()
+    "s": Strike(),
+    "d": Defend(),
+    "b": Bash()
 }
 
 # Play your way! Displays your hand, draw pile, and discard pile, and reads the next decision from user input.
@@ -24,12 +24,12 @@ def user_ironclad(fight: Fight) -> bool:
     print("Draw pile:", player.draw_pile)
     print("Discard pile:", player.discard_pile)
 
-    cmds = input("To play a card in your hand, enter its name\nTo end your turn, type \"end\"\nFor example: \"bash defend end\"\n").split()
+    cmds = input("To play a card in your hand, enter its first letter\nTo end your turn, type \"e\"\nFor example: \"b d e\"\n").split()
 
     print()
 
     for i, cmd in enumerate(cmds):
-        if cmd == "end":
+        if cmd == "e":
             if i != len(cmds) - 1:
                 print(f"The following cards would not be played after ending your turn: {cmds[i+1:]}")
                 return False
@@ -39,7 +39,7 @@ def user_ironclad(fight: Fight) -> bool:
                 return False # Prompt again
 
     for i, cmd in enumerate(cmds):
-        if cmd == "end":
+        if cmd == "e":
             return True
 
         card = CARDS[cmd]
