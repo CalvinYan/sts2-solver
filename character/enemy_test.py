@@ -1,7 +1,10 @@
 import numpy as np
 
+from fractions import Fraction
+
 from character.enemies import FuzzyWurmCrawler, Nibbit, SludgeSpinner
 from character.enemies.fuzzy_wurm_crawler import AcidGoop1, Inhale, AcidGoop2
+from character.enemies.nibbit import HesitantSlice
 from character.enemy import Enemy
 
 def test_enemy_encodes_to_tuple():
@@ -47,3 +50,10 @@ def test_sludge_spinner_doesnt_repeat_moves():
 
         last_intent = enemy.intent
         enemy.resolve_end_of_turn(None)
+
+def test_enemy_next_intents():
+    nibbit = Nibbit(name="Test")
+    expected = (HesitantSlice(), Fraction(1, 1))
+    got = nibbit.next_states()
+
+    assert expected == got

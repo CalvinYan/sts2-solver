@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+from copy import deepcopy
 from dataclasses import dataclass, field
+from fractions import Fraction
 from random import randint
 from typing import ClassVar
 
@@ -17,6 +19,10 @@ class Intent:
 
     def next(self) -> Intent:
         pass
+
+    # Helper method for dp solve. Returns the probability distribtion of the next intent after this one
+    def next_intents(self) -> list[Intent, Fraction]:
+        return [(self.next(), Fraction(1, 1))]
 
     def to_vector(self) -> np.ndarray:
         return np.array([self.id])
@@ -47,6 +53,20 @@ class Enemy(Character):
     def resolve_end_of_turn(self, fight: "Fight") -> None:
         super().resolve_end_of_turn(fight)
         self.intent = self.intent.next()
+
+    # Helper method for dp solve.
+    # Computes the probability distribution of an enemy's state during the start of the player's next turn.
+    # For our case, the only source of randomness is the enemy's next intent, so this just returns the probability
+    # distrubtion of next intents.
+    def next_states(self) -> list[Enemy, Fraction]:
+        result = []
+        for intent, probability in self.intent.next_intents():
+            clone = deepcopy(self)
+            # TODO: I dislike this way of copying objects for next states... using setter methods would be much more Pythonic
+            clone.intent = intent
+            result.append((clone, probability))
+            
+        return result
     
     # Vector representation of an Enemy for interpretation by learning models.
     # The representation is defined in the following way:

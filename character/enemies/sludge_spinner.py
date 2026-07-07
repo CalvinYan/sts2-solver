@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from fractions import Fraction
 from random import random
 
 from character.enemy import Enemy, Intent
@@ -13,6 +14,9 @@ class OilSpray(Intent):
     def next(self) -> Intent:
         return Slam() if random() < 0.5 else Rage()
 
+    def next_intents(self) -> list[Intent, Fraction]:
+        return [(Slam(), Fraction(1, 2)), (Rage(), Fraction(1, 2))]
+
 @dataclass(repr=False)
 class Slam(Intent):
     id: int = 1
@@ -21,6 +25,9 @@ class Slam(Intent):
     def next(self) -> Intent:
         return OilSpray() if random() < 0.5 else Rage()
 
+    def next_intents(self) -> list[Intent, Fraction]:
+        return [(OilSpray(), Fraction(1, 2)), (Rage(), Fraction(1, 2))]
+
 @dataclass(repr=False)
 class Rage(Intent):
     id: int = 2
@@ -28,6 +35,9 @@ class Rage(Intent):
 
     def next(self) -> Intent:
         return OilSpray() if random() < 0.5 else Slam()
+
+    def next_intents(self) -> list[Intent, Fraction]:
+        return [(OilSpray(), Fraction(1, 2)), (Slam(), Fraction(1, 2))]
 
 @dataclass(repr=False)
 class SludgeSpinner(Enemy):
