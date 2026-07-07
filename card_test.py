@@ -84,7 +84,7 @@ def test_card_pile_draws_distribution():
         (CardPile(cards=Counter({Defend(): 3, Bash(): 1, AscendersBane(): 1})), Fraction(4, 462)),
     ]
 
-    got = deck.draw_probabilities(5)
+    got = deck.next_hands(5)
 
     assert len(got) == len(list(expected))
 

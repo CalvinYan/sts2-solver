@@ -97,7 +97,7 @@ class CardPile():
             self.cards[card] += 1
 
     # Helper method for dp solve. Computes the probability distribution of drawing n cards from this pile.
-    def draw_probabilities(self, cards: int) -> list[CardPile, Fraction]:
+    def next_hands(self, cards: int) -> list[CardPile, Fraction]:
         if cards > self.cards.total():
             raise ValueError(f"Cannot draw {cards} cards from a pile of {self.cards.total()}")
 
@@ -115,6 +115,12 @@ class CardPile():
             raise TypeError("Cannot add card pile and", type(other))
 
         return CardPile(cards=self.cards + other.cards)
+
+    def __sub__(self, other: CardPile):
+        if type(other) is not CardPile:
+            raise TypeError("Cannot subtract card pile and", type(other))
+
+        return CardPile(cards=self.cards - other.cards)
 
     def __repr__(self):
         return list(self.cards.elements()).__repr__()

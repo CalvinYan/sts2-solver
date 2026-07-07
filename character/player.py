@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 from collections import Counter
+from copy import deepcopy
 from dataclasses import dataclass, field
+from fractions import Fraction
 from typing import Callable
 
 from card import AscendersBane, Bash, Card, CardPile, Defend, Strike
@@ -36,7 +38,7 @@ class Player(Character):
 
     def play(self, card: Card, target: Character = None) -> None:
         if self.hand.cards[card] == 0:
-            print("Card not in hand")
+            print(f"{self.name} tried to play {card} but hand is: {self.hand}")
             return
 
         self.act(target=target, action=card.action)
@@ -65,6 +67,44 @@ class Player(Character):
 
         self.discard_pile += self.hand
         self.hand = CardPile()
+
+    # Helper method for dp solve - computes all possible next states of the player and their probabilities.
+    # For our purposes, this calculation is only nontrivial when the player is drawing cards, so this method
+    # primarily calculates draw order probabilities.
+    def next_states(self) -> list[tuple[Player, Fraction]]:
+        clone = deepcopy(self)
+        clone.resolve_end_of_turn(None)
+
+        cards_drawn = 5
+        result = []
+
+        if cards_drawn > clone.draw_pile.cards.total():
+            reshuffle_draws = clone.discard_pile.next_hands(
+                cards=min(clone.discard_pile.cards.total(), cards_drawn - self.draw_pile.cards.total())
+            )
+
+            for draw, probability in reshuffle_draws:
+                future_player = deepcopy(clone)
+                future_player.draw_pile = clone.discard_pile - draw
+                future_player.hand = clone.draw_pile + draw
+                future_player.discard_pile = CardPile()
+
+                result.append((future_player, probability))
+        else:
+            hands = clone.draw_pile.next_hands(cards_drawn)
+
+            for hand, probability in hands:
+                future_player = deepcopy(clone)
+                future_player.draw_pile = clone.draw_pile - hand
+                future_player.hand = hand
+                future_player.discard_pile = clone.discard_pile
+
+                result.append((future_player, probability))
+        
+        return result
+
+    def __repr__(self) -> str:
+        return f"{super().__repr__()} Draw: {self.draw_pile} Hand: {self.hand} Discard: {self.discard_pile}"
 
 @dataclass(repr=False)
 class Ironclad(Player):
