@@ -6,6 +6,7 @@ import readline # Enabling line editing in user input
 from card import Bash, Defend, Strike, Targeting
 from character.encounters import fuzzy_wurm_crawler, nibbit, seapunk, shrinker_beetle, sludge_spinner
 from collections import defaultdict
+from compare_strategies import has_lethal
 from fight import Fight
 from character.player import Ironclad
 
@@ -20,6 +21,11 @@ def user_ironclad(fight: Fight) -> bool:
     player = fight.player
     
     print(fight)
+    if has_lethal(fight):
+        print("YOU HAVE LETHAL!")
+        fight.enemies[0].hp == 0
+        return True
+
     cmds = input("To play a card in your hand, enter its first letter\nTo end your turn, type \"e\"\nFor example: \"b d e\"\n").split()
 
     print()
@@ -45,7 +51,7 @@ def user_ironclad(fight: Fight) -> bool:
             print(f"Could not play card {card} at position {i}")
             return False # Prompt again
 
-    return False
+    return player.energy == 0
     
 
 
