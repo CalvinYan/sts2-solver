@@ -2,7 +2,7 @@ import numpy as np
 
 from character.enemies import Nibbit
 from character.player import Ironclad
-from fight import Fight, MAX_ENEMIES
+from fight import MAX_ENEMIES, Fight
 from util.core import Action
 from util.effect import Vulnerable
 

@@ -2,8 +2,8 @@ from collections import Counter
 from fractions import Fraction
 from math import comb
 
-from character.player import Ironclad
 from card import Bash, CardPile, Defend, Strike
+from character.player import Ironclad
 
 
 def test_player_next_states_reshuffle():

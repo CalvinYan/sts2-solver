@@ -1,8 +1,7 @@
 """Simulates Floor 2 fights with user input, allowing you to compare how you stack up against algorithms"""
 
-from copy import deepcopy
-
 import readline  # Enabling line editing in user input
+from collections import defaultdict
 
 from card import Bash, Defend, Strike, Targeting
 from character.encounters import (
@@ -12,10 +11,9 @@ from character.encounters import (
     shrinker_beetle,
     sludge_spinner,
 )
-from collections import defaultdict
+from character.player import Ironclad
 from compare_strategies import has_lethal
 from fight import Fight
-from character.player import Ironclad
 
 CARDS = {"s": Strike(), "d": Defend(), "b": Bash()}
 

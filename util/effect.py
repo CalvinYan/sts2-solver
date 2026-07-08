@@ -24,7 +24,7 @@ class Effect:
 
     # Stack this effect with another one of the same class
     def stack(self, other: Effect) -> bool:
-        if type(self) != type(other):
+        if type(self) is not type(other):
             return False
         if self.power is not None and other.power is not None:
             self.power += other.power

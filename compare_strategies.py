@@ -5,7 +5,7 @@ different encounters.
 
 import argparse
 import cProfile
-
+from collections import defaultdict
 from copy import deepcopy
 
 from card import Bash, Defend, Strike
@@ -16,9 +16,8 @@ from character.encounters import (
     shrinker_beetle,
     sludge_spinner,
 )
-from collections import defaultdict
-from fight import Fight
 from character.player import Ironclad
+from fight import Fight
 from util.core import Move
 from util.effect import Shrink, Vulnerable, Weak
 

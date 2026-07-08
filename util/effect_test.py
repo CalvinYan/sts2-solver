@@ -111,7 +111,7 @@ def test_strength_only_affects_attacks():
     action = Action(block=5)
     Strength(power=100).resolve(Move(action, None, None), False)
 
-    assert action.damage == None
+    assert action.damage is None
 
 
 def test_effects_encode_to_vector():

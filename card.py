@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import itertools
 import random
-
 from collections import Counter
 from dataclasses import dataclass, field
 from enum import Enum

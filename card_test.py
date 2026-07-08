@@ -1,9 +1,9 @@
-import numpy as np
-
 from collections import Counter
 from fractions import Fraction
 
-from card import CardPile, Strike, Defend, Bash, AscendersBane
+import numpy as np
+
+from card import AscendersBane, Bash, CardPile, Defend, Strike
 
 
 def test_card_encodes_to_vector():
