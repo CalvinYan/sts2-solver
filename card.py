@@ -22,16 +22,16 @@ class Targeting(Enum):
 class Card:
     """An action with an energy cost and a target type."""
     id: int
-    cost: int
+    cost: int | None
     targeting: Targeting
 
     def action(self) -> Action:
-        pass
+        return Action()
 
     def playable(self, energy: int) -> bool:
-        return energy >= self.cost
+        return self.cost is not None and energy >= self.cost
 
-    def to_vector(self) -> np.ndarray:
+    def to_vector(self: Card | None) -> np.ndarray:
         base = np.zeros(max(ID_TO_CARD.keys()) + 1, dtype=int)
         if self is not None:
             base[self.id] = 1
@@ -73,11 +73,8 @@ class Bash(Card):
 @dataclass(frozen=True)
 class AscendersBane(Card):
     id: int = 11
-    cost: int = None
+    cost: None = None
     targeting: Targeting = Targeting.NONE
-
-    def playable(self, energy: int) -> bool:
-        return False
 
 ID_TO_CARD = {
     Strike.id: Strike,
@@ -91,7 +88,7 @@ ID_TO_CARD = {
 class CardPile():
     cards: Counter[Card] = field(default_factory=Counter)
 
-    def pop(self) -> Card:
+    def pop(self) -> Card | None:
         if not self.cards:
             return None
         card = random.choice(list(self.cards.elements()))
@@ -107,7 +104,7 @@ class CardPile():
             self.cards[card] += 1
 
     # Helper method for dp solve. Computes the probability distribution of drawing n cards from this pile.
-    def next_hands(self, cards: int) -> list[CardPile, Fraction]:
+    def next_hands(self, cards: int) -> list[tuple[CardPile, Fraction]]:
         if cards > self.cards.total():
             raise ValueError(f"Cannot draw {cards} cards from a pile of {self.cards.total()}")
 

@@ -4,7 +4,6 @@ from copy import deepcopy
 from dataclasses import dataclass, field
 from fractions import Fraction
 from random import randint
-from typing import ClassVar
 
 import numpy as np
 
@@ -20,10 +19,10 @@ class Intent:
         return list()
 
     def next(self) -> Intent:
-        pass
+        return Intent(id=0)
 
     # Helper method for dp solve. Returns the probability distribtion of the next intent after this one
-    def next_intents(self) -> list[Intent, Fraction]:
+    def next_intents(self) -> list[tuple[Intent, Fraction]]:
         return [(self.next(), Fraction(1, 1))]
 
     def to_vector(self) -> np.ndarray:
@@ -41,21 +40,22 @@ class Enemy(Character):
     A hostile non-player character with an intent and a range of possible hp values.
     Each fight starts with one or more enemies, and ends if none remain with more than 0 HP.
     """
-    hp: int = None
+    # TODO: Find a neater way to do this
+    hp: int = 0
     intent: Intent
-    min_hp: ClassVar[int]
-    max_hp: ClassVar[int]
+    min_hp: int
+    max_hp: int
 
     def __post_init__(self):
-        if self.hp is None:
+        if self.hp == 0:
             self.hp = randint(self.min_hp, self.max_hp)
 
-    def resolve_turn(self, fight: "Fight") -> None:
+    def resolve_turn(self, fight: "Fight") -> bool: # type: ignore
         for action in self.intent.actions():
             self.act(target=fight.player, action=action) # Doesn't handle dying mid-turn but that will never happen Floor 2
         return True
 
-    def resolve_end_of_turn(self, fight: "Fight") -> None:
+    def resolve_end_of_turn(self, fight: "Fight") -> None: # type: ignore
         super().resolve_end_of_turn(fight)
         self.intent = self.intent.next()
 
@@ -63,7 +63,7 @@ class Enemy(Character):
     # Computes the probability distribution of an enemy's state during the start of the player's next turn.
     # For our case, the only source of randomness is the enemy's next intent, so this just returns the probability
     # distrubtion of next intents.
-    def next_states(self) -> list[Enemy, Fraction]:
+    def next_states(self) -> list[tuple[Enemy, Fraction]]:
         result = []
         for intent, probability in self.intent.next_intents():
             clone = deepcopy(self)
@@ -81,10 +81,11 @@ class Enemy(Character):
     # - the id of the enemy's intent
     #
     # A nonexistent enemy (None) is encoded as all zeroes.
-    def to_vector(self) -> np.ndarray:
+    # TODO: This signature override is disgusting. Find another way to do it
+    def to_vector(self: Enemy | None) -> np.ndarray:
         if self is None:
             return np.concatenate([[0], Character.to_vector(None), [0]])
-        return np.concatenate([[1], super().to_vector(), self.intent.to_vector()])
+        return np.concatenate([[1], super(Enemy, self).to_vector(), self.intent.to_vector()])
 
     def __str__(self):
         return super().__str__() + f" {self.intent}"

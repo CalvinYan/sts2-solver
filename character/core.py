@@ -40,15 +40,15 @@ class Character:
                 self.debuffs.append(debuff_incoming)
 
     # Resolve all start-of-turn effects for the character.
-    def resolve_start_of_turn(self, fight: "Fight") -> None:
+    def resolve_start_of_turn(self, fight: "Fight") -> None: # type: ignore
         self.block = 0
 
     # Resolve the character's turn. Returns whether or not the character has ended their turn.
-    def resolve_turn(self, fight: "Fight") -> bool:
+    def resolve_turn(self, fight: "Fight") -> bool: # type: ignore
         return True
 
     # Resolve all end-of-turn effects for the character.
-    def resolve_end_of_turn(self, fight: "Fight") -> None:
+    def resolve_end_of_turn(self, fight: "Fight") -> None: # type: ignore
         new_buffs = []
         new_debuffs = []
         for buff in self.buffs:
@@ -67,7 +67,7 @@ class Character:
 
         self.debuffs = new_debuffs
 
-    def act(self, target: Character, action: Action) -> None:
+    def act(self, target: Character | None, action: Action) -> None:
         if self.verbose:
             if target:
                 print(f"{self.name} uses {action} on {target.name}")
@@ -97,7 +97,7 @@ class Character:
 
         self.receive_buffs(move.action.buffs)
 
-    def to_vector(self) -> np.ndarray:
+    def to_vector(self: Character | None) -> np.ndarray:
         if self is None:
             return np.concatenate([
                 [0, 0, 0],

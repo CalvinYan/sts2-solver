@@ -29,7 +29,7 @@ def incoming_damage(fight: Fight) -> int:
                 buff.resolve(move, is_target=True)
             for debuff in fight.player.debuffs:
                 debuff.resolve(move, is_target=True)
-            dmg += new_action.damage
+            dmg += new_action.damage # type: ignore
 
     return dmg
 

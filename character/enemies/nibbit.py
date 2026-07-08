@@ -38,5 +38,5 @@ class Hiss(Intent):
 class Nibbit(Enemy):
     id: int = 4
     intent: Intent = field(default_factory=Butt)
-    min_hp = 44
-    max_hp = 48
+    min_hp: int = 44
+    max_hp: int = 48

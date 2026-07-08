@@ -21,7 +21,7 @@ class Player(Character):
     draw_pile: CardPile
     discard_pile: CardPile = field(default_factory=CardPile)
 
-    player_turn_callback: Callable[["Fight"], bool]
+    player_turn_callback: Callable[["Fight"], bool] # type: ignore
 
     def draw(self, cards: int) -> None:
         for _ in range(cards):
@@ -35,14 +35,18 @@ class Player(Character):
 
             self.hand.draw(self.draw_pile)
 
-    def play(self, card: Card, target: Character = None) -> None:
+    def play(self, card: Card, target: Character | None = None) -> None:
         if self.hand.cards[card] == 0:
             print(f"{self.name} tried to play {card} but hand is: {self.hand}")
             return
 
+        if not card.playable(self.energy):
+            print(f"{self.name} tried to play {card} but card is not playable")
+            return
+
         self.act(target=target, action=card.action())
 
-        self.energy -= card.cost
+        self.energy -= card.cost # type: ignore
 
         self.hand.cards[card] -= 1
         if self.hand.cards[card] == 0:
@@ -50,15 +54,15 @@ class Player(Character):
 
         self.discard_pile.cards[card] += 1
 
-    def resolve_start_of_turn(self, fight: "Fight") -> None:
+    def resolve_start_of_turn(self, fight: "Fight") -> None: # type: ignore
         super().resolve_start_of_turn(fight)
         self.energy = 3
         self.draw(5)
 
-    def resolve_turn(self, fight: "Fight") -> bool:
+    def resolve_turn(self, fight: "Fight") -> bool: # type: ignore
         return self.player_turn_callback(fight)
 
-    def resolve_end_of_turn(self, fight: "Fight") -> None:
+    def resolve_end_of_turn(self, fight: "Fight") -> None: # type: ignore
         super().resolve_end_of_turn(fight)
         
         if self.hand.cards[AscendersBane()] > 0:

@@ -38,5 +38,5 @@ class Stomp(Intent):
 class ShrinkerBeetle(Enemy):
     id: int = 6
     intent: Intent = field(default_factory=Shrinker)
-    min_hp = 40
-    max_hp = 42
+    min_hp: int = 40
+    max_hp: int = 42

@@ -38,5 +38,5 @@ class BubbleBurp(Intent):
 class Seapunk(Enemy):
     id: int = 5
     intent: Intent = field(default_factory=SeaKick)
-    min_hp = 47
-    max_hp = 49
+    min_hp: int = 47
+    max_hp: int = 49
