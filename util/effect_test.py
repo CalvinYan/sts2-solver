@@ -124,10 +124,10 @@ def test_effects_encode_to_vector():
     for effect, expected in zip(
         effects,
         [
-            (1, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
-            (0, 0, 0, 1, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
-            (0, 0, 0, 0, 0, 0, 1, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0),
-            (0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0),
+            (2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+            (0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+            (0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0),
+            (0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0),
         ],
     ):
         assert np.array_equal(expected, effect.to_vector())
@@ -140,6 +140,6 @@ def test_effects_list_encodes_to_vector():
         Vulnerable(duration=4),
         Weak(duration=1),
     ]
-    expected = (1, 2, 0, 1, 2, 0, 1, 0, 4, 1, 0, 1, 0, 0, 0, 0, 0, 0)
+    expected = (2, 0, 2, 0, 0, 4, 0, 1, 0, 0, 0, 0)
     got = Effect.effects_to_vector(effects)
     assert np.array_equal(expected, got)

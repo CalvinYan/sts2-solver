@@ -33,15 +33,13 @@ class Effect:
 
         return True
 
-    def to_vector(self: Effect | None) -> np.ndarray:
+    def to_vector(self: Effect) -> np.ndarray:
         # This positional encoding ensures that the vector of a list of effects is equal to the sum of the vectors of each effect
-        arr = np.zeros((max(ID_TO_EFFECT.keys()) + 1, 3), dtype=int)
-        if self is not None:
-            arr[self.id] = (
-                1,
-                self.power if self.power is not None else 0,
-                self.duration if self.duration is not None else 0,
-            )
+        arr = np.zeros((max(ID_TO_EFFECT.keys()) + 1, 2), dtype=int)
+        arr[self.id] = (
+            self.power if self.power is not None else 0,
+            self.duration if self.duration is not None else 0,
+        )
 
         return arr.flatten()
 
@@ -59,7 +57,7 @@ class Effect:
 
     @staticmethod
     def effects_to_vector(effects: list[Effect]) -> np.ndarray:
-        return sum((effect.to_vector() for effect in effects), start=Effect.to_vector(None))
+        return sum((effect.to_vector() for effect in effects), start=Effect(id=0).to_vector())
 
 
 @dataclass(eq=False, kw_only=True)
