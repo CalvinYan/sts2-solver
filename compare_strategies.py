@@ -17,7 +17,7 @@ from util.effect import Shrink, Vulnerable, Weak
 
 def incoming_damage(fight: Fight) -> int:
     dmg = 0
-    for action in fight.enemies[0].intent.actions:
+    for action in fight.enemies[0].intent.actions():
         if action.damage:
             new_action = deepcopy(action)
             move = Move(new_action, actor=fight.enemies[0], target=fight.player)

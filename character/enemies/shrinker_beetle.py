@@ -7,7 +7,9 @@ from util.effect import Shrink
 @dataclass(frozen=True)
 class Shrinker(Intent):
     id: int = 0
-    actions: list = field(default_factory=lambda: [Action(debuffs=[Shrink()])])
+
+    def actions(self) -> list[Action]:
+        return [Action(debuffs=[Shrink()])]
 
     def next(self) -> Intent:
         return Chomp()
@@ -15,7 +17,9 @@ class Shrinker(Intent):
 @dataclass(frozen=True)
 class Chomp(Intent):
     id: int = 1
-    actions: list = field(default_factory=lambda: [Action(damage=8)])
+
+    def actions(self) -> list[Action]:
+        return [Action(damage=8)]
 
     def next(self) -> Intent:
         return Stomp()
@@ -23,7 +27,9 @@ class Chomp(Intent):
 @dataclass(frozen=True)
 class Stomp(Intent):
     id: int = 2
-    actions: list = field(default_factory=lambda: [Action(damage=14)])
+
+    def actions(self) -> list[Action]:
+        return [Action(damage=14)]
 
     def next(self) -> Intent:
         return Chomp()

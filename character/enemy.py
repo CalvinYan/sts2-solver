@@ -15,7 +15,9 @@ from util.core import Action
 class Intent:
     """A sequence of actions that an enemy will perform on a given turn, with a random variable determining its next intent."""
     id: int
-    actions: list[Action]
+
+    def actions(self) -> list[Action]:
+        return list()
 
     def next(self) -> Intent:
         pass
@@ -49,7 +51,7 @@ class Enemy(Character):
         self.hp = randint(self.min_hp, self.max_hp)
 
     def resolve_turn(self, fight: "Fight") -> None:
-        for action in self.intent.actions:
+        for action in self.intent.actions():
             self.act(target=fight.player, action=action) # Doesn't handle dying mid-turn but that will never happen Floor 2
         return True
 

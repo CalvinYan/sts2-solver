@@ -9,7 +9,9 @@ from util.effect import Strength, Weak
 @dataclass(frozen=True)
 class OilSpray(Intent):
     id: int = 0
-    actions: list = field(default_factory=lambda: [Action(damage=9, debuffs=[Weak(duration=1)])])
+
+    def actions(self) -> list[Action]:
+        return [Action(damage=9, debuffs=[Weak(duration=1)])]
 
     def next(self) -> Intent:
         return Slam() if random() < 0.5 else Rage()
@@ -20,7 +22,9 @@ class OilSpray(Intent):
 @dataclass(frozen=True)
 class Slam(Intent):
     id: int = 1
-    actions: list = field(default_factory=lambda: [Action(damage=12)])
+
+    def actions(self) -> list[Action]:
+        return [Action(damage=12)]
 
     def next(self) -> Intent:
         return OilSpray() if random() < 0.5 else Rage()
@@ -31,7 +35,9 @@ class Slam(Intent):
 @dataclass(frozen=True)
 class Rage(Intent):
     id: int = 2
-    actions: list = field(default_factory=lambda: [Action(damage=7, buffs=[Strength(power=3)])])
+
+    def actions(self) -> list[Action]:
+        return [Action(damage=7, buffs=[Strength(power=3)])]
 
     def next(self) -> Intent:
         return OilSpray() if random() < 0.5 else Slam()
