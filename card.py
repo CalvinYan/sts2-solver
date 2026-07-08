@@ -1,3 +1,5 @@
+"""Contains data abstractions for cards, piles of cards, and the library of cards itself."""
+
 from __future__ import annotations
 
 import itertools

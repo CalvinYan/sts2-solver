@@ -1,3 +1,5 @@
+"""Defines the possible encounters for the first fight of the run."""
+
 from character.enemies import (
     FuzzyWurmCrawler,
     Nibbit,

@@ -1,3 +1,5 @@
+"""Shared logic for all characters."""
+
 from __future__ import annotations
 
 from copy import deepcopy

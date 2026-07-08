@@ -1,3 +1,5 @@
+"""Defines player behavior and the five player classes."""
+
 from __future__ import annotations
 
 from collections import Counter

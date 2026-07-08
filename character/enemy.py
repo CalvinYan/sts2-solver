@@ -1,3 +1,5 @@
+"""Defines enemy behavior and the enemy-specific concept of intents."""
+
 from __future__ import annotations
 
 from copy import deepcopy
