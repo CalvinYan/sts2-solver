@@ -8,6 +8,11 @@ import numpy as np
 from util.core import Action, Move
 from util.effect import Effect
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from fight import Fight
+
 
 @dataclass(kw_only=True)
 class Character:
@@ -42,15 +47,15 @@ class Character:
                 self.debuffs.append(debuff_incoming)
 
     # Resolve all start-of-turn effects for the character.
-    def resolve_start_of_turn(self, fight: "Fight") -> None:  # type: ignore
+    def resolve_start_of_turn(self, fight: Fight) -> None:
         self.block = 0
 
     # Resolve the character's turn. Returns whether or not the character has ended their turn.
-    def resolve_turn(self, fight: "Fight") -> bool:  # type: ignore
+    def resolve_turn(self, fight: Fight) -> bool:
         return True
 
     # Resolve all end-of-turn effects for the character.
-    def resolve_end_of_turn(self, fight: "Fight") -> None:  # type: ignore
+    def resolve_end_of_turn(self, fight: Fight) -> None:
         new_buffs = []
         new_debuffs = []
         for buff in self.buffs:

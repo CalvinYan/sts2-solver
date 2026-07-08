@@ -9,6 +9,11 @@ from typing import Callable
 from card import AscendersBane, Bash, Card, CardPile, Defend, Strike
 from character.core import Character
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from fight import Fight
+
 
 @dataclass(kw_only=True, repr=False)
 class Player(Character):
@@ -23,7 +28,7 @@ class Player(Character):
     draw_pile: CardPile
     discard_pile: CardPile = field(default_factory=CardPile)
 
-    player_turn_callback: Callable[["Fight"], bool]  # type: ignore
+    player_turn_callback: Callable[[Fight], bool]
 
     def draw(self, cards: int) -> None:
         for _ in range(cards):
@@ -56,15 +61,15 @@ class Player(Character):
 
         self.discard_pile.cards[card] += 1
 
-    def resolve_start_of_turn(self, fight: "Fight") -> None:  # type: ignore
+    def resolve_start_of_turn(self, fight: Fight) -> None:
         super().resolve_start_of_turn(fight)
         self.energy = 3
         self.draw(5)
 
-    def resolve_turn(self, fight: "Fight") -> bool:  # type: ignore
+    def resolve_turn(self, fight: Fight) -> bool:
         return self.player_turn_callback(fight)
 
-    def resolve_end_of_turn(self, fight: "Fight") -> None:  # type: ignore
+    def resolve_end_of_turn(self, fight: Fight) -> None:
         super().resolve_end_of_turn(fight)
 
         if self.hand.cards[AscendersBane()] > 0:

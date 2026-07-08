@@ -10,6 +10,11 @@ import numpy as np
 from character.core import Character
 from util.core import Action
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from fight import Fight
+
 
 @dataclass(frozen=True)
 class Intent:
@@ -54,14 +59,14 @@ class Enemy(Character):
         if self.hp == 0:
             self.hp = randint(self.min_hp, self.max_hp)
 
-    def resolve_turn(self, fight: "Fight") -> bool:  # type: ignore
+    def resolve_turn(self, fight: Fight) -> bool:
         for action in self.intent.actions():
             self.act(
                 target=fight.player, action=action
             )  # Doesn't handle dying mid-turn but that will never happen Floor 2
         return True
 
-    def resolve_end_of_turn(self, fight: "Fight") -> None:  # type: ignore
+    def resolve_end_of_turn(self, fight: Fight) -> None:
         super().resolve_end_of_turn(fight)
         self.intent = self.intent.next()
 
