@@ -25,7 +25,6 @@ def user_ironclad(fight: Fight) -> bool:
     print(fight)
     if has_lethal(fight):
         print("YOU HAVE LETHAL!")
-        fight.enemies[0].hp == 0
         return True
 
     cmds = input(
