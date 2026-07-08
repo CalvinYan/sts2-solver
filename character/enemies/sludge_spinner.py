@@ -6,7 +6,7 @@ from character.enemy import Enemy, Intent
 from util.core import Action
 from util.effect import Strength, Weak
 
-@dataclass
+@dataclass(frozen=True)
 class OilSpray(Intent):
     id: int = 0
     actions: list = field(default_factory=lambda: [Action(damage=9, debuffs=[Weak(duration=1)])])
@@ -17,7 +17,7 @@ class OilSpray(Intent):
     def next_intents(self) -> list[Intent, Fraction]:
         return [(Slam(), Fraction(1, 2)), (Rage(), Fraction(1, 2))]
 
-@dataclass
+@dataclass(frozen=True)
 class Slam(Intent):
     id: int = 1
     actions: list = field(default_factory=lambda: [Action(damage=12)])
@@ -28,7 +28,7 @@ class Slam(Intent):
     def next_intents(self) -> list[Intent, Fraction]:
         return [(OilSpray(), Fraction(1, 2)), (Rage(), Fraction(1, 2))]
 
-@dataclass
+@dataclass(frozen=True)
 class Rage(Intent):
     id: int = 2
     actions: list = field(default_factory=lambda: [Action(damage=7, buffs=[Strength(power=3)])])

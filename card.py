@@ -38,6 +38,9 @@ class Card:
     def __str__(self):
         return type(self).__name__
 
+    def __deepcopy__(self, memo) -> Card:
+        return self
+
 @dataclass(frozen=True)
 class Strike(Card):
     id: int = 0

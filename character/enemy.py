@@ -11,7 +11,7 @@ import numpy as np
 from character.core import Character
 from util.core import Action
 
-@dataclass
+@dataclass(frozen=True)
 class Intent:
     """A sequence of actions that an enemy will perform on a given turn, with a random variable determining its next intent."""
     id: int
@@ -29,6 +29,9 @@ class Intent:
 
     def __str__(self) -> str:
         return type(self).__name__
+
+    def __deepcopy__(self, memo) -> Intent:
+        return self
 
 @dataclass(kw_only=True)
 class Enemy(Character):

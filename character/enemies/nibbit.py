@@ -4,7 +4,7 @@ from character.enemy import Enemy, Intent
 from util.core import Action
 from util.effect import Strength
 
-@dataclass
+@dataclass(frozen=True)
 class Butt(Intent):
     id: int = 0
     actions: list = field(default_factory=lambda: [Action(damage=13)])
@@ -12,7 +12,7 @@ class Butt(Intent):
     def next(self) -> Intent:
         return HesitantSlice()
 
-@dataclass
+@dataclass(frozen=True)
 class HesitantSlice(Intent):
     id: int = 1
     actions: list = field(default_factory=lambda: [Action(damage=7, block=6)])
@@ -20,7 +20,7 @@ class HesitantSlice(Intent):
     def next(self) -> Intent:
         return Hiss()
 
-@dataclass
+@dataclass(frozen=True)
 class Hiss(Intent):
     id: int = 2
     actions: list = field(default_factory=lambda: [Action(buffs=[Strength(power=3)])])
