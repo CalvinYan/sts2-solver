@@ -4,12 +4,10 @@ from collections import Counter
 from copy import deepcopy
 from dataclasses import dataclass, field
 from fractions import Fraction
-from typing import Callable
+from typing import TYPE_CHECKING, Callable
 
 from card import AscendersBane, Bash, Card, CardPile, Defend, Strike
 from character.core import Character
-
-from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from fight import Fight
@@ -61,16 +59,16 @@ class Player(Character):
 
         self.discard_pile.cards[card] += 1
 
-    def resolve_start_of_turn(self, fight: Fight) -> None:
-        super().resolve_start_of_turn(fight)
+    def resolve_start_of_turn(self) -> None:
+        super().resolve_start_of_turn()
         self.energy = 3
         self.draw(5)
 
     def resolve_turn(self, fight: Fight) -> bool:
         return self.player_turn_callback(fight)
 
-    def resolve_end_of_turn(self, fight: Fight) -> None:
-        super().resolve_end_of_turn(fight)
+    def resolve_end_of_turn(self) -> None:
+        super().resolve_end_of_turn()
 
         if self.hand.cards[AscendersBane()] > 0:
             del self.hand.cards[AscendersBane()]
@@ -83,7 +81,7 @@ class Player(Character):
     # primarily calculates draw order probabilities.
     def next_states(self) -> list[tuple[Player, Fraction]]:
         clone = deepcopy(self)
-        clone.resolve_end_of_turn(None)
+        clone.resolve_end_of_turn()
 
         cards_drawn = 5
         result = []

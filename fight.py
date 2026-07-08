@@ -28,11 +28,11 @@ class Fight:
         if self.verbose:
             print(self)
 
-        self.player.resolve_start_of_turn(self)
+        self.player.resolve_start_of_turn()
         while not self.player.resolve_turn(self):
             pass
 
-        self.player.resolve_end_of_turn(self)
+        self.player.resolve_end_of_turn()
 
         self.enemies = [enemy for enemy in self.enemies if enemy.hp > 0]
 
@@ -40,11 +40,11 @@ class Fight:
             print(self)
 
         for enemy in self.enemies:
-            enemy.resolve_start_of_turn(self)
+            enemy.resolve_start_of_turn()
         for enemy in self.enemies:
             enemy.resolve_turn(self)
         for enemy in self.enemies:
-            enemy.resolve_end_of_turn(self)
+            enemy.resolve_end_of_turn()
 
         if self.verbose:
             print(self)

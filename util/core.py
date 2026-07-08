@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -31,4 +30,4 @@ class Move:
 
     action: Action
     actor: Character
-    target: Character
+    target: Character | None

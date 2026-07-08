@@ -4,13 +4,12 @@ from copy import deepcopy
 from dataclasses import dataclass
 from fractions import Fraction
 from random import randint
+from typing import TYPE_CHECKING
 
 import numpy as np
 
 from character.core import Character
 from util.core import Action
-
-from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from fight import Fight
@@ -66,8 +65,8 @@ class Enemy(Character):
             )  # Doesn't handle dying mid-turn but that will never happen Floor 2
         return True
 
-    def resolve_end_of_turn(self, fight: Fight) -> None:
-        super().resolve_end_of_turn(fight)
+    def resolve_end_of_turn(self) -> None:
+        super().resolve_end_of_turn()
         self.intent = self.intent.next()
 
     # Helper method for dp solve.

@@ -2,13 +2,12 @@ from __future__ import annotations
 
 from copy import deepcopy
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING
 
 import numpy as np
 
 from util.core import Action, Move
 from util.effect import Effect
-
-from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from fight import Fight
@@ -47,7 +46,7 @@ class Character:
                 self.debuffs.append(debuff_incoming)
 
     # Resolve all start-of-turn effects for the character.
-    def resolve_start_of_turn(self, fight: Fight) -> None:
+    def resolve_start_of_turn(self) -> None:
         self.block = 0
 
     # Resolve the character's turn. Returns whether or not the character has ended their turn.
@@ -55,7 +54,7 @@ class Character:
         return True
 
     # Resolve all end-of-turn effects for the character.
-    def resolve_end_of_turn(self, fight: Fight) -> None:
+    def resolve_end_of_turn(self) -> None:
         new_buffs = []
         new_debuffs = []
         for buff in self.buffs:
