@@ -28,18 +28,6 @@ def test_enemy_encodes_to_tuple():
         0,
         0,
         0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
         enemy.intent.id,
     )
     got = enemy.to_vector()
@@ -67,18 +55,6 @@ def test_enemy_cycles_intents():
 
 def test_no_enemy_encodes_to_zeroes():
     expected = (
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
         0,
         0,
         0,

@@ -32,7 +32,7 @@ class BubbleBurp(Intent):
     id: int = 2
 
     def actions(self) -> list[Action]:
-        return [Action(block=8, buffs=[Strength(power=2)])]
+        return [Action(block=8, actor_effects=[Strength(power=2)])]
 
     def next(self) -> Intent:
         return SeaKick()

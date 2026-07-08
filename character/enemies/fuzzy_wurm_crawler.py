@@ -21,7 +21,7 @@ class Inhale(Intent):
     id: int = 1
 
     def actions(self) -> list[Action]:
-        return [Action(buffs=[Strength(power=7)])]
+        return [Action(actor_effects=[Strength(power=7)])]
 
     def next(self) -> Intent:
         return AcidGoop2()

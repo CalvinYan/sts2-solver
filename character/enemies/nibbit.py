@@ -32,7 +32,7 @@ class Hiss(Intent):
     id: int = 2
 
     def actions(self) -> list[Action]:
-        return [Action(buffs=[Strength(power=3)])]
+        return [Action(actor_effects=[Strength(power=3)])]
 
     def next(self) -> Intent:
         return Butt()

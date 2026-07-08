@@ -28,14 +28,10 @@ def incoming_damage(fight: Fight) -> int:
         if action.damage:
             new_action = deepcopy(action)
             move = Move(new_action, actor=fight.enemies[0], target=fight.player)
-            for buff in fight.enemies[0].buffs:
-                buff.resolve(move, is_target=False)
-            for debuff in fight.enemies[0].debuffs:
-                debuff.resolve(move, is_target=False)
-            for buff in fight.player.buffs:
-                buff.resolve(move, is_target=True)
-            for debuff in fight.player.debuffs:
-                debuff.resolve(move, is_target=True)
+            for effect in fight.enemies[0].effects:
+                effect.resolve(move, is_target=False)
+            for effect in fight.player.effects:
+                effect.resolve(move, is_target=True)
             dmg += new_action.damage  # type: ignore
 
     return dmg
@@ -46,11 +42,11 @@ def has_lethal(fight: Fight) -> bool:
     enemy = fight.enemies[0]
     max_damage = 0
 
-    shrink_multiplier = 0.7 if Shrink() in player.debuffs else 1
+    shrink_multiplier = 0.7 if Shrink() in player.effects else 1
     vuln_multipler = (
-        1.5 if any([debuff in enemy.debuffs for debuff in [Vulnerable(duration=1), Vulnerable(duration=2)]]) else 1
+        1.5 if any([debuff in enemy.effects for debuff in [Vulnerable(duration=1), Vulnerable(duration=2)]]) else 1
     )
-    weak_multipler = 0.75 if Weak(duration=1) in player.debuffs else 1
+    weak_multipler = 0.75 if Weak(duration=1) in player.effects else 1
 
     # Try playing only strikes
     num_strikes = min(player.hand.cards[Strike()], player.energy)

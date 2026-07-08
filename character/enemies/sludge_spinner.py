@@ -12,7 +12,7 @@ class OilSpray(Intent):
     id: int = 0
 
     def actions(self) -> list[Action]:
-        return [Action(damage=9, debuffs=[Weak(duration=1)])]
+        return [Action(damage=9, target_effects=[Weak(duration=1)])]
 
     def next(self) -> Intent:
         return Slam() if random() < 0.5 else Rage()
@@ -40,7 +40,7 @@ class Rage(Intent):
     id: int = 2
 
     def actions(self) -> list[Action]:
-        return [Action(damage=7, buffs=[Strength(power=3)])]
+        return [Action(damage=7, actor_effects=[Strength(power=3)])]
 
     def next(self) -> Intent:
         return OilSpray() if random() < 0.5 else Slam()

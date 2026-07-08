@@ -10,7 +10,7 @@ class Shrinker(Intent):
     id: int = 0
 
     def actions(self) -> list[Action]:
-        return [Action(debuffs=[Shrink()])]
+        return [Action(target_effects=[Shrink()])]
 
     def next(self) -> Intent:
         return Chomp()

@@ -75,7 +75,7 @@ class Bash(Card):
     targeting: Targeting = Targeting.ENEMY_SINGLE
 
     def action(self) -> Action:
-        return Action(damage=8, debuffs=[Vulnerable(duration=2)])
+        return Action(damage=8, target_effects=[Vulnerable(duration=2)])
 
 
 @dataclass(frozen=True)

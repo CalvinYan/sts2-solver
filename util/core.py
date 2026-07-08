@@ -14,14 +14,14 @@ class Action:
 
     damage: int | None = None
     block: int | None = None
-    buffs: list[Effect] = field(default_factory=list)
-    debuffs: list[Effect] = field(default_factory=list)
+    actor_effects: list[Effect] = field(default_factory=list)
+    target_effects: list[Effect] = field(default_factory=list)
 
     def __str__(self) -> str:
         return f"Action({", ".join(f"{k}={v}" for k, v in self.__dict__.items() if v)})"
 
     def __hash__(self):
-        return hash((self.damage, self.block, tuple(self.buffs), tuple(self.debuffs)))
+        return hash((self.damage, self.block, tuple(self.actor_effects), tuple(self.target_effects)))
 
 
 @dataclass

@@ -23,29 +23,20 @@ class Character:
     id: int
     hp: int
     block: int = 0
-    buffs: list[Effect] = field(default_factory=list)
-    debuffs: list[Effect] = field(default_factory=list)
+    effects: list[Effect] = field(default_factory=list)
     verbose: bool = False
 
     def take_damage(self, damage: int) -> None:
         self.hp -= max(0, damage - self.block)
         self.block = max(0, self.block - damage)
 
-    def receive_buffs(self, buffs: list[Effect]) -> None:
-        for buff_incoming in buffs:
-            for buff_current in self.buffs:
-                if buff_current.stack(buff_incoming):
+    def receive_effects(self, effects: list[Effect]) -> None:
+        for effect_incoming in effects:
+            for effect_current in self.effects:
+                if effect_current.stack(effect_incoming):
                     break
             else:
-                self.buffs.append(buff_incoming)
-
-    def receive_debuffs(self, debuffs: list[Effect]) -> None:
-        for debuff_incoming in debuffs:
-            for debuff_current in self.debuffs:
-                if debuff_current.stack(debuff_incoming):
-                    break
-            else:
-                self.debuffs.append(debuff_incoming)
+                self.effects.append(effect_incoming)
 
     # Resolve all start-of-turn effects for the character.
     def resolve_start_of_turn(self) -> None:
@@ -57,23 +48,14 @@ class Character:
 
     # Resolve all end-of-turn effects for the character.
     def resolve_end_of_turn(self) -> None:
-        new_buffs = []
-        new_debuffs = []
-        for buff in self.buffs:
-            if buff.duration is not None:
-                buff.duration -= 1
-            if buff.duration != 0:
-                new_buffs.append(buff)
+        new_effects = []
+        for effect in self.effects:
+            if effect.duration is not None:
+                effect.duration -= 1
+            if effect.duration != 0:
+                new_effects.append(effect)
 
-        self.buffs = new_buffs
-
-        for debuff in self.debuffs:
-            if debuff.duration is not None:
-                debuff.duration -= 1
-            if debuff.duration != 0:
-                new_debuffs.append(debuff)
-
-        self.debuffs = new_debuffs
+        self.effects = new_effects
 
     def act(self, target: Character | None, action: Action) -> None:
         if self.verbose:
@@ -84,26 +66,22 @@ class Character:
 
         move = Move(action=deepcopy(action), actor=self, target=target)
 
-        for buff in self.buffs:
-            buff.resolve(move, is_target=False)
-        for debuff in self.debuffs:
-            debuff.resolve(move, is_target=False)
+        for effect in self.effects:
+            effect.resolve(move, is_target=False)
 
         if target:
-            for buff in target.buffs:
-                buff.resolve(move, is_target=True)
-            for debuff in target.debuffs:
-                debuff.resolve(move, is_target=True)
+            for effect in target.effects:
+                effect.resolve(move, is_target=True)
 
             if move.action.damage:
                 target.take_damage(move.action.damage)
 
-            target.receive_debuffs(move.action.debuffs)
+            target.receive_effects(move.action.target_effects)
 
         if move.action.block:
             self.block += move.action.block
 
-        self.receive_buffs(move.action.buffs)
+        self.receive_effects(move.action.actor_effects)
 
     def to_vector(self: Character | None) -> np.ndarray:
         if self is None:
@@ -111,22 +89,18 @@ class Character:
                 [
                     [0, 0, 0],
                     Effect.effects_to_vector(list()),
-                    Effect.effects_to_vector(list()),
                 ]
             )
         return np.concatenate(
             [
                 [self.id, self.hp, self.block],
-                Effect.effects_to_vector(self.buffs),
-                Effect.effects_to_vector(self.debuffs),
+                Effect.effects_to_vector(self.effects),
             ]
         )
 
     def __str__(self) -> str:
         retval = f"{self.name} ({self.block}){self.hp}"
-        for buff in self.buffs:
-            retval += f" ^({buff})"
-        for debuff in self.debuffs:
-            retval += f" v({debuff})"
+        for effect in self.effects:
+            retval += f" ({effect})"
 
         return retval

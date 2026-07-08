@@ -60,14 +60,14 @@ def test_simulate_nibbit_fight():
             fight.player.act(fight.enemies[0], Action(block=5))
             fight.player.act(fight.enemies[0], Action(block=5))
         elif fight.turn == 2:
-            fight.player.act(fight.enemies[0], Action(damage=8, debuffs=[Vulnerable(duration=2)]))
+            fight.player.act(fight.enemies[0], Action(damage=8, target_effects=[Vulnerable(duration=2)]))
             fight.player.act(fight.enemies[0], Action(block=5))
         elif fight.turn == 3:
             fight.player.act(fight.enemies[0], Action(damage=6))
             fight.player.act(fight.enemies[0], Action(damage=6))
             fight.player.act(fight.enemies[0], Action(damage=6))
         elif fight.turn == 4:
-            fight.player.act(fight.enemies[0], Action(damage=8, debuffs=[Vulnerable(duration=2)]))
+            fight.player.act(fight.enemies[0], Action(damage=8, target_effects=[Vulnerable(duration=2)]))
             fight.player.act(fight.enemies[0], Action(damage=6))
         else:
             raise AssertionError("Fight should have ended by now")
