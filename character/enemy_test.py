@@ -51,9 +51,9 @@ def test_sludge_spinner_doesnt_repeat_moves():
         last_intent = enemy.intent
         enemy.resolve_end_of_turn(None)
 
-def test_enemy_next_intents():
-    nibbit = Nibbit(name="Test")
-    expected = (HesitantSlice(), Fraction(1, 1))
+def test_enemy_next_states():
+    nibbit = Nibbit(name="Test", hp=44)
+    expected = [(Nibbit(name="Test", hp=44, intent=HesitantSlice()), Fraction(1, 1))]
     got = nibbit.next_states()
 
     assert expected == got
