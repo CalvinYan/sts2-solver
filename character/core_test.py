@@ -229,7 +229,7 @@ def test_character_buffs_dont_stack_with_debuffs():
 def test_character_loses_block():
     c = Character(name="Test", id=0, hp=80, block=10)
 
-    c.resolve_start_of_turn(None)
+    c.resolve_start_of_turn()
 
     assert c.block == 0
 
@@ -242,12 +242,12 @@ def test_character_effects_tick_down():
     assert len(c.debuffs) == 1
     assert c.debuffs[0] == Weak(duration=2)
 
-    c.resolve_end_of_turn(None)
+    c.resolve_end_of_turn()
 
     assert len(c.debuffs) == 1
     assert c.debuffs[0] == Weak(duration=1)
 
-    c.resolve_end_of_turn(None)
+    c.resolve_end_of_turn()
 
     assert len(c.debuffs) == 0
 

@@ -64,15 +64,15 @@ def test_enemy_cycles_intents():
 
     assert isinstance(enemy.intent, AcidGoop1)
 
-    enemy.resolve_end_of_turn(None)
+    enemy.resolve_end_of_turn()
 
     assert isinstance(enemy.intent, Inhale)
 
-    enemy.resolve_end_of_turn(None)
+    enemy.resolve_end_of_turn()
 
     assert isinstance(enemy.intent, AcidGoop2)
 
-    enemy.resolve_end_of_turn(None)
+    enemy.resolve_end_of_turn()
 
     assert isinstance(enemy.intent, AcidGoop1)
 
@@ -137,7 +137,7 @@ def test_sludge_spinner_doesnt_repeat_moves():
             raise AssertionError("Sludge Spinner repeated intent", enemy.intent)
 
         last_intent = enemy.intent
-        enemy.resolve_end_of_turn(None)
+        enemy.resolve_end_of_turn()
 
 
 def test_enemy_next_states():
