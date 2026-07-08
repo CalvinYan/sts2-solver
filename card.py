@@ -22,9 +22,11 @@ class Targeting(Enum):
 class Card:
     """An action with an energy cost and a target type."""
     id: int
-    action: Action
     cost: int
     targeting: Targeting
+
+    def action(self) -> Action:
+        pass
 
     def playable(self, energy: int) -> bool:
         return energy >= self.cost
@@ -44,28 +46,33 @@ class Card:
 @dataclass(frozen=True)
 class Strike(Card):
     id: int = 0
-    action: Action = field(default_factory=lambda: Action(damage=6))
     cost: int = 1
     targeting: Targeting = Targeting.ENEMY_SINGLE
+
+    def action(self) -> Action: 
+        return Action(damage=6)
 
 @dataclass(frozen=True)
 class Defend(Card):
     id: int = 1
-    action: Action = field(default_factory=lambda: Action(block=5))
     cost: int = 1
     targeting: Targeting = Targeting.NONE
+
+    def action(self) -> Action: 
+        return Action(block=5)
 
 @dataclass(frozen=True)
 class Bash(Card):
     id: int = 2
-    action: Action = field(default_factory=lambda: Action(damage=8, debuffs=[Vulnerable(duration=2)]))
     cost: int = 2
     targeting: Targeting = Targeting.ENEMY_SINGLE
+
+    def action(self) -> Action:
+        return Action(damage=8, debuffs=[Vulnerable(duration=2)])
 
 @dataclass(frozen=True)
 class AscendersBane(Card):
     id: int = 11
-    action: Action = field(default_factory=lambda: Action())
     cost: int = None
     targeting: Targeting = Targeting.NONE
 

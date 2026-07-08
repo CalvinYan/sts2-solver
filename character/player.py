@@ -40,7 +40,7 @@ class Player(Character):
             print(f"{self.name} tried to play {card} but hand is: {self.hand}")
             return
 
-        self.act(target=target, action=card.action)
+        self.act(target=target, action=card.action())
 
         self.energy -= card.cost
 
