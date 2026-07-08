@@ -61,10 +61,11 @@ if __name__ == "__main__":
     for encounter in [fuzzy_wurm_crawler, nibbit, seapunk, shrinker_beetle, sludge_spinner]:
         for _ in range(20):
             player = Ironclad(name="User", player_turn_callback=user_ironclad, verbose=True)
+            starting_hp = player.hp
             fight = Fight(player=player, enemies=encounter(verbose=True))
             fight.start()
 
-            print(f"You lost {player.hp} hp")
+            print(f"You lost {starting_hp - player.hp} hp")
             hp_losses[encounter].append(player.hp)
 
     for encounter in [fuzzy_wurm_crawler, nibbit, seapunk, shrinker_beetle, sludge_spinner]:

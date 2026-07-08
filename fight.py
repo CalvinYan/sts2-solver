@@ -46,7 +46,7 @@ class Fight:
             print(self)
 
     def is_over(self) -> bool:
-        return all(enemy.hp <= 0 for enemy in self.enemies) or self.turn >= 20
+        return all(enemy.hp <= 0 for enemy in self.enemies) or self.player.hp <= 0
 
     def start(self) -> None:
         while not self.is_over():

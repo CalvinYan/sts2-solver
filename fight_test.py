@@ -35,7 +35,7 @@ def test_fight_ends_when_enemies_die():
 
     assert fight.is_over()
 
-def test_fight_does_not_end_if_player_dies():
+def test_fight_ends_if_player_dies():
     player = Ironclad(name="Test", player_turn_callback=lambda fight: True, hp=100)
     enemy = Nibbit(name="Test")
     fight = Fight(player=player, enemies=[enemy])
@@ -44,7 +44,7 @@ def test_fight_does_not_end_if_player_dies():
 
     fight.loop()
 
-    assert not fight.is_over()
+    assert fight.is_over()
 
 def test_simulate_nibbit_fight():
 
@@ -74,4 +74,4 @@ def test_simulate_nibbit_fight():
 
     fight.start()
 
-    assert player.hp == -5
+    assert player.hp == 59

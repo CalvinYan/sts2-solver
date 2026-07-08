@@ -138,10 +138,11 @@ def main():
         for name, callback in zip(["Chad", "Virgin", "Balanced"], [unga_bunga_ironclad, noob_ironclad, balanced_ironclad]):
             for _ in range(10000):
                 player = Ironclad(name=name, player_turn_callback=callback)
+                starting_hp = player.hp
                 fight = Fight(player=player, enemies=encounter())
                 fight.start()
 
-                hp_losses[name][encounter].append(player.hp)
+                hp_losses[name][encounter].append(starting_hp - player.hp)
 
     for encounter in [fuzzy_wurm_crawler, nibbit, seapunk, shrinker_beetle, sludge_spinner]:
         for name in ["Chad", "Virgin", "Balanced"]:

@@ -15,8 +15,7 @@ class Player(Character):
     A player-controlled character with the cards in their deck distributed between their hand, draw pile, and discard pile.
     Each fight has exactly one player.
     """
-    # We don't care about the player's HP, only how much they lose during the fight
-    hp: int = 0
+    hp: int
     energy: int = 3
     hand: CardPile = field(default_factory=CardPile)
     draw_pile: CardPile
@@ -109,6 +108,7 @@ class Player(Character):
 @dataclass
 class Ironclad(Player):
     id: int = 0
+    hp: int = 64
     draw_pile: CardPile = field(
         default_factory=lambda: CardPile(
             cards=Counter({
