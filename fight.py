@@ -1,8 +1,6 @@
 """Represents a single combat in Slay the Spire 2."""
 
-from collections import defaultdict
 from dataclasses import dataclass
-from fractions import Fraction
 
 import numpy as np
 
