@@ -4,10 +4,4 @@ from character.enemies.seapunk import Seapunk
 from character.enemies.shrinker_beetle import ShrinkerBeetle
 from character.enemies.sludge_spinner import SludgeSpinner
 
-__all__ = [
-    "FuzzyWurmCrawler",
-    "Nibbit",
-    "Seapunk",
-    "ShrinkerBeetle",
-    "SludgeSpinner"
-]
+__all__ = ["FuzzyWurmCrawler", "Nibbit", "Seapunk", "ShrinkerBeetle", "SludgeSpinner"]

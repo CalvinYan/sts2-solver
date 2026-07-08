@@ -1,5 +1,8 @@
 """Represents a single combat in Slay the Spire 2."""
+
+from collections import defaultdict
 from dataclasses import dataclass
+from fractions import Fraction
 
 import numpy as np
 
@@ -7,6 +10,7 @@ from character.enemy import Enemy
 from character.player import Player
 
 MAX_ENEMIES = 5
+
 
 @dataclass
 class Fight:
@@ -54,6 +58,14 @@ class Fight:
         if self.verbose:
             print(f"Fight ended after {self.turn} turns. Player HP loss: {self.player.hp}")
 
+    # Helper method for dp solve - determines the probability distribution of the player's next state.
+    # For our use case, we only need to compute this distribution when the player draws cards, so the method is
+    # primarily dedicated to modelling draw orders.
+    # def next_states(self, ):
+    # draws = list[]
+    # for card in sorted(self.draw_pile).
+    # pass
+
     # Vector representation of a Fight for interpretation by learning models.
     # The representation is entirely defined by:
     # - The vector representation of the player
@@ -61,11 +73,13 @@ class Fight:
     # - The number of the current turn
     def to_vector(self) -> np.ndarray:
         enemies_padded = self.enemies + [None] * (MAX_ENEMIES - len(self.enemies))
-        return np.concatenate([
-            self.player.to_vector(),
-            *[Enemy.to_vector(enemy) for enemy in enemies_padded],
-            [self.turn],
-        ])
+        return np.concatenate(
+            [
+                self.player.to_vector(),
+                *[Enemy.to_vector(enemy) for enemy in enemies_padded],
+                [self.turn],
+            ]
+        )
 
     def __str__(self) -> str:
         return f"\nTurn {self.turn}\n\nEnemies:\n{'\n'.join(str(enemy) for enemy in self.enemies)}\n\nPlayer:\n{self.player}"

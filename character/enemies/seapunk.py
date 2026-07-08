@@ -4,6 +4,7 @@ from character.enemy import Enemy, Intent
 from util.core import Action
 from util.effect import Strength
 
+
 @dataclass(frozen=True)
 class SeaKick(Intent):
     id: int = 0
@@ -13,6 +14,7 @@ class SeaKick(Intent):
 
     def next(self) -> Intent:
         return SpinningKick()
+
 
 @dataclass(frozen=True)
 class SpinningKick(Intent):
@@ -24,6 +26,7 @@ class SpinningKick(Intent):
     def next(self) -> Intent:
         return BubbleBurp()
 
+
 @dataclass(frozen=True)
 class BubbleBurp(Intent):
     id: int = 2
@@ -33,6 +36,7 @@ class BubbleBurp(Intent):
 
     def next(self) -> Intent:
         return SeaKick()
+
 
 @dataclass
 class Seapunk(Enemy):

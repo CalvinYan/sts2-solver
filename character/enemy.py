@@ -10,9 +10,11 @@ import numpy as np
 from character.core import Character
 from util.core import Action
 
+
 @dataclass(frozen=True)
 class Intent:
     """A sequence of actions that an enemy will perform on a given turn, with a random variable determining its next intent."""
+
     id: int
 
     def actions(self) -> list[Action]:
@@ -34,12 +36,14 @@ class Intent:
     def __deepcopy__(self, memo) -> Intent:
         return self
 
+
 @dataclass(kw_only=True)
 class Enemy(Character):
     """
     A hostile non-player character with an intent and a range of possible hp values.
     Each fight starts with one or more enemies, and ends if none remain with more than 0 HP.
     """
+
     # TODO: Find a neater way to do this
     hp: int = 0
     intent: Intent
@@ -50,12 +54,14 @@ class Enemy(Character):
         if self.hp == 0:
             self.hp = randint(self.min_hp, self.max_hp)
 
-    def resolve_turn(self, fight: "Fight") -> bool: # type: ignore
+    def resolve_turn(self, fight: "Fight") -> bool:  # type: ignore
         for action in self.intent.actions():
-            self.act(target=fight.player, action=action) # Doesn't handle dying mid-turn but that will never happen Floor 2
+            self.act(
+                target=fight.player, action=action
+            )  # Doesn't handle dying mid-turn but that will never happen Floor 2
         return True
 
-    def resolve_end_of_turn(self, fight: "Fight") -> None: # type: ignore
+    def resolve_end_of_turn(self, fight: "Fight") -> None:  # type: ignore
         super().resolve_end_of_turn(fight)
         self.intent = self.intent.next()
 
@@ -70,9 +76,9 @@ class Enemy(Character):
             # TODO: I dislike this way of copying objects for next states... using setter methods would be much more Pythonic
             clone.intent = intent
             result.append((clone, probability))
-            
+
         return result
-    
+
     # Vector representation of an Enemy for interpretation by learning models.
     # The representation is defined in the following way:
     # - 0 if the enemy does not exist, 1 if it does. This is necessary because Fight encodes a fixed # of enemies to

@@ -6,6 +6,7 @@ from character.enemy import Enemy, Intent
 from util.core import Action
 from util.effect import Strength, Weak
 
+
 @dataclass(frozen=True)
 class OilSpray(Intent):
     id: int = 0
@@ -18,6 +19,7 @@ class OilSpray(Intent):
 
     def next_intents(self) -> list[tuple[Intent, Fraction]]:
         return [(Slam(), Fraction(1, 2)), (Rage(), Fraction(1, 2))]
+
 
 @dataclass(frozen=True)
 class Slam(Intent):
@@ -32,6 +34,7 @@ class Slam(Intent):
     def next_intents(self) -> list[tuple[Intent, Fraction]]:
         return [(OilSpray(), Fraction(1, 2)), (Rage(), Fraction(1, 2))]
 
+
 @dataclass(frozen=True)
 class Rage(Intent):
     id: int = 2
@@ -44,6 +47,7 @@ class Rage(Intent):
 
     def next_intents(self) -> list[tuple[Intent, Fraction]]:
         return [(OilSpray(), Fraction(1, 2)), (Slam(), Fraction(1, 2))]
+
 
 @dataclass
 class SludgeSpinner(Enemy):

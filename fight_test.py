@@ -6,21 +6,25 @@ from fight import Fight, MAX_ENEMIES
 from util.core import Action
 from util.effect import Vulnerable
 
+
 def test_fight_encodes_to_vector():
     player = Ironclad(name="Test", player_turn_callback=None)
     enemy = Nibbit(name="Test")
     fight = Fight(player=player, enemies=[enemy])
 
     enemy_vector = enemy.to_vector()
-    expected = np.concatenate([
-        player.to_vector(),
-        enemy_vector,
-        np.zeros(len(enemy_vector) * (MAX_ENEMIES - 1), dtype=int),
-        [fight.turn],
-    ])
+    expected = np.concatenate(
+        [
+            player.to_vector(),
+            enemy_vector,
+            np.zeros(len(enemy_vector) * (MAX_ENEMIES - 1), dtype=int),
+            [fight.turn],
+        ]
+    )
     got = fight.to_vector()
 
     assert np.array_equal(expected, got)
+
 
 def test_fight_ends_when_enemies_die():
     player = Ironclad(name="Test", player_turn_callback=lambda fight: True)
@@ -35,6 +39,7 @@ def test_fight_ends_when_enemies_die():
 
     assert fight.is_over()
 
+
 def test_fight_ends_if_player_dies():
     player = Ironclad(name="Test", player_turn_callback=lambda fight: True, hp=100)
     enemy = Nibbit(name="Test")
@@ -45,6 +50,7 @@ def test_fight_ends_if_player_dies():
     fight.loop()
 
     assert fight.is_over()
+
 
 def test_simulate_nibbit_fight():
 
@@ -63,7 +69,7 @@ def test_simulate_nibbit_fight():
         elif fight.turn == 4:
             fight.player.act(fight.enemies[0], Action(damage=8, debuffs=[Vulnerable(duration=2)]))
             fight.player.act(fight.enemies[0], Action(damage=6))
-        else: 
+        else:
             raise AssertionError("Fight should have ended by now")
 
         return True

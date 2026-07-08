@@ -2,18 +2,26 @@
 A basic demo of the simulator. Provides several naive algorithms for Floor 2 fights and benchmarks them against
 different encounters.
 """
+
 import argparse
 import cProfile
 
 from copy import deepcopy
 
 from card import Bash, Defend, Strike
-from character.encounters import fuzzy_wurm_crawler, nibbit, seapunk, shrinker_beetle, sludge_spinner
+from character.encounters import (
+    fuzzy_wurm_crawler,
+    nibbit,
+    seapunk,
+    shrinker_beetle,
+    sludge_spinner,
+)
 from collections import defaultdict
 from fight import Fight
 from character.player import Ironclad
 from util.core import Move
 from util.effect import Shrink, Vulnerable, Weak
+
 
 def incoming_damage(fight: Fight) -> int:
     dmg = 0
@@ -29,9 +37,10 @@ def incoming_damage(fight: Fight) -> int:
                 buff.resolve(move, is_target=True)
             for debuff in fight.player.debuffs:
                 debuff.resolve(move, is_target=True)
-            dmg += new_action.damage # type: ignore
+            dmg += new_action.damage  # type: ignore
 
     return dmg
+
 
 def has_lethal(fight: Fight) -> bool:
     player = fight.player
@@ -39,7 +48,9 @@ def has_lethal(fight: Fight) -> bool:
     max_damage = 0
 
     shrink_multiplier = 0.7 if Shrink() in player.debuffs else 1
-    vuln_multipler = 1.5 if any([debuff in enemy.debuffs for debuff in [Vulnerable(duration=1), Vulnerable(duration=2)]]) else 1
+    vuln_multipler = (
+        1.5 if any([debuff in enemy.debuffs for debuff in [Vulnerable(duration=1), Vulnerable(duration=2)]]) else 1
+    )
     weak_multipler = 0.75 if Weak(duration=1) in player.debuffs else 1
 
     # Try playing only strikes
@@ -56,8 +67,9 @@ def has_lethal(fight: Fight) -> bool:
     if enemy.block + enemy.hp <= max_damage:
         fight.enemies[0].hp = 0
         return True
-        
+
     return False
+
 
 # Attack, attack, attack! Prioritize cards in the following order: Bash, Strike, Defend. Spend all energy.
 def unga_bunga_ironclad(fight: Fight) -> bool:
@@ -80,6 +92,7 @@ def unga_bunga_ironclad(fight: Fight) -> bool:
         player.play(defend, target=None)
 
     return player.energy == 0 or player.hand.cards.total() == 0  # End turn if no energy left or hand is empty
+
 
 # The way an inexperienced player might play - block all incoming damage, then priotize Bash, then Strike.
 def noob_ironclad(fight: Fight) -> bool:
@@ -106,6 +119,7 @@ def noob_ironclad(fight: Fight) -> bool:
 
     return player.energy == 0 or player.hand.cards.total() == 0  # End turn if no energy left or hand is empty
 
+
 # A more balanced approach - Play Bash if it's in hand, then block if it would save 5 HP, otherwise play Strike.
 def balanced_ironclad(fight: Fight) -> bool:
     player = fight.player
@@ -120,22 +134,34 @@ def balanced_ironclad(fight: Fight) -> bool:
     if player.hand.cards[bash] > 0 and bash.playable(player.energy):
         player.play(bash, target=fight.enemies[0])
 
-    elif incoming_damage(fight) >= player.block + 5 and player.hand.cards[defend] > 0 and defend.playable(player.energy):
+    elif (
+        incoming_damage(fight) >= player.block + 5 and player.hand.cards[defend] > 0 and defend.playable(player.energy)
+    ):
         player.play(defend, target=None)
 
     elif player.hand.cards[strike] > 0 and strike.playable(player.energy):
         player.play(strike, target=fight.enemies[0])
-    
+
     else:
         return True  # End turn if no cards can be played
 
     return player.energy == 0 or player.hand.cards.total() == 0  # End turn if no energy left or hand is empty
 
+
 def main():
     hp_losses = defaultdict(lambda: defaultdict(list))
 
-    for encounter in [fuzzy_wurm_crawler, nibbit, seapunk, shrinker_beetle, sludge_spinner]:
-        for name, callback in zip(["Chad", "Virgin", "Balanced"], [unga_bunga_ironclad, noob_ironclad, balanced_ironclad]):
+    for encounter in [
+        fuzzy_wurm_crawler,
+        nibbit,
+        seapunk,
+        shrinker_beetle,
+        sludge_spinner,
+    ]:
+        for name, callback in zip(
+            ["Chad", "Virgin", "Balanced"],
+            [unga_bunga_ironclad, noob_ironclad, balanced_ironclad],
+        ):
             for _ in range(10000):
                 player = Ironclad(name=name, player_turn_callback=callback)
                 starting_hp = player.hp
@@ -144,9 +170,18 @@ def main():
 
                 hp_losses[name][encounter].append(starting_hp - player.hp)
 
-    for encounter in [fuzzy_wurm_crawler, nibbit, seapunk, shrinker_beetle, sludge_spinner]:
+    for encounter in [
+        fuzzy_wurm_crawler,
+        nibbit,
+        seapunk,
+        shrinker_beetle,
+        sludge_spinner,
+    ]:
         for name in ["Chad", "Virgin", "Balanced"]:
-            print(f"Average HP loss of {name} against {encounter.__name__}: {sum(hp_losses[name][encounter]) / len(hp_losses[name][encounter])}")
+            print(
+                f"Average HP loss of {name} against {encounter.__name__}: {sum(hp_losses[name][encounter]) / len(hp_losses[name][encounter])}"
+            )
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)

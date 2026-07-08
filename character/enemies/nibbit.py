@@ -4,6 +4,7 @@ from character.enemy import Enemy, Intent
 from util.core import Action
 from util.effect import Strength
 
+
 @dataclass(frozen=True)
 class Butt(Intent):
     id: int = 0
@@ -13,6 +14,7 @@ class Butt(Intent):
 
     def next(self) -> Intent:
         return HesitantSlice()
+
 
 @dataclass(frozen=True)
 class HesitantSlice(Intent):
@@ -24,6 +26,7 @@ class HesitantSlice(Intent):
     def next(self) -> Intent:
         return Hiss()
 
+
 @dataclass(frozen=True)
 class Hiss(Intent):
     id: int = 2
@@ -33,6 +36,7 @@ class Hiss(Intent):
 
     def next(self) -> Intent:
         return Butt()
+
 
 @dataclass
 class Nibbit(Enemy):

@@ -8,9 +8,11 @@ import numpy as np
 from util.core import Action, Move
 from util.effect import Effect
 
+
 @dataclass(kw_only=True)
 class Character:
     """Represents a player or enemy in the fight."""
+
     name: str
     id: int
     hp: int
@@ -40,15 +42,15 @@ class Character:
                 self.debuffs.append(debuff_incoming)
 
     # Resolve all start-of-turn effects for the character.
-    def resolve_start_of_turn(self, fight: "Fight") -> None: # type: ignore
+    def resolve_start_of_turn(self, fight: "Fight") -> None:  # type: ignore
         self.block = 0
 
     # Resolve the character's turn. Returns whether or not the character has ended their turn.
-    def resolve_turn(self, fight: "Fight") -> bool: # type: ignore
+    def resolve_turn(self, fight: "Fight") -> bool:  # type: ignore
         return True
 
     # Resolve all end-of-turn effects for the character.
-    def resolve_end_of_turn(self, fight: "Fight") -> None: # type: ignore
+    def resolve_end_of_turn(self, fight: "Fight") -> None:  # type: ignore
         new_buffs = []
         new_debuffs = []
         for buff in self.buffs:
@@ -99,16 +101,20 @@ class Character:
 
     def to_vector(self: Character | None) -> np.ndarray:
         if self is None:
-            return np.concatenate([
-                [0, 0, 0],
-                Effect.effects_to_vector(list()),
-                Effect.effects_to_vector(list())
-            ])
-        return np.concatenate([
-            [self.id, self.hp, self.block],
-            Effect.effects_to_vector(self.buffs),
-            Effect.effects_to_vector(self.debuffs)
-        ])
+            return np.concatenate(
+                [
+                    [0, 0, 0],
+                    Effect.effects_to_vector(list()),
+                    Effect.effects_to_vector(list()),
+                ]
+            )
+        return np.concatenate(
+            [
+                [self.id, self.hp, self.block],
+                Effect.effects_to_vector(self.buffs),
+                Effect.effects_to_vector(self.debuffs),
+            ]
+        )
 
     def __str__(self) -> str:
         retval = f"{self.name} ({self.block}){self.hp}"

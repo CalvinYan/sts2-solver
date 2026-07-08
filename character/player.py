@@ -9,19 +9,21 @@ from typing import Callable
 from card import AscendersBane, Bash, Card, CardPile, Defend, Strike
 from character.core import Character
 
+
 @dataclass(kw_only=True, repr=False)
 class Player(Character):
     """
     A player-controlled character with the cards in their deck distributed between their hand, draw pile, and discard pile.
     Each fight has exactly one player.
     """
+
     hp: int
     energy: int = 3
     hand: CardPile = field(default_factory=CardPile)
     draw_pile: CardPile
     discard_pile: CardPile = field(default_factory=CardPile)
 
-    player_turn_callback: Callable[["Fight"], bool] # type: ignore
+    player_turn_callback: Callable[["Fight"], bool]  # type: ignore
 
     def draw(self, cards: int) -> None:
         for _ in range(cards):
@@ -46,7 +48,7 @@ class Player(Character):
 
         self.act(target=target, action=card.action())
 
-        self.energy -= card.cost # type: ignore
+        self.energy -= card.cost  # type: ignore
 
         self.hand.cards[card] -= 1
         if self.hand.cards[card] == 0:
@@ -54,17 +56,17 @@ class Player(Character):
 
         self.discard_pile.cards[card] += 1
 
-    def resolve_start_of_turn(self, fight: "Fight") -> None: # type: ignore
+    def resolve_start_of_turn(self, fight: "Fight") -> None:  # type: ignore
         super().resolve_start_of_turn(fight)
         self.energy = 3
         self.draw(5)
 
-    def resolve_turn(self, fight: "Fight") -> bool: # type: ignore
+    def resolve_turn(self, fight: "Fight") -> bool:  # type: ignore
         return self.player_turn_callback(fight)
 
-    def resolve_end_of_turn(self, fight: "Fight") -> None: # type: ignore
+    def resolve_end_of_turn(self, fight: "Fight") -> None:  # type: ignore
         super().resolve_end_of_turn(fight)
-        
+
         if self.hand.cards[AscendersBane()] > 0:
             del self.hand.cards[AscendersBane()]
 
@@ -83,7 +85,10 @@ class Player(Character):
 
         if cards_drawn > clone.draw_pile.cards.total():
             reshuffle_draws = clone.discard_pile.next_hands(
-                cards=min(clone.discard_pile.cards.total(), cards_drawn - self.draw_pile.cards.total())
+                cards=min(
+                    clone.discard_pile.cards.total(),
+                    cards_drawn - self.draw_pile.cards.total(),
+                )
             )
 
             for draw, probability in reshuffle_draws:
@@ -103,11 +108,12 @@ class Player(Character):
                 future_player.discard_pile = clone.discard_pile
 
                 result.append((future_player, probability))
-        
+
         return result
 
     def __str__(self) -> str:
         return f"{super().__str__()}\nHand: {self.hand}\nDraw: {self.draw_pile}\nDiscard: {self.discard_pile}"
+
 
 @dataclass
 class Ironclad(Player):
@@ -115,11 +121,13 @@ class Ironclad(Player):
     hp: int = 64
     draw_pile: CardPile = field(
         default_factory=lambda: CardPile(
-            cards=Counter({
-                Strike(): 5,
-                Defend(): 4,
-                Bash(): 1,
-                AscendersBane(): 1,
-            })
+            cards=Counter(
+                {
+                    Strike(): 5,
+                    Defend(): 4,
+                    Bash(): 1,
+                    AscendersBane(): 1,
+                }
+            )
         )
     )

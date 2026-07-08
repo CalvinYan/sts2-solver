@@ -4,6 +4,7 @@ from character.enemy import Enemy, Intent
 from util.core import Action
 from util.effect import Shrink
 
+
 @dataclass(frozen=True)
 class Shrinker(Intent):
     id: int = 0
@@ -13,6 +14,7 @@ class Shrinker(Intent):
 
     def next(self) -> Intent:
         return Chomp()
+
 
 @dataclass(frozen=True)
 class Chomp(Intent):
@@ -24,6 +26,7 @@ class Chomp(Intent):
     def next(self) -> Intent:
         return Stomp()
 
+
 @dataclass(frozen=True)
 class Stomp(Intent):
     id: int = 2
@@ -33,6 +36,7 @@ class Stomp(Intent):
 
     def next(self) -> Intent:
         return Chomp()
+
 
 @dataclass
 class ShrinkerBeetle(Enemy):
