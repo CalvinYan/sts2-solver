@@ -49,6 +49,33 @@ class Fight:
         if self.verbose:
             print(self)
 
+    # SEARCH METHODS
+    #
+    # The following methods are similar to loop() in that they simulate a specific phase of the fight, but instead of
+    # transitioning to the next game state at random, search traverses all possible next states, and computes the
+    # probability distribution of player hp losses from that point dynamic programming.
+    #
+    # Each search method takes in the following fields:
+    # dp_table: The dynamic programming lookup table containing already computed search results
+    # prob: The probability of reaching the current state from the state where search began
+    def search_player_turn_start(self, dp_table: defaultdict, prob: Fraction) -> None:
+        pass
+
+    def search_player_turn(self, dp_table: defaultdict, prob: Fraction) -> None:
+        pass
+
+    def search_player_turn_end(self, dp_table: defaultdict, prob: Fraction) -> None:
+        pass
+
+    def search_enemy_turn_start(self, dp_table: defaultdict, prob: Fraction) -> None:
+        pass
+
+    def search_enemy_turn(self, dp_table: defaultdict, prob: Fraction) -> None:
+        pass
+
+    def search_enemy_turn_end(self, dp_table: defaultdict, prob: Fraction) -> None:
+        pass
+
     def is_over(self) -> bool:
         return all(enemy.hp <= 0 for enemy in self.enemies) or self.player.hp <= 0
 
@@ -57,14 +84,6 @@ class Fight:
             self.loop()
         if self.verbose:
             print(f"Fight ended after {self.turn} turns. Player HP loss: {self.player.hp}")
-
-    # Helper method for dp solve - determines the probability distribution of the player's next state.
-    # For our use case, we only need to compute this distribution when the player draws cards, so the method is
-    # primarily dedicated to modelling draw orders.
-    # def next_states(self, ):
-    # draws = list[]
-    # for card in sorted(self.draw_pile).
-    # pass
 
     # Vector representation of a Fight for interpretation by learning models.
     # The representation is entirely defined by:
