@@ -157,7 +157,7 @@ def main():
             ["Chad", "Virgin", "Balanced"],
             [unga_bunga_ironclad, noob_ironclad, balanced_ironclad],
         ):
-            for _ in range(10000):
+            for _ in range(100000):
                 player = Ironclad(name=name, player_turn_callback=callback)
                 starting_hp = player.hp
                 fight = Fight(player=player, enemies=encounter())

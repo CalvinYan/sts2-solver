@@ -1,15 +1,17 @@
 from collections import Counter
+from fractions import Fraction
 
 import numpy as np
 
 from card import AscendersBane, Bash, CardPile, Defend, Strike
-from character.enemies import Nibbit, SludgeSpinner
+from character.enemies import Nibbit, ShrinkerBeetle, SludgeSpinner
 from character.enemies.nibbit import HesitantSlice
+from character.enemies.shrinker_beetle import Stomp
 from character.enemies.sludge_spinner import Slam
 from character.player import Ironclad
 from fight import MAX_ENEMIES, Fight
 from util.core import Action
-from util.effect import Strength, Vulnerable, Weak
+from util.effect import Shrink, Strength, Vulnerable, Weak
 
 
 def test_fight_encodes_to_vector():
@@ -134,3 +136,54 @@ def test_simulate_nibbit_fight():
     fight.start()
 
     assert player.hp == 59
+
+
+def test_search_finds_lethal_against_shrinker_beetle():
+    dp_table = dict()
+    player = Ironclad(
+        name="Player",
+        hp=1,
+        hand=CardPile(cards=Counter({Strike(): 3, Defend(): 2})),
+        effects=[Shrink()],
+        player_turn_callback=lambda fight: True,
+    )
+    enemy = ShrinkerBeetle(name="Enemy", hp=15, intent=Stomp(), effects=[Vulnerable(duration=2)])
+
+    fight = Fight(player=player, enemies=[enemy], turn=1)
+    fight_vector = tuple(fight.to_vector())
+
+    hp_losses_expected = {0: Fraction(1, 1)}
+    hp_losses_got = fight.search_player_turn(dp_table)
+    assert hp_losses_expected == hp_losses_got
+
+    # On this turn, playing a strike guarantees that you have lethal, and playing a defend or passing guarantees you
+    # will die
+    dp_table_expected = {
+        (*fight_vector, Strike().id): {0: Fraction(1, 1)},
+        (*fight_vector, Defend().id): {4: Fraction(1, 1)},
+        (*fight_vector, -1): {14: Fraction(1, 1)},
+    }
+    for state_action_pair, hp_losses in dp_table_expected.items():
+        assert dp_table[state_action_pair] == hp_losses
+
+
+def test_search_computes_draw_order_probability():
+    dp_table = dict()
+    player = Ironclad(
+        name="Player",
+        hp=1,
+        hand=CardPile(cards=Counter({Strike(): 2, Defend(): 3})),
+        draw_pile=CardPile(cards=Counter({Strike(): 3, Defend(): 1, Bash(): 1, AscendersBane(): 1})),
+        player_turn_callback=lambda fight: True,
+    )
+    enemy = Nibbit(name="Enemy", hp=18)
+
+    # Nibbit hits for 13 -> Player must triple defend
+    # Nibbit hits for 7 -> Player must draw three strikes (50% chance) or they are dead
+    fight = Fight(player=player, enemies=[enemy], turn=1)
+
+    hp_losses_expected = {0: Fraction(1, 2), 2: Fraction(1, 2)}
+    hp_losses_got = fight.search_player_turn(dp_table)
+    for k, v in dp_table.items():
+        print(",".join(map(str, k[:-1])), k[-1], v)
+    assert hp_losses_expected == hp_losses_got

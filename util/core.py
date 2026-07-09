@@ -20,9 +20,6 @@ class Action:
     def __str__(self) -> str:
         return f"Action({", ".join(f"{k}={v}" for k, v in self.__dict__.items() if v)})"
 
-    def __hash__(self):
-        return hash((self.damage, self.block, tuple(self.actor_effects), tuple(self.target_effects)))
-
 
 @dataclass
 class Move:
