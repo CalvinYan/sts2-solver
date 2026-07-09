@@ -5,8 +5,8 @@ from math import comb
 import numpy as np
 
 from card import AscendersBane, Bash, CardPile, Defend, Strike
-from character.player import Ironclad
-from util.effect import Strength, Weak
+from character.player import Ironclad, Player
+from util.effect import Strength, Thorns, Weak
 
 
 def test_player_encodes_to_vector():
@@ -75,6 +75,88 @@ def test_player_encodes_to_vector():
     )
     got = clad.to_vector()
     assert np.array_equal(expected, got)
+
+
+def test_player_decodes_from_vector():
+    vector = (
+        0,
+        80,
+        0,
+        4,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        3,
+        2,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+    )
+    expected = Ironclad(
+        name="Player",
+        hp=80,
+        player_turn_callback=None,
+        draw_pile=CardPile(cards=Counter({Defend(): 1})),
+        hand=CardPile(cards=Counter({Strike(): 2, Defend(): 1, Bash(): 1, AscendersBane(): 1})),
+        discard_pile=CardPile(cards=Counter({Strike(): 3, Defend(): 2})),
+        effects=[Strength(power=4), Weak(duration=2)],
+    )
+    got, read = Player.from_vector(vector)
+    assert expected == got
+    assert len(vector) == read
+
+
+def test_player_round_trip():
+    expected = Ironclad(
+        name="Player",
+        hp=64,
+        player_turn_callback=None,
+        draw_pile=CardPile(cards=Counter({Strike(): 2, Defend(): 3, Bash(): 1})),
+        hand=CardPile(cards=Counter({Strike(): 1, AscendersBane(): 1})),
+        discard_pile=CardPile(cards=Counter({Strike(): 2, Defend(): 1})),
+        effects=[Thorns(power=3)],
+    )
+    got, _ = Player.from_vector(tuple(expected.to_vector()))
+    assert expected == got
 
 
 def test_player_next_states_reshuffle():

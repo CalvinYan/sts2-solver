@@ -107,6 +107,20 @@ def test_no_character_encodes_to_zeroes():
     assert np.array_equal(expected, got)
 
 
+def test_character_decodes_from_vector():
+    vector = (0, 40, 10, 7, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0)
+    expected = Character(name="Character", id=0, hp=40, block=10, effects=[Strength(power=7), Vulnerable(duration=1)])
+    got, read = Character.from_vector(vector)
+    assert expected == got
+    assert len(vector) == read
+
+
+def test_character_round_trip():
+    expected = Character(name="Character", id=1, hp=24, block=0, effects=[Weak(duration=5)])
+    got, _ = Character.from_vector(tuple(expected.to_vector()))
+    assert expected == got
+
+
 def test_character_effects_stack():
     c = Character(name="Test", id=0, hp=80)
 

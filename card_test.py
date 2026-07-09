@@ -24,6 +24,28 @@ def test_card_pile_encodes_to_vector():
     assert np.array_equal(expected, got)
 
 
+def test_card_pile_decodes_from_vector():
+    vector = np.array([5, 4, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1])
+    expected = CardPile(cards=Counter({Strike(): 5, Defend(): 4, Bash(): 1, AscendersBane(): 1}))
+    got, read = CardPile.from_vector(vector)
+    assert expected == got
+    assert len(vector) == read
+
+
+def test_empty_card_pile_decodes_from_zeroes():
+    vector = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+    expected = CardPile()
+    got, read = CardPile.from_vector(vector)
+    assert expected == got
+    assert len(vector) == read
+
+
+def test_card_pile_round_trip():
+    expected = CardPile(cards=Counter({Strike(): 1, Defend(): 3, AscendersBane(): 1}))
+    got, _ = CardPile.from_vector(tuple(expected.to_vector()))
+    assert expected == got
+
+
 def test_card_pile_overdraws():
     hand = CardPile(cards=Counter({Strike(): 3, Defend(): 2}))
     draw_pile = CardPile(cards=Counter({AscendersBane(): 1}))

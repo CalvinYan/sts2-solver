@@ -16,6 +16,9 @@ from util.core import Action
 if TYPE_CHECKING:
     from fight import Fight
 
+# Registry of enemy id to enemy class, populated by Enemy.__init_subclass__ as subclasses are defined.
+ID_TO_ENEMY: dict[int, type[Enemy]] = {}
+
 
 @dataclass(frozen=True)
 class Intent:
@@ -55,6 +58,10 @@ class Enemy(Character):
     intent: Intent
     min_hp: int
     max_hp: int
+
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        ID_TO_ENEMY[cls.id] = cls
 
     def __post_init__(self):
         if self.hp == 0:
@@ -98,6 +105,38 @@ class Enemy(Character):
         if self is None:
             return np.concatenate([[0], Character.to_vector(None), [0]])
         return np.concatenate([[1], super(Enemy, self).to_vector(), self.intent.to_vector()])
+
+    @staticmethod
+    def from_vector(vector: tuple[int, ...]) -> tuple[Enemy, int]:
+        try:
+            character, read = Character.from_vector(vector[1:])
+        except ValueError as e:
+            raise ValueError("Error reading Character from Enemy vector:", e)
+
+        if len(vector) < read + 2:
+            raise ValueError(
+                f"Not enough values in Enemy vector to read intent: expected {read + 2}, got {len(vector)}"
+            )
+
+        intent = ID_TO_ENEMY[character.id].id_to_intent(vector[read + 1])
+
+        return (
+            # min_hp/max_hp are intentionally omitted so the subclass's spawn-range defaults apply;
+            # mypy can't know that every registered subclass defines those defaults.
+            ID_TO_ENEMY[character.id](  # type: ignore[call-arg]
+                id=character.id,
+                name="Enemy",
+                hp=character.hp,
+                block=character.block,
+                effects=character.effects,
+                intent=intent,
+            ),
+            read + 2,
+        )
+
+    @staticmethod
+    def id_to_intent(intent_id: int) -> Intent:
+        return Intent(id=0)
 
     def __str__(self):
         return super().__str__() + f" {self.intent}"

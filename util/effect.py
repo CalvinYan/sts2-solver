@@ -59,6 +59,22 @@ class Effect:
     def effects_to_vector(effects: list[Effect]) -> np.ndarray:
         return sum((effect.to_vector() for effect in effects), start=Effect(id=0).to_vector())
 
+    @staticmethod
+    def effects_from_vector(vector: tuple[int, ...]) -> tuple[list[Effect], int]:
+        min_length = (max(ID_TO_EFFECT.keys()) + 1) * 2
+        effects = []
+        if len(vector) < min_length:
+            raise ValueError(f"Not enough values in Effects vector: expected {min_length}, got {len(vector)}")
+
+        for id, effect in ID_TO_EFFECT.items():
+            effect_vector = (vector[id * 2], vector[id * 2 + 1])
+            if effect_vector != (0, 0):
+                power = effect_vector[0] if effect_vector[0] != 0 else None
+                duration = effect_vector[1] if effect_vector[1] != 0 else None
+                effects.append(effect(id=id, power=power, duration=duration))
+
+        return effects, min_length
+
 
 @dataclass(eq=False, kw_only=True)
 class Strength(Effect):

@@ -2,9 +2,10 @@ from fractions import Fraction
 
 import numpy as np
 
-from character.enemies import FuzzyWurmCrawler, Nibbit, SludgeSpinner
+from character.enemies import FuzzyWurmCrawler, Nibbit, Seapunk, SludgeSpinner
 from character.enemies.fuzzy_wurm_crawler import AcidGoop1, AcidGoop2, Inhale
 from character.enemies.nibbit import HesitantSlice
+from character.enemies.seapunk import SpinningKick
 from character.enemy import Enemy
 
 
@@ -76,6 +77,38 @@ def test_no_enemy_encodes_to_zeroes():
     got = Enemy.to_vector(None)
 
     assert np.array_equal(expected, got)
+
+
+def test_enemy_decodes_from_vector():
+    vector = (
+        1,
+        Seapunk.id,
+        48,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        SpinningKick.id,
+    )
+    expected = Seapunk(name="Enemy", hp=48, intent=SpinningKick())
+    got, read = Enemy.from_vector(vector)
+    assert expected == got
+    assert len(vector) == read
+
+
+def test_enemy_round_trip():
+    expected = Nibbit(name="Enemy")
+    got, _ = Enemy.from_vector(tuple(expected.to_vector()))
+    assert expected == got
 
 
 def test_sludge_spinner_doesnt_repeat_moves():

@@ -1,5 +1,7 @@
 """Represents a single combat in Slay the Spire 2."""
 
+from __future__ import annotations
+
 from collections import defaultdict
 from dataclasses import dataclass
 from fractions import Fraction
@@ -99,6 +101,33 @@ class Fight:
                 [self.turn],
             ]
         )
+
+    @staticmethod
+    def from_vector(vector: tuple) -> tuple[Fight, int]:
+        indices_read = 0
+        try:
+            player, read = Player.from_vector(vector)
+        except ValueError as e:
+            raise ValueError("Error reading Player from Fight vector:", e)
+        indices_read += read
+        enemies = []
+
+        for _ in range(MAX_ENEMIES):
+            exists = vector[indices_read]
+            if exists:
+                enemy, read = Enemy.from_vector(vector[indices_read:])
+                enemies.append(enemy)
+            elif not enemies:
+                raise ValueError("Fight vector must contain at least one Enemy")
+            indices_read += read
+
+        if len(vector) < indices_read + 1:
+            raise ValueError(
+                f"Not enough values in Fight vector to read turn number: expected {indices_read + 1}, got {indices_read}"
+            )
+        turn: int = vector[indices_read]
+
+        return Fight(player=player, enemies=enemies, turn=turn), indices_read + 1
 
     def __str__(self) -> str:
         return f"\nTurn {self.turn}\n\nEnemies:\n{'\n'.join(str(enemy) for enemy in self.enemies)}\n\nPlayer:\n{self.player}"

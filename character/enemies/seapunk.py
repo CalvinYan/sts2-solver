@@ -44,3 +44,14 @@ class Seapunk(Enemy):
     intent: Intent = field(default_factory=SeaKick)
     min_hp: int = 47
     max_hp: int = 49
+
+    @staticmethod
+    def id_to_intent(intent_id: int) -> Intent:
+        return ID_TO_INTENT[intent_id](id=intent_id)
+
+
+ID_TO_INTENT: dict[int, type[Intent]] = {
+    SeaKick.id: SeaKick,
+    SpinningKick.id: SpinningKick,
+    BubbleBurp.id: BubbleBurp,
+}

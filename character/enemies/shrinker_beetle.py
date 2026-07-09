@@ -44,3 +44,14 @@ class ShrinkerBeetle(Enemy):
     intent: Intent = field(default_factory=Shrinker)
     min_hp: int = 40
     max_hp: int = 42
+
+    @staticmethod
+    def id_to_intent(intent_id: int) -> Intent:
+        return ID_TO_INTENT[intent_id](id=intent_id)
+
+
+ID_TO_INTENT: dict[int, type[Intent]] = {
+    Shrinker.id: Shrinker,
+    Chomp.id: Chomp,
+    Stomp.id: Stomp,
+}

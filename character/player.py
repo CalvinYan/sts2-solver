@@ -24,13 +24,12 @@ class Player(Character):
     Each fight has exactly one player.
     """
 
-    hp: int
     energy: int = 3
     hand: CardPile = field(default_factory=CardPile)
     draw_pile: CardPile
     discard_pile: CardPile = field(default_factory=CardPile)
 
-    player_turn_callback: Callable[[Fight], bool]
+    player_turn_callback: Callable[[Fight], bool] | None
 
     def draw(self, cards: int) -> None:
         for _ in range(cards):
@@ -69,7 +68,7 @@ class Player(Character):
         self.draw(5)
 
     def resolve_turn(self, fight: Fight) -> bool:
-        return self.player_turn_callback(fight)
+        return self.player_turn_callback(fight) if self.player_turn_callback else True
 
     def resolve_end_of_turn(self) -> None:
         super().resolve_end_of_turn()
@@ -123,6 +122,48 @@ class Player(Character):
             [super().to_vector(), self.draw_pile.to_vector(), self.hand.to_vector(), self.discard_pile.to_vector()]
         )
 
+    @staticmethod
+    def from_vector(vector: tuple[int, ...]) -> tuple[Player, int]:
+        values_read = 0
+        try:
+            character, read = Character.from_vector(vector)
+            values_read += read
+        except ValueError as e:
+            raise ValueError("Error reading Character from Player vector:", e)
+
+        try:
+            draw_pile, read = CardPile.from_vector(vector[values_read:])
+            values_read += read
+        except ValueError as e:
+            raise ValueError("Error reading draw pile from Player vector:", e)
+
+        try:
+            hand, read = CardPile.from_vector(vector[values_read:])
+            values_read += read
+        except ValueError as e:
+            raise ValueError("Error reading hand from Player vector:", e)
+
+        try:
+            discard_pile, read = CardPile.from_vector(vector[values_read:])
+            values_read += read
+        except ValueError as e:
+            raise ValueError("Error reading discard pile from Player vector:", e)
+
+        return (
+            ID_TO_PLAYER[character.id](
+                name="Player",
+                id=character.id,
+                hp=character.hp,
+                block=character.block,
+                effects=character.effects,
+                draw_pile=draw_pile,
+                hand=hand,
+                discard_pile=discard_pile,
+                player_turn_callback=None,
+            ),
+            values_read,
+        )
+
     def __str__(self) -> str:
         return f"{super().__str__()}\nHand: {self.hand}\nDraw: {self.draw_pile}\nDiscard: {self.discard_pile}"
 
@@ -143,3 +184,6 @@ class Ironclad(Player):
             )
         )
     )
+
+
+ID_TO_PLAYER: dict[int, type[Player]] = {Ironclad.id: Ironclad}

@@ -44,3 +44,14 @@ class FuzzyWurmCrawler(Enemy):
     intent: Intent = field(default_factory=AcidGoop1)
     min_hp: int = 58
     max_hp: int = 59
+
+    @staticmethod
+    def id_to_intent(intent_id: int) -> Intent:
+        return ID_TO_INTENT[intent_id](id=intent_id)
+
+
+ID_TO_INTENT: dict[int, type[Intent]] = {
+    AcidGoop1.id: AcidGoop1,
+    Inhale.id: Inhale,
+    AcidGoop2.id: AcidGoop2,
+}
