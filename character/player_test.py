@@ -13,6 +13,7 @@ def test_player_encodes_to_vector():
     clad = Ironclad(
         name="Test",
         hp=80,
+        energy=3,
         player_turn_callback=None,
         draw_pile=CardPile(cards=Counter({Defend(): 1})),
         hand=CardPile(cards=Counter({Strike(): 2, Defend(): 1, Bash(): 1, AscendersBane(): 1})),
@@ -36,6 +37,7 @@ def test_player_encodes_to_vector():
         0,
         0,
         0,
+        3,
         0,
         1,
         0,
@@ -94,6 +96,7 @@ def test_player_decodes_from_vector():
         0,
         0,
         0,
+        3,
         0,
         1,
         0,
@@ -134,6 +137,7 @@ def test_player_decodes_from_vector():
     expected = Ironclad(
         name="Player",
         hp=80,
+        energy=3,
         player_turn_callback=None,
         draw_pile=CardPile(cards=Counter({Defend(): 1})),
         hand=CardPile(cards=Counter({Strike(): 2, Defend(): 1, Bash(): 1, AscendersBane(): 1})),
@@ -149,6 +153,7 @@ def test_player_round_trip():
     expected = Ironclad(
         name="Player",
         hp=64,
+        energy=0,
         player_turn_callback=None,
         draw_pile=CardPile(cards=Counter({Strike(): 2, Defend(): 3, Bash(): 1})),
         hand=CardPile(cards=Counter({Strike(): 1, AscendersBane(): 1})),

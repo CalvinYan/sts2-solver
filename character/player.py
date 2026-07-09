@@ -119,7 +119,13 @@ class Player(Character):
 
     def to_vector(self) -> np.ndarray:
         return np.concatenate(
-            [super().to_vector(), self.draw_pile.to_vector(), self.hand.to_vector(), self.discard_pile.to_vector()]
+            [
+                super().to_vector(),
+                [self.energy],
+                self.draw_pile.to_vector(),
+                self.hand.to_vector(),
+                self.discard_pile.to_vector(),
+            ]
         )
 
     @staticmethod
@@ -130,6 +136,13 @@ class Player(Character):
             values_read += read
         except ValueError as e:
             raise ValueError("Error reading Character from Player vector:", e)
+
+        if len(vector) < values_read + 1:
+            raise ValueError(
+                f"Could not read energy from Player vector: expected {values_read + 1} values, got {len(vector)}"
+            )
+        energy = vector[values_read]
+        values_read += 1
 
         try:
             draw_pile, read = CardPile.from_vector(vector[values_read:])
@@ -155,6 +168,7 @@ class Player(Character):
                 id=character.id,
                 hp=character.hp,
                 block=character.block,
+                energy=energy,
                 effects=character.effects,
                 draw_pile=draw_pile,
                 hand=hand,
