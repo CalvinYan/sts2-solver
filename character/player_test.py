@@ -2,8 +2,79 @@ from collections import Counter
 from fractions import Fraction
 from math import comb
 
-from card import Bash, CardPile, Defend, Strike
+import numpy as np
+
+from card import AscendersBane, Bash, CardPile, Defend, Strike
 from character.player import Ironclad
+from util.effect import Strength, Weak
+
+
+def test_player_encodes_to_vector():
+    clad = Ironclad(
+        name="Test",
+        hp=80,
+        player_turn_callback=None,
+        draw_pile=CardPile(cards=Counter({Defend(): 1})),
+        hand=CardPile(cards=Counter({Strike(): 2, Defend(): 1, Bash(): 1, AscendersBane(): 1})),
+        discard_pile=CardPile(cards=Counter({Strike(): 3, Defend(): 2})),
+        effects=[Strength(power=4), Weak(duration=2)],
+    )
+
+    expected = (
+        0,
+        80,
+        0,
+        4,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        2,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        3,
+        2,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+    )
+    got = clad.to_vector()
+    assert np.array_equal(expected, got)
 
 
 def test_player_next_states_reshuffle():

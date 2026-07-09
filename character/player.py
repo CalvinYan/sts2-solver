@@ -8,6 +8,8 @@ from dataclasses import dataclass, field
 from fractions import Fraction
 from typing import TYPE_CHECKING, Callable
 
+import numpy as np
+
 from card import AscendersBane, Bash, Card, CardPile, Defend, Strike
 from character.core import Character
 
@@ -115,6 +117,11 @@ class Player(Character):
                 result.append((future_player, probability))
 
         return result
+
+    def to_vector(self) -> np.ndarray:
+        return np.concatenate(
+            [super().to_vector(), self.draw_pile.to_vector(), self.hand.to_vector(), self.discard_pile.to_vector()]
+        )
 
     def __str__(self) -> str:
         return f"{super().__str__()}\nHand: {self.hand}\nDraw: {self.draw_pile}\nDiscard: {self.discard_pile}"
