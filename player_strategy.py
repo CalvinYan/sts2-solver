@@ -1,6 +1,5 @@
 """Simulates Floor 2 fights with user input, allowing you to compare how you stack up against algorithms"""
 
-import readline  # Enabling line editing in user input
 from collections import defaultdict
 
 from card import Bash, Defend, Strike, Targeting
@@ -77,7 +76,7 @@ if __name__ == "__main__":
             fight.start()
 
             print(f"You lost {starting_hp - player.hp} hp")
-            hp_losses[encounter].append(player.hp)
+            hp_losses[encounter].append(starting_hp - player.hp)
 
     for encounter in [
         fuzzy_wurm_crawler,
