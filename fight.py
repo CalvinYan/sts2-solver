@@ -14,6 +14,7 @@ from character.core import Character
 from character.enemies import SludgeSpinner
 from character.enemy import Enemy
 from character.player import Player
+from util.core import Move
 
 MAX_ENEMIES = 5
 
@@ -63,6 +64,20 @@ class Fight:
     # probability distributions of player hp losses from each state, and returning the distributions with the best
     # expected value. State-action pairs are memoized according to dynamic programming.
 
+    def incoming_damage(self) -> int:
+        dmg = 0
+        for enemy in self.enemies:
+            for action in enemy.intent.actions():
+                if action.damage:
+                    move = Move(action, actor=enemy, target=self.player)
+                    for effect in enemy.effects:
+                        effect.resolve(move, is_target=False)
+                    for effect in self.player.effects:
+                        effect.resolve(move, is_target=True)
+                    dmg += action.damage  # type: ignore
+
+        return dmg
+
     def search_player_turn_start(
         self, dp_table: dict[tuple, dict[int, Fraction]], hp_limit: int = 0
     ) -> dict[int, Fraction]:
@@ -93,8 +108,7 @@ class Fight:
         for card in self.player.hand.cards.keys():
             # Optimization: Don't play defends if enemies are not attacking
             if card.playable(self.player.energy) and not (
-                isinstance(card, Defend)
-                and not any([any([action.damage for action in enemy.intent.actions()]) for enemy in self.enemies])
+                isinstance(card, Defend) and self.incoming_damage() <= self.player.block
             ):
                 hp_losses = deepcopy(self).search_player_turn_action(dp_table, card, hp_limit)
                 if hp_losses:

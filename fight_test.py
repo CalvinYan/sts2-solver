@@ -274,3 +274,22 @@ def test_search_no_defend_on_empty_turn():
     fight.search_player_turn(dp_table)
     # Search should not ever consider playing Defend
     assert not any(vector[-1] == Defend.id for vector in dp_table.keys())
+
+
+def test_search_no_overblock():
+    dp_table = dict()
+    player = Ironclad(
+        name="Player",
+        block=10,
+        energy=1,
+        hand=CardPile(cards=Counter({Bash(): 1, Strike(): 1, Defend(): 1})),
+        draw_pile=CardPile(cards=Counter({Strike(): 4, Defend(): 1})),
+        player_turn_callback=lambda fight: True,
+    )
+    enemy = Nibbit(name="Enemy", hp=12, intent=HesitantSlice())
+
+    fight = Fight(player=player, enemies=[enemy], turn=2)
+
+    fight.search_player_turn(dp_table)
+    # Search should not ever consider playing Defend
+    assert not any(vector[-1] == Defend.id for vector in dp_table.keys())
