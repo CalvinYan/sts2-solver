@@ -31,11 +31,12 @@ Minor improvements are limited to the following:
 * Fixing obvious mistakes in game logic (see rule 2 above)
 * Fixing errors that would prevent code from running in the root directory (i.e. compilation errors, circular imports, null pointer exceptions)
 * Optimizing code (removing duplicated code, improving list comprehensions to be more readable, etc)
+* Increasing testing coverage
 
 They do not include:
 * Implementing new features
-* Writing unit tests
 * Modifying the code's file structure / class structure (unless it is strictly necessary for the above)
+* Modifying non-engine code (.md files, GitHub actions, etc)
 
 For each improvement, check if you have an open pull request for the issue, otherwise raise one according to the following format:
 ### What
