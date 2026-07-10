@@ -27,3 +27,13 @@ def shrinker_beetle(verbose: bool = False):
 
 def sludge_spinner(verbose: bool = False):
     return [SludgeSpinner(name="Sludge Spinner", verbose=verbose)]
+
+
+# All Floor 2 encounters, in a canonical order for iterating over benchmarks.
+ALL_ENCOUNTERS = [
+    fuzzy_wurm_crawler,
+    nibbit,
+    seapunk,
+    shrinker_beetle,
+    sludge_spinner,
+]

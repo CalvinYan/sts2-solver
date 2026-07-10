@@ -3,13 +3,7 @@
 from collections import defaultdict
 
 from card import Bash, Defend, Strike, Targeting
-from character.encounters import (
-    fuzzy_wurm_crawler,
-    nibbit,
-    seapunk,
-    shrinker_beetle,
-    sludge_spinner,
-)
+from character.encounters import ALL_ENCOUNTERS
 from character.player import Ironclad
 from compare_strategies import has_lethal
 from fight import Fight
@@ -62,13 +56,7 @@ def user_ironclad(fight: Fight) -> bool:
 if __name__ == "__main__":
     hp_losses = defaultdict(list)
 
-    for encounter in [
-        fuzzy_wurm_crawler,
-        nibbit,
-        seapunk,
-        shrinker_beetle,
-        sludge_spinner,
-    ]:
+    for encounter in ALL_ENCOUNTERS:
         for _ in range(20):
             player = Ironclad(name="User", player_turn_callback=user_ironclad, verbose=True)
             starting_hp = player.hp
@@ -78,13 +66,7 @@ if __name__ == "__main__":
             print(f"You lost {starting_hp - player.hp} hp")
             hp_losses[encounter].append(starting_hp - player.hp)
 
-    for encounter in [
-        fuzzy_wurm_crawler,
-        nibbit,
-        seapunk,
-        shrinker_beetle,
-        sludge_spinner,
-    ]:
+    for encounter in ALL_ENCOUNTERS:
         print(f"HP losses against {encounter.__name__}: {hp_losses[encounter]}")
         print(
             f"Average HP loss of against {encounter.__name__}: {sum(hp_losses[encounter]) / len(hp_losses[encounter])}"
