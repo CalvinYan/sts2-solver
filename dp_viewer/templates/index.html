@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>DP Viewer</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+</head>
+<body>
+  <h1>DP Viewer</h1>
+  <p class="subtitle">Reconstruct a fight state and look up the solved HP-loss distribution for every action.
+    <span class="muted">({{ '{:,}'.format(state_count) }} states loaded)</span></p>
+
+  <form id="fight-form">
+    <div class="row top">
+      <label>Player class
+        <select name="player" id="player">
+          {% for pid, name in players.items() %}<option value="{{ pid }}">{{ name }}</option>{% endfor %}
+        </select>
+      </label>
+      <label>Enemy
+        <select name="enemy" id="enemy">
+          {% for eid, name in enemies.items() %}<option value="{{ eid }}">{{ name }}</option>{% endfor %}
+        </select>
+      </label>
+      <label>Turn #
+        <input type="number" name="turn" id="turn" min="0" value="1" required />
+      </label>
+    </div>
+
+    <div class="row columns">
+      <fieldset class="panel">
+        <legend>Player</legend>
+        <label>HP <input type="number" name="player_hp" min="0" required /></label>
+        <label>Block <input type="number" name="player_block" min="0" value="0" required /></label>
+        <label>Energy <input type="number" name="player_energy" min="0" value="3" required /></label>
+        <label>Effects</label>
+        <table class="effects">
+          <tbody>
+            {% for cid, name in cards.items() %}
+            <tr>
+              <th>{{ name }}</th>
+              <td><input type="number" name="draw_{{ cid }}" min="0" value="0" /></td>
+              <td><input type="number" name="hand_{{ cid }}" min="0" value="0" /></td>
+              <td><input type="number" name="discard_{{ cid }}" min="0" value="0" /></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </fieldset>
+
+      <fieldset class="panel">
+        <legend>Enemy</legend>
+        <label>HP <input type="number" name="enemy_hp" min="0" required /></label>
+        <label>Block <input type="number" name="enemy_block" min="0" value="0" required /></label>
+        <label>Intent
+          <select name="enemy_intent" id="enemy_intent"></select>
+        </label>
+      </fieldset>
+    </div>
+
+    <fieldset class="panel">
+      <legend>Card piles</legend>
+      <table class="piles">
+        <thead>
+          <tr><th></th><th>Draw</th><th>Hand</th><th>Discard</th></tr>
+        </thead>
+        <tbody>
+          {% for cid, name in cards.items() %}
+          <tr>
+            <th>{{ name }}</th>
+            <td><input type="number" name="draw_{{ cid }}" min="0" value="0" /></td>
+            <td><input type="number" name="hand_{{ cid }}" min="0" value="0" /></td>
+            <td><input type="number" name="discard_{{ cid }}" min="0" value="0" /></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </fieldset>
+
+    <button type="submit">Calculate</button>
+  </form>
+
+  <section id="results" hidden>
+    <h2>Actions <span class="muted" id="results-note"></span></h2>
+    <div id="results-body"></div>
+  </section>
+
+  <script>
+    const INTENTS = {{ intents | tojson }};
+
+    const enemySelect = document.getElementById('enemy');
+    const intentSelect = document.getElementById('enemy_intent');
+
+    function refreshIntents() {
+      const options = INTENTS[enemySelect.value] || {};
+      intentSelect.innerHTML = '';
+      for (const [id, name] of Object.entries(options)) {
+        const opt = document.createElement('option');
+        opt.value = id;
+        opt.textContent = `${name} (${id})`;
+        intentSelect.appendChild(opt);
+      }
+    }
+    enemySelect.addEventListener('change', refreshIntents);
+    refreshIntents();
+
+    const form = document.getElementById('fight-form');
+    const results = document.getElementById('results');
+    const resultsBody = document.getElementById('results-body');
+    const resultsNote = document.getElementById('results-note');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const params = new URLSearchParams(new FormData(form));
+      resultsNote.textContent = 'loading…';
+      results.hidden = false;
+      resultsBody.innerHTML = '';
+
+      let data;
+      try {
+        const resp = await fetch('/query?' + params.toString());
+        data = await resp.json();
+        if (!resp.ok) throw new Error(data.error || 'Request failed');
+      } catch (err) {
+        resultsNote.textContent = '';
+        resultsBody.innerHTML = `<p class="error">${err.message}</p>`;
+        return;
+      }
+
+      if (!data.found) {
+        resultsNote.textContent = '';
+        resultsBody.innerHTML = '<p class="error">No data for this state. It may be unreachable, ' +
+          'truncated by the solver\'s HP limit, or require effects the form can\'t express.</p>';
+        return;
+      }
+
+      resultsNote.textContent = `(lowest expected HP loss first)`;
+      for (const action of data.actions) {
+        const card = document.createElement('div');
+        card.className = 'action' + (action.best ? ' best' : '');
+        const rows = action.outcomes.map(o =>
+          `<tr><td>${o.hp_loss}</td><td>${o.prob_str}</td><td>${(o.prob * 100).toFixed(1)}%</td></tr>`
+        ).join('');
+        card.innerHTML = `
+          <div class="action-head">
+            <span class="action-name">${action.label}${action.best ? ' &#9733;' : ''}</span>
+            <span class="expected">E[HP loss] = ${action.expected_loss.toFixed(3)}</span>
+          </div>
+          <table class="dist">
+            <thead><tr><th>HP loss</th><th>Prob</th><th></th></tr></thead>
+            <tbody>${rows}</tbody>
+          </table>`;
+        resultsBody.appendChild(card);
+      }
+    });
+  </script>
+</body>
+</html>
