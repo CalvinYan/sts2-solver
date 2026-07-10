@@ -1,4 +1,5 @@
 from collections import Counter
+from copy import deepcopy
 from fractions import Fraction
 
 import numpy as np
@@ -184,6 +185,28 @@ def test_search_computes_draw_order_probability():
 
     hp_losses_expected = {0: Fraction(1, 2), 2: Fraction(1, 2)}
     hp_losses_got = fight.search_player_turn(dp_table)
-    for k, v in dp_table.items():
-        print(",".join(map(str, k[:-1])), k[-1], v)
     assert hp_losses_expected == hp_losses_got
+
+
+def test_search_uses_cache():
+    player = Ironclad(
+        name="Player",
+        hp=1,
+        hand=CardPile(cards=Counter({Strike(): 2, Defend(): 3})),
+        draw_pile=CardPile(cards=Counter({Strike(): 3, Defend(): 1, Bash(): 1, AscendersBane(): 1})),
+        player_turn_callback=lambda fight: True,
+    )
+    enemy = Nibbit(name="Enemy", hp=18)
+    fight = Fight(player=player, enemies=[enemy], turn=1)
+
+    expected = {
+        (*fight.to_vector(), -1): {13: Fraction(1, 1)},
+        (*fight.to_vector(), 0): {8: Fraction(1, 1)},
+        (*fight.to_vector(), 1): {0: Fraction(1, 2), 2: Fraction(1, 2)},
+    }
+    got = deepcopy(expected)
+
+    fight.search_player_turn(got)
+
+    # Should not contain additional search states even if a blank-slate search would turn them up
+    assert expected == got
