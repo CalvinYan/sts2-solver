@@ -6,7 +6,7 @@ import numpy as np
 
 from card import AscendersBane, Bash, CardPile, Defend, Strike
 from character.enemies import Nibbit, ShrinkerBeetle, SludgeSpinner
-from character.enemies.nibbit import HesitantSlice
+from character.enemies.nibbit import HesitantSlice, Hiss
 from character.enemies.shrinker_beetle import Stomp
 from character.enemies.sludge_spinner import Slam
 from character.player import Ironclad
@@ -259,17 +259,18 @@ def test_search_terminates_at_hp_limit():
     assert all(hp_loss < 7 for hp_loss, _ in hp_losses.items())
 
 
-# def test_search_truncates_after_finding_lethal():
-#     dp_table = dict()
-#     player = Ironclad(
-#         name="Player",
-#         hand=CardPile(cards=Counter({Bash(): 1, Strike(): 1, AscendersBane(): 1, Defend(): 2})),
-#         player_turn_callback=lambda fight: True,
-#     )
-#     enemy = SludgeSpinner(name="Enemy", hp=15, intent=OilSpray())
+def test_search_no_defend_on_empty_turn():
+    dp_table = dict()
+    player = Ironclad(
+        name="Player",
+        hand=CardPile(cards=Counter({Bash(): 1, Strike(): 1, AscendersBane(): 1, Defend(): 2})),
+        draw_pile=CardPile(cards=Counter({Strike(): 4, Defend(): 2})),
+        player_turn_callback=lambda fight: True,
+    )
+    enemy = Nibbit(name="Enemy", hp=15, intent=Hiss())
 
-#     fight = Fight(player=player, enemies=[enemy], turn=3)
+    fight = Fight(player=player, enemies=[enemy], turn=3)
 
-#     fight.search_player_turn(dp_table)
-#     # Search should terminate before it considers defend
-#     assert not any(vector[-1] == Defend.id for vector in dp_table.keys())
+    fight.search_player_turn(dp_table)
+    # Search should not ever consider playing Defend
+    assert not any(vector[-1] == Defend.id for vector in dp_table.keys())

@@ -9,7 +9,7 @@ from fractions import Fraction
 
 import numpy as np
 
-from card import Card
+from card import Card, Defend
 from character.core import Character
 from character.enemies import SludgeSpinner
 from character.enemy import Enemy
@@ -91,7 +91,11 @@ class Fight:
 
         # Try playing each playable card in your hand
         for card in self.player.hand.cards.keys():
-            if card.playable(self.player.energy):
+            # Optimization: Don't play defends if enemies are not attacking
+            if card.playable(self.player.energy) and not (
+                isinstance(card, Defend)
+                and not any([any([action.damage for action in enemy.intent.actions()]) for enemy in self.enemies])
+            ):
                 hp_losses = deepcopy(self).search_player_turn_action(dp_table, card, hp_limit)
                 if hp_losses:
                     expected_value = sum(
