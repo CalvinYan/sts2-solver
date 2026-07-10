@@ -154,9 +154,9 @@ def test_search_truncates_after_finding_lethal():
     fight_vector = tuple(fight.to_vector())
 
     hp_losses_expected = {0: Fraction(1)}
-    hp_losses_got = fight.search_player_turn(dp_table)
-    print(hp_losses_got)
+    hp_losses_got, search_complete = fight.search_player_turn(dp_table)
     assert hp_losses_expected == hp_losses_got
+    assert search_complete
 
     # Search should terminate once it finds that triple Strike is lethal
     dp_table_expected = {(*fight_vector, Strike().id): {0: Fraction(1)}}
@@ -194,8 +194,9 @@ def test_search_computes_unwinnable_turn():
                 dp_table_expected[(*fight_copy.to_vector(), 1)] = {9 - 5 * min(1, 2 - strikes): Fraction(1)}
 
     hp_losses_expected = {4: Fraction(1)}
-    hp_losses_got = fight.search_player_turn(dp_table)
+    hp_losses_got, search_complete = fight.search_player_turn(dp_table)
     assert hp_losses_expected == hp_losses_got
+    assert search_complete
 
     # Player is dead no matter what, but search should tabulate all the possible ways
     assert dp_table_expected == dp_table
@@ -217,8 +218,9 @@ def test_search_computes_draw_order_probability():
     fight = Fight(player=player, enemies=[enemy], turn=1)
 
     hp_losses_expected = {0: Fraction(1, 2), 2: Fraction(1, 2)}
-    hp_losses_got = fight.search_player_turn(dp_table)
+    hp_losses_got, search_complete = fight.search_player_turn(dp_table)
     assert hp_losses_expected == hp_losses_got
+    assert search_complete
 
 
 def test_search_uses_cache():
@@ -255,8 +257,8 @@ def test_search_terminates_at_hp_limit():
 
     fight = Fight(player=player, enemies=[enemy], turn=1)
 
-    hp_losses = fight.search_player_turn_start(dp_table, hp_limit=57)
-    assert all(hp_loss < 7 for hp_loss, _ in hp_losses.items())
+    _, search_complete = fight.search_player_turn_start(dp_table, hp_limit=57)
+    assert not search_complete
 
 
 def test_search_no_defend_on_empty_turn():
