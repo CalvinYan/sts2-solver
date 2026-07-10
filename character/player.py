@@ -10,7 +10,22 @@ from typing import TYPE_CHECKING, Callable
 
 import numpy as np
 
-from card import AscendersBane, Bash, Card, CardPile, Defend, Strike
+from card import (
+    AscendersBane,
+    Bash,
+    Bodyguard,
+    Card,
+    CardPile,
+    Defend,
+    Dualcast,
+    FallingStar,
+    Neutralize,
+    Strike,
+    Survivor,
+    Unleash,
+    Venerate,
+    Zap,
+)
 from character.core import Character
 
 if TYPE_CHECKING:
@@ -194,6 +209,82 @@ class Ironclad(Player):
                     Strike(): 5,
                     Defend(): 4,
                     Bash(): 1,
+                    AscendersBane(): 1,
+                }
+            )
+        )
+    )
+
+
+@dataclass
+class Silent(Player):
+    id: int = 0
+    hp: int = 56
+    draw_pile: CardPile = field(
+        default_factory=lambda: CardPile(
+            cards=Counter(
+                {
+                    Strike(): 5,
+                    Defend(): 5,
+                    Neutralize(): 1,
+                    Survivor(): 1,
+                    AscendersBane(): 1,
+                }
+            )
+        )
+    )
+
+
+@dataclass
+class Regent(Player):
+    id: int = 0
+    hp: int = 60
+    draw_pile: CardPile = field(
+        default_factory=lambda: CardPile(
+            cards=Counter(
+                {
+                    Strike(): 4,
+                    Defend(): 4,
+                    Venerate(): 1,
+                    FallingStar(): 1,
+                    AscendersBane(): 1,
+                }
+            )
+        )
+    )
+
+
+@dataclass
+class Necrobinder(Player):
+    id: int = 0
+    hp: int = 52
+    draw_pile: CardPile = field(
+        default_factory=lambda: CardPile(
+            cards=Counter(
+                {
+                    Strike(): 4,
+                    Defend(): 4,
+                    Bodyguard(): 1,
+                    Unleash(): 1,
+                    AscendersBane(): 1,
+                }
+            )
+        )
+    )
+
+
+@dataclass
+class Defect(Player):
+    id: int = 4
+    hp: int = 60
+    draw_pile: CardPile = field(
+        default_factory=lambda: CardPile(
+            cards=Counter(
+                {
+                    Strike(): 4,
+                    Defend(): 4,
+                    Zap(): 1,
+                    Dualcast(): 1,
                     AscendersBane(): 1,
                 }
             )
