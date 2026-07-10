@@ -41,7 +41,7 @@ def user_ironclad(fight: Fight) -> bool:
             return True
 
         card = CARDS[cmd]
-        if player.hand.cards[card] > 0 and card.playable(player.energy):
+        if player.hand.cards[card] > 0 and player.can_play(card):
             player.play(
                 card,
                 target=(None if card.targeting == Targeting.NONE else fight.enemies[0]),

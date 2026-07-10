@@ -107,7 +107,7 @@ class Fight:
         # Try playing each playable card in your hand
         for card in self.player.hand.cards.keys():
             # Optimization: Don't play defends if enemies are not attacking
-            if card.playable(self.player.energy) and not (
+            if self.player.can_play(card) and not (
                 isinstance(card, Defend) and self.incoming_damage() <= self.player.block
             ):
                 hp_losses = deepcopy(self).search_player_turn_action(dp_table, card, hp_limit)

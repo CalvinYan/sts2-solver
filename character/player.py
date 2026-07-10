@@ -59,12 +59,15 @@ class Player(Character):
 
             self.hand.draw(self.draw_pile)
 
+    def can_play(self, card: Card) -> bool:
+        return card.cost is not None and self.energy >= card.cost
+
     def play(self, card: Card, target: Character | None = None) -> None:
         if self.hand.cards[card] == 0:
             print(f"{self.name} tried to play {card} but hand is: {self.hand}")
             return
 
-        if not card.playable(self.energy):
+        if not self.can_play(card):
             print(f"{self.name} tried to play {card} but card is not playable")
             return
 

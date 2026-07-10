@@ -32,9 +32,6 @@ class Card:
     def action(self) -> Action:
         return Action()
 
-    def playable(self, energy: int) -> bool:
-        return self.cost is not None and energy >= self.cost
-
     def to_vector(self: Card | None) -> np.ndarray:
         base = np.zeros(max(ID_TO_CARD.keys()) + 1, dtype=int)
         if self is not None:

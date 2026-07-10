@@ -71,13 +71,13 @@ def unga_bunga_ironclad(fight: Fight) -> bool:
     strike = Strike()
     defend = Defend()
 
-    if player.hand.cards[bash] > 0 and bash.playable(player.energy):
+    if player.hand.cards[bash] > 0 and player.can_play(bash):
         player.play(bash, target=fight.enemies[0])
 
-    elif player.hand.cards[strike] > 0 and strike.playable(player.energy):
+    elif player.hand.cards[strike] > 0 and player.can_play(strike):
         player.play(strike, target=fight.enemies[0])
 
-    elif player.hand.cards[defend] > 0 and defend.playable(player.energy):
+    elif player.hand.cards[defend] > 0 and player.can_play(defend):
         player.play(defend, target=None)
 
     return player.energy == 0 or player.hand.cards.total() == 0  # End turn if no energy left or hand is empty
@@ -94,13 +94,13 @@ def noob_ironclad(fight: Fight) -> bool:
     strike = Strike()
     defend = Defend()
 
-    if incoming_damage(fight) > player.block and player.hand.cards[defend] > 0 and defend.playable(player.energy):
+    if incoming_damage(fight) > player.block and player.hand.cards[defend] > 0 and player.can_play(defend):
         player.play(defend, target=None)
 
-    elif player.hand.cards[bash] > 0 and bash.playable(player.energy):
+    elif player.hand.cards[bash] > 0 and player.can_play(bash):
         player.play(bash, target=fight.enemies[0])
 
-    elif player.hand.cards[strike] > 0 and strike.playable(player.energy):
+    elif player.hand.cards[strike] > 0 and player.can_play(strike):
         player.play(strike, target=fight.enemies[0])
 
     else:
@@ -120,15 +120,13 @@ def balanced_ironclad(fight: Fight) -> bool:
     strike = Strike()
     defend = Defend()
 
-    if player.hand.cards[bash] > 0 and bash.playable(player.energy):
+    if player.hand.cards[bash] > 0 and player.can_play(bash):
         player.play(bash, target=fight.enemies[0])
 
-    elif (
-        incoming_damage(fight) >= player.block + 5 and player.hand.cards[defend] > 0 and defend.playable(player.energy)
-    ):
+    elif incoming_damage(fight) >= player.block + 5 and player.hand.cards[defend] > 0 and player.can_play(defend):
         player.play(defend, target=None)
 
-    elif player.hand.cards[strike] > 0 and strike.playable(player.energy):
+    elif player.hand.cards[strike] > 0 and player.can_play(strike):
         player.play(strike, target=fight.enemies[0])
 
     else:
