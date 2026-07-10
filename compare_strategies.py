@@ -9,13 +9,7 @@ from collections import defaultdict
 from copy import deepcopy
 
 from card import Bash, Defend, Strike
-from character.encounters import (
-    fuzzy_wurm_crawler,
-    nibbit,
-    seapunk,
-    shrinker_beetle,
-    sludge_spinner,
-)
+from character.encounters import ALL_ENCOUNTERS
 from character.player import Ironclad
 from fight import Fight
 from util.core import Move
@@ -146,13 +140,7 @@ def balanced_ironclad(fight: Fight) -> bool:
 def main():
     hp_losses = defaultdict(lambda: defaultdict(list))
 
-    for encounter in [
-        fuzzy_wurm_crawler,
-        nibbit,
-        seapunk,
-        shrinker_beetle,
-        sludge_spinner,
-    ]:
+    for encounter in ALL_ENCOUNTERS:
         for name, callback in zip(
             ["Chad", "Virgin", "Balanced"],
             [unga_bunga_ironclad, noob_ironclad, balanced_ironclad],
@@ -165,13 +153,7 @@ def main():
 
                 hp_losses[name][encounter].append(starting_hp - player.hp)
 
-    for encounter in [
-        fuzzy_wurm_crawler,
-        nibbit,
-        seapunk,
-        shrinker_beetle,
-        sludge_spinner,
-    ]:
+    for encounter in ALL_ENCOUNTERS:
         for name in ["Chad", "Virgin", "Balanced"]:
             print(
                 f"Average HP loss of {name} against {encounter.__name__}: {sum(hp_losses[name][encounter]) / len(hp_losses[name][encounter])}"
