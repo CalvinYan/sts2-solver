@@ -12,7 +12,7 @@ from fractions import Fraction
 import numpy as np
 
 from util.core import Action
-from util.effect import Vulnerable
+from util.effect import Vulnerable, Weak
 
 
 class Targeting(Enum):
@@ -76,6 +76,72 @@ class Bash(Card):
 
     def action(self) -> Action:
         return Action(damage=8, target_effects=[Vulnerable(duration=2)])
+
+
+@dataclass(frozen=True)
+class Neutralize(Card):
+    id: int = 3
+    cost: int = 0
+    targeting: Targeting = Targeting.ENEMY_SINGLE
+
+    def action(self) -> Action:
+        return Action(damage=3, target_effects=[Weak(duration=1)])
+
+
+@dataclass(frozen=True)
+class Survivor(Card):
+    id: int = 4
+    cost: int = 1
+    targeting: Targeting = Targeting.NONE
+
+    def action(self) -> Action:
+        return Action(block=8)
+
+
+@dataclass(frozen=True)
+class Venerate(Card):
+    id: int = 5
+    cost: int = 1
+    targeting: Targeting = Targeting.NONE
+
+
+@dataclass(frozen=True)
+class FallingStar(Card):
+    id: int = 6
+    cost: int = 0
+    star_cost: int = 2
+    targeting: Targeting = Targeting.ENEMY_SINGLE
+
+    def action(self) -> Action:
+        return Action(damage=8, target_effects=[Weak(duration=1), Vulnerable(duration=1)])
+
+
+@dataclass(frozen=True)
+class Bodyguard(Card):
+    id: int = 7
+    cost: int = 1
+    targeting: Targeting = Targeting.NONE
+
+
+@dataclass(frozen=True)
+class Unleash(Card):
+    id: int = 8
+    cost: int = 1
+    targeting: Targeting = Targeting.ENEMY_SINGLE
+
+
+@dataclass(frozen=True)
+class Zap(Card):
+    id: int = 9
+    cost: int = 1
+    targeting: Targeting = Targeting.NONE
+
+
+@dataclass(frozen=True)
+class Dualcast(Card):
+    id: int = 10
+    cost: int = 1
+    targeting: Targeting = Targeting.NONE
 
 
 @dataclass(frozen=True)
