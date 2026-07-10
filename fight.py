@@ -167,7 +167,7 @@ class Fight:
         while not self.is_over():
             self.loop()
         if self.verbose:
-            print(f"Fight ended after {self.turn} turns. Player HP loss: {self.player.hp}")
+            print(f"Fight ended after {self.turn} turns. Player HP remaining: {self.player.hp}")
 
     # Vector representation of a Fight for interpretation by learning models.
     # The representation is entirely defined by:
