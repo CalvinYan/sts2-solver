@@ -127,7 +127,7 @@ def test_sludge_spinner_doesnt_repeat_moves():
 
 def test_enemy_next_states():
     nibbit = Nibbit(name="Test", hp=44)
-    expected = [(Nibbit(name="Test", hp=44, intent=HesitantSlice()), Fraction(1, 1))]
+    expected = [(Nibbit(name="Test", hp=44, intent=HesitantSlice()), Fraction(1))]
     got = nibbit.next_states()
 
     assert expected == got

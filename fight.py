@@ -84,7 +84,7 @@ class Fight:
 
     def search_player_turn(self, dp_table: dict[tuple, dict[int, Fraction]], hp_limit: int = 0) -> dict[int, Fraction]:
         if self.is_over():
-            return {0: Fraction(1, 1)}
+            return {0: Fraction(1)}
 
         best_distribution = {}
         best_value = Fraction(1 << 32)
@@ -101,7 +101,7 @@ class Fight:
                         best_distribution = hp_losses
                         best_value = expected_value
 
-                    if hp_losses == {0: Fraction(1, 1)}:
+                    if hp_losses == {0: Fraction(1)}:
                         break
         else:
             # Try just ending your turn
@@ -157,7 +157,7 @@ class Fight:
         self, dp_table: dict[tuple, dict[int, Fraction]], hp_limit: int = 0
     ) -> dict[int, Fraction]:
         if self.is_over():
-            return {0: Fraction(1, 1)}
+            return {0: Fraction(1)}
 
         for enemy in self.enemies:
             enemy.resolve_start_of_turn()
@@ -179,7 +179,7 @@ class Fight:
         self, dp_table: dict[tuple, dict[int, Fraction]], hp_limit: int = 0
     ) -> dict[int, Fraction]:
         if self.is_over():
-            return {0: Fraction(1, 1)}
+            return {0: Fraction(1)}
 
         # TODO: Eventually I will have to deal with multiple enemies with random intents but
         # don't feel like doing it right now

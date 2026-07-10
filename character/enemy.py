@@ -34,7 +34,7 @@ class Intent:
 
     # Helper method for dp solve. Returns the probability distribtion of the next intent after this one
     def next_intents(self) -> list[tuple[Intent, Fraction]]:
-        return [(self.next(), Fraction(1, 1))]
+        return [(self.next(), Fraction(1))]
 
     def to_vector(self) -> np.ndarray:
         return np.array([self.id])
