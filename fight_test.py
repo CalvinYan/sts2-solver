@@ -139,7 +139,7 @@ def test_simulate_nibbit_fight():
     assert player.hp == 59
 
 
-def test_search_finds_lethal_against_shrinker_beetle():
+def test_search_truncates_after_finding_lethal():
     dp_table = dict()
     player = Ironclad(
         name="Player",
@@ -158,15 +158,47 @@ def test_search_finds_lethal_against_shrinker_beetle():
     print(hp_losses_got)
     assert hp_losses_expected == hp_losses_got
 
-    # On this turn, playing a strike guarantees that you have lethal, and playing a defend or passing guarantees you
-    # will die
-    dp_table_expected = {
-        (*fight_vector, Strike().id): {0: Fraction(1, 1)},
-        (*fight_vector, Defend().id): {4: Fraction(1, 1)},
-        (*fight_vector, -1): {14: Fraction(1, 1)},
-    }
+    # Search should terminate once it finds that triple Strike is lethal
+    dp_table_expected = {(*fight_vector, Strike().id): {0: Fraction(1, 1)}}
     for state_action_pair, hp_losses in dp_table_expected.items():
         assert hp_losses == dp_table[state_action_pair]
+
+
+def test_search_computes_unwinnable_turn():
+    dp_table = dict()
+    player = Ironclad(
+        name="Player",
+        hp=1,
+        hand=CardPile(cards=Counter({Strike(): 3, Defend(): 2})),
+        effects=[Shrink()],
+        player_turn_callback=lambda fight: True,
+    )
+    enemy = ShrinkerBeetle(name="Enemy", hp=20, intent=Stomp(), effects=[Vulnerable(duration=2)])
+
+    # Precalculate the expected DP table
+    fight = Fight(player=player, enemies=[enemy], turn=2)
+    dp_table_expected = dict()
+
+    for strikes in range(4):
+        for defends in range(min(2, 3 - strikes) + 1):
+            fight_copy = deepcopy(fight)
+            for _ in range(strikes):
+                fight_copy.player.play(Strike(), fight_copy.enemies[0])
+            for _ in range(defends):
+                fight_copy.player.play(Defend())
+
+            dp_table_expected[(*fight_copy.to_vector(), -1)] = {14 - 5 * defends: Fraction(1, 1)}
+            if strikes < 3 and strikes + defends < 3:
+                dp_table_expected[(*fight_copy.to_vector(), 0)] = {14 - 5 * min(2, 2 - strikes): Fraction(1, 1)}
+            if defends < 2 and strikes + defends < 3:
+                dp_table_expected[(*fight_copy.to_vector(), 1)] = {9 - 5 * min(1, 2 - strikes): Fraction(1, 1)}
+
+    hp_losses_expected = {4: Fraction(1, 1)}
+    hp_losses_got = fight.search_player_turn(dp_table)
+    assert hp_losses_expected == hp_losses_got
+
+    # Player is dead no matter what, but search should tabulate all the possible ways
+    assert dp_table_expected == dp_table
 
 
 def test_search_computes_draw_order_probability():
@@ -225,3 +257,19 @@ def test_search_terminates_at_hp_limit():
 
     hp_losses = fight.search_player_turn_start(dp_table, hp_limit=57)
     assert all(hp_loss < 7 for hp_loss, _ in hp_losses.items())
+
+
+# def test_search_truncates_after_finding_lethal():
+#     dp_table = dict()
+#     player = Ironclad(
+#         name="Player",
+#         hand=CardPile(cards=Counter({Bash(): 1, Strike(): 1, AscendersBane(): 1, Defend(): 2})),
+#         player_turn_callback=lambda fight: True,
+#     )
+#     enemy = SludgeSpinner(name="Enemy", hp=15, intent=OilSpray())
+
+#     fight = Fight(player=player, enemies=[enemy], turn=3)
+
+#     fight.search_player_turn(dp_table)
+#     # Search should terminate before it considers defend
+#     assert not any(vector[-1] == Defend.id for vector in dp_table.keys())

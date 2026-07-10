@@ -101,16 +101,19 @@ class Fight:
                         best_distribution = hp_losses
                         best_value = expected_value
 
-        # Try just ending your turn
-        # In theory we don't need to deepcopy the fight here, since this path is the last one to be traversed
-        hp_losses = self.search_player_turn_action(dp_table, None, hp_limit)
-        if hp_losses:
-            expected_value = sum(
-                (hp_loss * prob_hp_loss for hp_loss, prob_hp_loss in hp_losses.items()), start=Fraction(0)
-            )
-            if expected_value < best_value:
-                best_distribution = hp_losses
-                best_value = expected_value
+                    if hp_losses == {0: Fraction(1, 1)}:
+                        break
+        else:
+            # Try just ending your turn
+            # In theory we don't need to deepcopy the fight here, since this path is the last one to be traversed
+            hp_losses = self.search_player_turn_action(dp_table, None, hp_limit)
+            if hp_losses:
+                expected_value = sum(
+                    (hp_loss * prob_hp_loss for hp_loss, prob_hp_loss in hp_losses.items()), start=Fraction(0)
+                )
+                if expected_value < best_value:
+                    best_distribution = hp_losses
+                    best_value = expected_value
 
         # Return the probability distribution with the least expected HP loss
         return best_distribution
