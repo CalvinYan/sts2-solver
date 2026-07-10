@@ -155,6 +155,7 @@ def test_search_finds_lethal_against_shrinker_beetle():
 
     hp_losses_expected = {0: Fraction(1, 1)}
     hp_losses_got = fight.search_player_turn(dp_table)
+    print(hp_losses_got)
     assert hp_losses_expected == hp_losses_got
 
     # On this turn, playing a strike guarantees that you have lethal, and playing a defend or passing guarantees you
@@ -165,7 +166,7 @@ def test_search_finds_lethal_against_shrinker_beetle():
         (*fight_vector, -1): {14: Fraction(1, 1)},
     }
     for state_action_pair, hp_losses in dp_table_expected.items():
-        assert dp_table[state_action_pair] == hp_losses
+        assert hp_losses == dp_table[state_action_pair]
 
 
 def test_search_computes_draw_order_probability():
@@ -210,3 +211,17 @@ def test_search_uses_cache():
 
     # Should not contain additional search states even if a blank-slate search would turn them up
     assert expected == got
+
+
+def test_search_terminates_at_hp_limit():
+    dp_table = dict()
+    player = Ironclad(
+        name="Player",
+        player_turn_callback=lambda fight: True,
+    )
+    enemy = Nibbit(name="Enemy", hp=20)
+
+    fight = Fight(player=player, enemies=[enemy], turn=1)
+
+    hp_losses = fight.search_player_turn_start(dp_table, hp_limit=57)
+    assert all(hp_loss < 7 for hp_loss, _ in hp_losses.items())

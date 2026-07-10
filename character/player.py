@@ -29,6 +29,7 @@ class Player(Character):
     draw_pile: CardPile
     discard_pile: CardPile = field(default_factory=CardPile)
 
+    # TODO: Expose this as an overrideable method instead of a field
     player_turn_callback: Callable[[Fight], bool] | None
 
     def draw(self, cards: int) -> None:
