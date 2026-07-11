@@ -1,14 +1,17 @@
 """Simulates Floor 2 fights with user input, allowing you to compare how you stack up against algorithms"""
 
 from collections import defaultdict
+from fractions import Fraction
 
-from card import Bash, Defend, Strike, Targeting
+from card import Bash, Card, Defend, Strike, Targeting
 from character.encounters import ALL_ENCOUNTERS
 from character.player import Ironclad
 from compare_strategies import has_lethal
+from dp_solver import load_dp_table
 from fight import Fight
 
-CARDS = {"s": Strike(), "d": Defend(), "b": Bash()}
+CARDS: dict[str, Card] = {"s": Strike(), "d": Defend(), "b": Bash()}
+dp_table: dict[tuple, dict[int, Fraction]] = load_dp_table("./data/dp_data.csv")
 
 
 # Play your way! Displays your hand, draw pile, and discard pile, and reads the next decision from user input.
@@ -16,6 +19,13 @@ def user_ironclad(fight: Fight) -> bool:
     player = fight.player
 
     print(fight)
+
+    print("Lines:")
+    for card in CARDS.values():
+        state_action = (*fight.to_vector(), card.id)
+        if state_action in dp_table:
+            print(card.__class__.__name__, dp_table[state_action])
+
     if has_lethal(fight):
         print("YOU HAVE LETHAL!")
         return True
