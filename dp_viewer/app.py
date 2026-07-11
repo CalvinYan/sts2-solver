@@ -40,6 +40,19 @@ def _pile_from_request(prefix: str) -> dict[int, int]:
     return counts
 
 
+def _effects_from_request(prefix: str) -> dict[int, dict[str, int]]:
+    """Read per-effect stats for a character, e.g. peff_0_power, peff_2_duration."""
+    specs: dict[int, dict[str, int]] = {}
+    for effect_id, meta in state_bridge.effect_types().items():
+        entry: dict[str, int] = {}
+        if meta["power"]:
+            entry["power"] = request.args.get(f"{prefix}_{effect_id}_power", 0, type=int)
+        if meta["duration"]:
+            entry["duration"] = request.args.get(f"{prefix}_{effect_id}_duration", 0, type=int)
+        specs[effect_id] = entry
+    return specs
+
+
 @app.route("/")
 def index():
     return render_template(
@@ -47,6 +60,7 @@ def index():
         players=state_bridge.player_classes(),
         enemies=state_bridge.enemy_classes(),
         cards=state_bridge.card_ids(),
+        effects=state_bridge.effect_types(),
         intents={eid: state_bridge.enemy_intents(eid) for eid in state_bridge.enemy_classes()},
         state_count=dp_table.state_count,
     )
@@ -68,6 +82,8 @@ def query():
             draw=_pile_from_request("draw"),
             hand=_pile_from_request("hand"),
             discard=_pile_from_request("discard"),
+            player_effects=_effects_from_request("peff"),
+            enemy_effects=_effects_from_request("eeff"),
         )
     except (ValueError, KeyError, TypeError) as e:
         return jsonify({"error": str(e)}), 400

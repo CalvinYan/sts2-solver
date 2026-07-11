@@ -62,6 +62,14 @@ table.piles thead th { color: var(--muted); font-weight: 600; }
 table.piles tbody th { text-align: left; }
 table.piles input { max-width: 5rem; }
 
+.field-label { font-weight: 600; }
+
+table.effects { width: 100%; border-collapse: collapse; }
+table.effects th, table.effects td { padding: .2rem .4rem; text-align: center; }
+table.effects thead th { color: var(--muted); font-weight: 600; }
+table.effects tbody th { text-align: left; font-weight: 600; }
+table.effects input { max-width: 4.5rem; }
+
 button[type="submit"] {
   align-self: flex-start;
   padding: .6rem 1.4rem;

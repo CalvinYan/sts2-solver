@@ -34,15 +34,15 @@
         <label>HP <input type="number" name="player_hp" min="0" required /></label>
         <label>Block <input type="number" name="player_block" min="0" value="0" required /></label>
         <label>Energy <input type="number" name="player_energy" min="0" value="3" required /></label>
-        <label>Effects</label>
+        <span class="field-label">Effects</span>
         <table class="effects">
+          <thead><tr><th></th><th>Power</th><th>Duration</th></tr></thead>
           <tbody>
-            {% for cid, name in cards.items() %}
+            {% for eid, meta in effects.items() %}
             <tr>
-              <th>{{ name }}</th>
-              <td><input type="number" name="draw_{{ cid }}" min="0" value="0" /></td>
-              <td><input type="number" name="hand_{{ cid }}" min="0" value="0" /></td>
-              <td><input type="number" name="discard_{{ cid }}" min="0" value="0" /></td>
+              <th>{{ meta.name }}</th>
+              <td>{% if meta.power %}<input type="number" name="peff_{{ eid }}_power" value="0" />{% endif %}</td>
+              <td>{% if meta.duration %}<input type="number" name="peff_{{ eid }}_duration" min="0" value="0" />{% endif %}</td>
             </tr>
             {% endfor %}
           </tbody>
@@ -56,6 +56,19 @@
         <label>Intent
           <select name="enemy_intent" id="enemy_intent"></select>
         </label>
+        <span class="field-label">Effects</span>
+        <table class="effects">
+          <thead><tr><th></th><th>Power</th><th>Duration</th></tr></thead>
+          <tbody>
+            {% for eid, meta in effects.items() %}
+            <tr>
+              <th>{{ meta.name }}</th>
+              <td>{% if meta.power %}<input type="number" name="eeff_{{ eid }}_power" value="0" />{% endif %}</td>
+              <td>{% if meta.duration %}<input type="number" name="eeff_{{ eid }}_duration" min="0" value="0" />{% endif %}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
       </fieldset>
     </div>
 
@@ -130,8 +143,8 @@
 
       if (!data.found) {
         resultsNote.textContent = '';
-        resultsBody.innerHTML = '<p class="error">No data for this state. It may be unreachable, ' +
-          'truncated by the solver\'s HP limit, or require effects the form can\'t express.</p>';
+        resultsBody.innerHTML = '<p class="error">No data for this state. It may be unreachable ' +
+          'or truncated by the solver\'s HP limit.</p>';
         return;
       }
 

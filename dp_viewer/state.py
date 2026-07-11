@@ -25,6 +25,7 @@ from card import ID_TO_CARD, CardPile
 from character.enemy import ID_TO_ENEMY, Enemy
 from character.player import ID_TO_PLAYER, Player
 from fight import Fight
+from util.effect import ID_TO_EFFECT, Effect
 
 # The action id stored for "end your turn" rather than playing a card.
 END_TURN_ACTION = -1
@@ -65,12 +66,47 @@ def card_ids() -> dict[int, str]:
     return {cid: cls.__name__ for cid, cls in sorted(ID_TO_CARD.items())}
 
 
+def effect_types() -> dict[int, dict]:
+    """Effect ids mapped to {name, power, duration}, where power/duration flag which stat the
+    effect is parameterized by.
+
+    The relevant stat is read from each effect subclass's own annotations (e.g. Strength
+    declares ``power: int``, Vulnerable declares ``duration: int``). Effects that declare
+    neither (e.g. Shrink) are omitted: with a (0, 0) vector slot they are indistinguishable
+    from absence, so there is nothing to input.
+    """
+    result: dict[int, dict] = {}
+    for eid, cls in sorted(ID_TO_EFFECT.items()):
+        own = cls.__dict__.get("__annotations__", {})
+        uses_power = "power" in own
+        uses_duration = "duration" in own
+        if uses_power or uses_duration:
+            result[eid] = {"name": cls.__name__, "power": uses_power, "duration": uses_duration}
+    return result
+
+
 def _build_pile(counts: dict[int, int]) -> CardPile:
     cards: Counter = Counter()
     for card_id, count in counts.items():
         if count:
             cards[ID_TO_CARD[card_id]()] = count
     return CardPile(cards=cards)
+
+
+def _build_effects(specs: dict[int, dict[str, int]]) -> list[Effect]:
+    """Build effect objects from {effect_id: {"power": int, "duration": int}} specs.
+
+    Mirrors ``Effect.effects_from_vector``: a 0 (or missing) stat becomes None, and an effect
+    with no nonzero stat is dropped so it round-trips through the vector encoding.
+    """
+    effects: list[Effect] = []
+    for eid, vals in specs.items():
+        power = vals.get("power") or None
+        duration = vals.get("duration") or None
+        if power is None and duration is None:
+            continue
+        effects.append(ID_TO_EFFECT[eid](id=eid, power=power, duration=duration))
+    return effects
 
 
 def build_state_key(
@@ -87,12 +123,13 @@ def build_state_key(
     draw: dict[int, int],
     hand: dict[int, int],
     discard: dict[int, int],
+    player_effects: dict[int, dict[str, int]] | None = None,
+    enemy_effects: dict[int, dict[str, int]] | None = None,
 ) -> tuple[int, ...]:
     """Reconstruct a Fight from form inputs and return its `to_vector()` state key.
 
     Reuses the engine's own serialization so the key is guaranteed to match how the solver
-    wrote it. Effects on the player and enemy are not part of the form, so the reconstructed
-    characters carry no effects.
+    wrote it.
     """
     if player_id not in ID_TO_PLAYER:
         raise ValueError(f"No engine support for player id {player_id}")
@@ -104,6 +141,7 @@ def build_state_key(
         hp=player_hp,
         block=player_block,
         energy=player_energy,
+        effects=_build_effects(player_effects or {}),
         draw_pile=_build_pile(draw),
         hand=_build_pile(hand),
         discard_pile=_build_pile(discard),
@@ -115,6 +153,7 @@ def build_state_key(
         name="Enemy",
         hp=enemy_hp,
         block=enemy_block,
+        effects=_build_effects(enemy_effects or {}),
         intent=enemy_cls.id_to_intent(enemy_intent),
     )
 
