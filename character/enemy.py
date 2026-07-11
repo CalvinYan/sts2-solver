@@ -8,8 +8,6 @@ from fractions import Fraction
 from random import randint
 from typing import TYPE_CHECKING
 
-import numpy as np
-
 from character.core import Character
 from util.core import Action
 
@@ -36,8 +34,8 @@ class Intent:
     def next_intents(self) -> list[tuple[Intent, Fraction]]:
         return [(self.next(), Fraction(1))]
 
-    def to_vector(self) -> np.ndarray:
-        return np.array([self.id])
+    def to_vector(self) -> list[int]:
+        return [self.id]
 
     def __str__(self) -> str:
         return type(self).__name__
@@ -101,10 +99,10 @@ class Enemy(Character):
     #
     # A nonexistent enemy (None) is encoded as all zeroes.
     # TODO: This signature override is disgusting. Find another way to do it
-    def to_vector(self: Enemy | None) -> np.ndarray:
+    def to_vector(self: Enemy | None) -> list[int]:
         if self is None:
-            return np.concatenate([[0], Character.to_vector(None), [0]])
-        return np.concatenate([[1], super(Enemy, self).to_vector(), self.intent.to_vector()])
+            return [0, *Character.to_vector(None), 0]
+        return [1, *super(Enemy, self).to_vector(), *self.intent.to_vector()]
 
     @staticmethod
     def from_vector(vector: tuple[int, ...]) -> tuple[Enemy, int]:

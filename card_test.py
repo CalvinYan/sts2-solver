@@ -6,15 +6,6 @@ import numpy as np
 from card import AscendersBane, Bash, CardPile, Defend, Strike
 
 
-def test_card_encodes_to_vector():
-    card = Strike()
-
-    expected = (1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
-    got = card.to_vector()
-
-    assert np.array_equal(expected, got)
-
-
 def test_card_pile_encodes_to_vector():
     cards = CardPile(cards=Counter({Strike(): 5, Defend(): 4, Bash(): 1, AscendersBane(): 1}))
 

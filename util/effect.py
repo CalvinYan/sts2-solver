@@ -56,8 +56,16 @@ class Effect:
         return retval
 
     @staticmethod
-    def effects_to_vector(effects: list[Effect]) -> np.ndarray:
-        return sum((effect.to_vector() for effect in effects), start=Effect(id=0).to_vector())
+    def effects_to_vector(effects: list[Effect]) -> list[int]:
+        # This positional encoding ensures that the vector of a list of effects is equal to the sum of the vectors of each effect
+        arr = [[0, 0] for _ in range(max(ID_TO_EFFECT.keys()) + 1)]
+        for effect in effects:
+            arr[effect.id] = [
+                effect.power if effect.power is not None else 0,
+                effect.duration if effect.duration is not None else 0,
+            ]
+
+        return [i for effect in arr for i in effect]
 
     @staticmethod
     def effects_from_vector(vector: tuple[int, ...]) -> tuple[list[Effect], int]:

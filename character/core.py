@@ -6,8 +6,6 @@ from copy import deepcopy
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
-import numpy as np
-
 from util.core import Action, Move
 from util.effect import Effect
 
@@ -83,20 +81,10 @@ class Character:
 
         self.receive_effects(move.action.actor_effects)
 
-    def to_vector(self: Character | None) -> np.ndarray:
+    def to_vector(self: Character | None) -> list[int]:
         if self is None:
-            return np.concatenate(
-                [
-                    [0, 0, 0],
-                    Effect.effects_to_vector(list()),
-                ]
-            )
-        return np.concatenate(
-            [
-                [self.id, self.hp, self.block],
-                Effect.effects_to_vector(self.effects),
-            ]
-        )
+            return [0, 0, 0, *Effect.effects_to_vector(list())]
+        return [self.id, self.hp, self.block, *Effect.effects_to_vector(self.effects)]
 
     @staticmethod
     def from_vector(vector: tuple[int, ...]) -> tuple[Character, int]:

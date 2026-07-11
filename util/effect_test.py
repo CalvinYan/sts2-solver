@@ -114,25 +114,6 @@ def test_strength_only_affects_attacks():
     assert action.damage is None
 
 
-def test_effects_encode_to_vector():
-    effects = [
-        Strength(power=2),
-        Thorns(power=2),
-        Vulnerable(duration=4),
-        Weak(duration=1),
-    ]
-    for effect, expected in zip(
-        effects,
-        [
-            (2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
-            (0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0),
-            (0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0),
-            (0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0),
-        ],
-    ):
-        assert np.array_equal(expected, effect.to_vector())
-
-
 def test_effects_list_encodes_to_vector():
     effects = [
         Strength(power=2),

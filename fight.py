@@ -7,8 +7,6 @@ from copy import deepcopy
 from dataclasses import dataclass
 from fractions import Fraction
 
-import numpy as np
-
 from card import Card, Defend
 from character.core import Character
 from character.enemies import SludgeSpinner
@@ -154,7 +152,7 @@ class Fight:
         self, dp_table: dict[tuple, dict[int, Fraction]], action: Card | None, hp_limit: int = 0
     ) -> tuple[dict[int, Fraction], bool]:
         action_id = action.id if action else -1
-        state_action_pair = (*tuple(map(int, self.to_vector())), action_id)
+        state_action_pair = (*tuple(self.to_vector()), action_id)
         hp_losses = {}
         search_complete = True
         if state_action_pair in dp_table:
@@ -251,15 +249,9 @@ class Fight:
     # - The vector representation of the player
     # - For n in 1..5: the vector representation of the nth enemy, or all zeroes if it doesn't exist
     # - The number of the current turn
-    def to_vector(self) -> np.ndarray:
+    def to_vector(self) -> list[int]:
         enemies_padded = self.enemies + [None] * (MAX_ENEMIES - len(self.enemies))
-        return np.concatenate(
-            [
-                self.player.to_vector(),
-                *[Enemy.to_vector(enemy) for enemy in enemies_padded],
-                [self.turn],
-            ]
-        )
+        return [*self.player.to_vector(), *[i for enemy in enemies_padded for i in Enemy.to_vector(enemy)], self.turn]
 
     @staticmethod
     def from_vector(vector: tuple) -> tuple[Fight, int]:

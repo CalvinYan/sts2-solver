@@ -9,8 +9,6 @@ from dataclasses import dataclass, field
 from enum import Enum
 from fractions import Fraction
 
-import numpy as np
-
 from util.core import Action
 from util.effect import Vulnerable, Weak
 
@@ -31,12 +29,6 @@ class Card:
 
     def action(self) -> Action:
         return Action()
-
-    def to_vector(self: Card | None) -> np.ndarray:
-        base = np.zeros(max(ID_TO_CARD.keys()) + 1, dtype=int)
-        if self is not None:
-            base[self.id] = 1
-        return base
 
     def __str__(self):
         return type(self).__name__
@@ -187,11 +179,11 @@ class CardPile:
         # Convert tuples to CardPiles and counts to probabilities
         return [(CardPile(cards=Counter(k)), Fraction(v, sum(combinations.values()))) for k, v in combinations.items()]
 
-    def to_vector(self) -> np.ndarray:
-        return sum(
-            [card.to_vector() * count for card, count in self.cards.items()],
-            start=Card.to_vector(None),
-        )
+    def to_vector(self) -> list[int]:
+        base = [0] * (max(ID_TO_CARD.keys()) + 1)
+        for card, cnt in self.cards.items():
+            base[card.id] = cnt
+        return base
 
     @staticmethod
     def from_vector(vector: tuple[int, ...]) -> tuple[CardPile, int]:

@@ -8,8 +8,6 @@ from dataclasses import dataclass, field
 from fractions import Fraction
 from typing import TYPE_CHECKING, Callable
 
-import numpy as np
-
 from card import (
     AscendersBane,
     Bash,
@@ -136,16 +134,14 @@ class Player(Character):
 
         return result
 
-    def to_vector(self) -> np.ndarray:
-        return np.concatenate(
-            [
-                super().to_vector(),
-                [self.energy],
-                self.draw_pile.to_vector(),
-                self.hand.to_vector(),
-                self.discard_pile.to_vector(),
-            ]
-        )
+    def to_vector(self) -> list[int]:
+        return [
+            *super().to_vector(),
+            self.energy,
+            *self.draw_pile.to_vector(),
+            *self.hand.to_vector(),
+            *self.discard_pile.to_vector(),
+        ]
 
     @staticmethod
     def from_vector(vector: tuple[int, ...]) -> tuple[Player, int]:
