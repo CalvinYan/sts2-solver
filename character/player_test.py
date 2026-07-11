@@ -181,16 +181,8 @@ def test_player_next_states_reshuffle():
         name="Test",
         player_turn_callback=None,
         draw_pile=CardPile(cards=Counter({Strike(): 1})),
-        hand=CardPile(
-            cards=Counter(
-                {
-                    Strike(): 1,
-                    Defend(): 3,
-                    Bash(): 1,
-                }
-            )
-        ),
-        discard_pile=CardPile(cards=Counter({Strike(): 3, Defend(): 1})),
+        hand=CardPile(),
+        discard_pile=CardPile(cards=Counter({Strike(): 4, Defend(): 4, Bash(): 1})),
     )
 
     got = clad.next_states()
@@ -199,19 +191,8 @@ def test_player_next_states_reshuffle():
         for bashes in range(min(1, 5 - strikes)):
             defends = 5 - strikes - bashes
             assert (
-                Ironclad(
-                    name="Test",
-                    player_turn_callback=None,
-                    draw_pile=CardPile(
-                        cards=Counter(
-                            {
-                                Strike(): 5 - strikes,
-                                Defend(): 4 - defends,
-                                Bash(): 1 - bashes,
-                            }
-                        )
-                    ),
-                    hand=CardPile(cards=Counter({Strike(): strikes, Defend(): defends, Bash(): bashes})),
-                ),
+                CardPile(cards=Counter({Strike(): 5 - strikes, Defend(): 4 - defends, Bash(): 1 - bashes})),
+                CardPile(cards=Counter({Strike(): strikes, Defend(): defends, Bash(): bashes})),
+                CardPile(),
                 Fraction(comb(4, strikes - 1) * comb(4, defends), comb(9, 4)),
             ) in got

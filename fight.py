@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from copy import deepcopy
 from dataclasses import dataclass
 from fractions import Fraction
 
@@ -72,20 +71,26 @@ class Fight:
         if self.player.hp <= hp_limit:
             return {0: Fraction(1)}, False
 
+        player_snapshot = self.player.to_vector()
+        turn_snapshot = self.turn
+
         search_complete = True
         self.turn += 1
         self.player.energy = 3
         Character.resolve_start_of_turn(self.player)
         results: dict[int, Fraction] = defaultdict(Fraction)
-        for next_player, prob_next_player in self.player.next_states():
-            next_fight = deepcopy(self)
-            next_fight.player = next_player
-
-            hp_losses, subsearch_complete = next_fight.search_player_turn(dp_table, hp_limit)
+        for draw_pile_next, hand_next, discard_pile_next, prob_next_player in self.player.next_states():
+            self.player.draw_pile = draw_pile_next
+            self.player.hand = hand_next
+            self.player.discard_pile = discard_pile_next
+            hp_losses, subsearch_complete = self.search_player_turn(dp_table, hp_limit)
             for hp_loss, prob_hp_loss in hp_losses.items():
                 results[hp_loss] += prob_hp_loss * prob_next_player
             if not subsearch_complete:
                 search_complete = False
+
+        self.turn = turn_snapshot
+        self.player.read_vector(player_snapshot)
 
         return results, search_complete
 
@@ -114,10 +119,10 @@ class Fight:
         search_complete = True
 
         # Try playing each playable card in your hand
-        for card in self.player.hand.cards.keys():
+        for card in list(self.player.hand.cards.keys()):
             # Optimization: Don't play defends if enemies are not attacking
             if self.player.can_play(card) and not (isinstance(card, Defend) and incoming_damage() <= self.player.block):
-                hp_losses, subsearch_complete = deepcopy(self).search_player_turn_action(dp_table, card, hp_limit)
+                hp_losses, subsearch_complete = self.search_player_turn_action(dp_table, card, hp_limit)
                 if hp_losses:
                     expected_value = sum(
                         (hp_loss * prob_hp_loss for hp_loss, prob_hp_loss in hp_losses.items()), start=Fraction(0)
@@ -132,7 +137,6 @@ class Fight:
                         break
         else:
             # Try just ending your turn
-            # In theory we don't need to deepcopy the fight here, since this path is the last one to be traversed
             hp_losses, subsearch_complete = self.search_player_turn_action(dp_table, None, hp_limit)
             if hp_losses:
                 expected_value = sum(
@@ -159,19 +163,24 @@ class Fight:
             hp_losses = dp_table[state_action_pair]
         else:
             if action is None:
-                # No deepcopy here for the same reason as above
                 hp_losses, subsearch_complete = self.search_player_turn_end(dp_table, hp_limit)
                 if not subsearch_complete:
                     search_complete = False
             else:
-                new_fight = deepcopy(self)
-                hp_before = new_fight.player.hp
-                new_fight.player.play(action, new_fight.enemies[0])
-                hp_after = new_fight.player.hp
-                hp_losses, subsearch_complete = new_fight.search_player_turn(dp_table, hp_limit)
+                player_snapshot = self.player.to_vector()
+                enemy_snapshot = self.enemies[0].to_vector()
+                hp_before = self.player.hp
+
+                self.player.play(action, self.enemies[0])
+
+                hp_after = self.player.hp
+                hp_losses, subsearch_complete = self.search_player_turn(dp_table, hp_limit)
                 hp_losses = {hp_loss + hp_before - hp_after: prob for hp_loss, prob in hp_losses.items()}
                 if not subsearch_complete:
                     search_complete = False
+
+                self.player.read_vector(player_snapshot)
+                self.enemies[0].read_vector(enemy_snapshot)
 
             if search_complete:
                 dp_table[state_action_pair] = hp_losses
@@ -181,9 +190,11 @@ class Fight:
     def search_player_turn_end(
         self, dp_table: dict[tuple, dict[int, Fraction]], hp_limit: int = 0
     ) -> tuple[dict[int, Fraction], bool]:
+        player_snapshot = self.player.to_vector()
         self.player.resolve_end_of_turn()
-        self.enemies = [enemy for enemy in self.enemies if enemy.hp > 0]
-        return self.search_enemy_turn_start(dp_table, hp_limit)
+        result = self.search_enemy_turn_start(dp_table, hp_limit)
+        self.player.read_vector(player_snapshot)
+        return result
 
     def search_enemy_turn_start(
         self, dp_table: dict[tuple, dict[int, Fraction]], hp_limit: int = 0
@@ -191,10 +202,17 @@ class Fight:
         if self.is_over():
             return {0: Fraction(1)}, True
 
+        # Covers both the block reset below and anything the enemies gain while acting in
+        # search_enemy_turn (search_enemy_turn_end restores its own mutations separately)
+        enemy_snapshots = [enemy.to_vector() for enemy in self.enemies]
         for enemy in self.enemies:
             enemy.resolve_start_of_turn()
 
-        return self.search_enemy_turn(dp_table, hp_limit)
+        result = self.search_enemy_turn(dp_table, hp_limit)
+
+        for enemy, snapshot in zip(self.enemies, enemy_snapshots):
+            enemy.read_vector(snapshot)
+        return result
 
     def search_enemy_turn(
         self, dp_table: dict[tuple, dict[int, Fraction]], hp_limit: int = 0
@@ -219,20 +237,26 @@ class Fight:
         # don't feel like doing it right now
         if len(self.enemies) == 1 and isinstance(self.enemies[0], SludgeSpinner):
             results: dict[int, Fraction] = defaultdict(Fraction)
-            for next_enemy, prob_next_enemy in self.enemies[0].next_states():
-                next_fight = deepcopy(self)
-                next_fight.enemies = [next_enemy]
+            current_intent = self.enemies[0].intent
 
-                hp_losses, subsearch_complete = next_fight.search_player_turn_start(dp_table, hp_limit)
+            for next_intent, prob_next_intent in self.enemies[0].intent.next_intents():
+                self.enemies[0].intent = next_intent
+                hp_losses, subsearch_complete = self.search_player_turn_start(dp_table, hp_limit)
                 for hp_loss, prob_hp_loss in hp_losses.items():
-                    results[hp_loss] += prob_next_enemy * prob_hp_loss
+                    results[hp_loss] += prob_next_intent * prob_hp_loss
                 if not subsearch_complete:
                     search_complete = False
+                self.enemies[0].intent = current_intent
+
             return results, search_complete
         else:
+            enemy_snapshots = [enemy.to_vector() for enemy in self.enemies]
             for enemy in self.enemies:
                 enemy.resolve_end_of_turn()
-            return self.search_player_turn_start(dp_table, hp_limit)
+            result = self.search_player_turn_start(dp_table, hp_limit)
+            for enemy, snapshot in zip(self.enemies, enemy_snapshots):
+                enemy.read_vector(snapshot)
+            return result
 
     def is_over(self) -> bool:
         # TODO: Check only if len(self.enemies) is 0

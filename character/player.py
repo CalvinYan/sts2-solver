@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections import Counter
-from copy import deepcopy
 from dataclasses import dataclass, field
 from fractions import Fraction
 from typing import TYPE_CHECKING, Callable
@@ -96,41 +95,32 @@ class Player(Character):
         self.discard_pile += self.hand
         self.hand = CardPile()
 
-    # Helper method for dp solve - computes all possible next states of the player and their probabilities.
-    # For our purposes, this calculation is only nontrivial when the player is drawing cards, so this method
-    # primarily calculates draw order probabilities.
-    def next_states(self) -> list[tuple[Player, Fraction]]:
-        clone = deepcopy(self)
-        clone.resolve_end_of_turn()
-
+    # Helper method for dp solve - computes the probability distribution of the player's state after the start of their
+    # turn.
+    # For our purposes, the only non-deterministic information about a player is their draw order, so this method
+    # returns the state in the form of its draw pile, hand, and discard pile, and the probability of reaching that
+    # state.
+    def next_states(self) -> list[tuple[CardPile, CardPile, CardPile, Fraction]]:
         cards_drawn = 5
         result = []
 
-        if cards_drawn > clone.draw_pile.cards.total():
-            reshuffle_draws = clone.discard_pile.next_hands(
+        if cards_drawn > self.draw_pile.cards.total():
+            reshuffle_draws = self.discard_pile.next_hands(
                 cards=min(
-                    clone.discard_pile.cards.total(),
+                    self.discard_pile.cards.total(),
                     cards_drawn - self.draw_pile.cards.total(),
                 )
             )
 
             for draw, probability in reshuffle_draws:
-                future_player = deepcopy(clone)
-                future_player.draw_pile = clone.discard_pile - draw
-                future_player.hand = clone.draw_pile + draw
-                future_player.discard_pile = CardPile()
-
-                result.append((future_player, probability))
+                result.append((self.discard_pile - draw, self.draw_pile + draw, CardPile(), probability))
         else:
-            hands = clone.draw_pile.next_hands(cards_drawn)
-
-            for hand, probability in hands:
-                future_player = deepcopy(clone)
-                future_player.draw_pile = clone.draw_pile - hand
-                future_player.hand = hand
-                future_player.discard_pile = clone.discard_pile
-
-                result.append((future_player, probability))
+            for hand, probability in self.draw_pile.next_hands(cards_drawn):
+                # Copy the discard pile so the states are independent: search mutates each state's
+                # piles in place, and a shared pile would leak changes between sibling states
+                result.append(
+                    (self.draw_pile - hand, hand, CardPile(cards=Counter(self.discard_pile.cards)), probability)
+                )
 
         return result
 
