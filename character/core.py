@@ -86,20 +86,25 @@ class Character:
             return [0, 0, 0, *Effect.effects_to_vector(list())]
         return [self.id, self.hp, self.block, *Effect.effects_to_vector(self.effects)]
 
-    @staticmethod
-    def from_vector(vector: tuple[int, ...]) -> tuple[Character, int]:
+    def read_vector(self, vector: tuple[int, ...]) -> int:
         if len(vector) < 3:
             raise ValueError(
                 f"Not enough values in Character vector to read id, hp, block: expected 3, got {len(vector)}"
             )
-        id, hp, block = vector[:3]
+        self.id, self.hp, self.block = vector[:3]
 
         try:
-            effects, read = Effect.effects_from_vector(vector[3:])
+            self.effects, read = Effect.effects_from_vector(vector[3:])
         except ValueError as e:
             raise ValueError("Error reading Effects from Character vector:", e)
 
-        return Character(name="Character", id=id, hp=hp, block=block, effects=effects), read + 3
+        return read + 3
+
+    @staticmethod
+    def from_vector(vector: tuple[int, ...]) -> tuple[Character, int]:
+        character = Character(name="Character", id=0, hp=0)
+        read = character.read_vector(vector)
+        return character, read
 
     def __str__(self) -> str:
         retval = f"{self.name} ({self.block}){self.hp}"

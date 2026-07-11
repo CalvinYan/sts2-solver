@@ -104,33 +104,29 @@ class Enemy(Character):
             return [0, *Character.to_vector(None), 0]
         return [1, *super(Enemy, self).to_vector(), *self.intent.to_vector()]
 
-    @staticmethod
-    def from_vector(vector: tuple[int, ...]) -> tuple[Enemy, int]:
+    def read_vector(self, vector: tuple[int, ...]) -> int:
         try:
-            character, read = Character.from_vector(vector[1:])
+            read = super().read_vector(vector[1:])
         except ValueError as e:
             raise ValueError("Error reading Character from Enemy vector:", e)
+        read += 1
 
-        if len(vector) < read + 2:
+        if len(vector) < read + 1:
             raise ValueError(
-                f"Not enough values in Enemy vector to read intent: expected {read + 2}, got {len(vector)}"
+                f"Not enough values in Enemy vector to read intent: expected {read + 1}, got {len(vector)}"
             )
+        self.intent = ID_TO_ENEMY[self.id].id_to_intent(vector[read])
+        read += 1
 
-        intent = ID_TO_ENEMY[character.id].id_to_intent(vector[read + 1])
+        return read
 
-        return (
-            # min_hp/max_hp are intentionally omitted so the subclass's spawn-range defaults apply;
-            # mypy can't know that every registered subclass defines those defaults.
-            ID_TO_ENEMY[character.id](  # type: ignore[call-arg]
-                id=character.id,
-                name="Enemy",
-                hp=character.hp,
-                block=character.block,
-                effects=character.effects,
-                intent=intent,
-            ),
-            read + 2,
-        )
+    @staticmethod
+    def from_vector(vector: tuple[int, ...]) -> tuple[Enemy, int]:
+        # min_hp/max_hp are intentionally omitted so the subclass's spawn-range defaults apply;
+        # mypy can't know that every registered subclass defines those defaults.
+        enemy: Enemy = ID_TO_ENEMY[vector[1]](name="Enemy", intent=Intent(id=0))  # type: ignore[call-arg]
+        read = enemy.read_vector(vector)
+        return enemy, read
 
     @staticmethod
     def id_to_intent(intent_id: int) -> Intent:

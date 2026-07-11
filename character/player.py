@@ -143,11 +143,10 @@ class Player(Character):
             *self.discard_pile.to_vector(),
         ]
 
-    @staticmethod
-    def from_vector(vector: tuple[int, ...]) -> tuple[Player, int]:
+    def read_vector(self, vector: tuple[int, ...]) -> int:
         values_read = 0
         try:
-            character, read = Character.from_vector(vector)
+            read = super().read_vector(vector)
             values_read += read
         except ValueError as e:
             raise ValueError("Error reading Character from Player vector:", e)
@@ -156,42 +155,24 @@ class Player(Character):
             raise ValueError(
                 f"Could not read energy from Player vector: expected {values_read + 1} values, got {len(vector)}"
             )
-        energy = vector[values_read]
+        self.energy = vector[values_read]
         values_read += 1
 
-        try:
-            draw_pile, read = CardPile.from_vector(vector[values_read:])
+        for pile, name in zip([self.draw_pile, self.hand, self.discard_pile], ["draw pile", "hand", "discard pile"]):
+            read = pile.read_vector(vector[values_read:])
             values_read += read
-        except ValueError as e:
-            raise ValueError("Error reading draw pile from Player vector:", e)
 
-        try:
-            hand, read = CardPile.from_vector(vector[values_read:])
-            values_read += read
-        except ValueError as e:
-            raise ValueError("Error reading hand from Player vector:", e)
+        return values_read
 
-        try:
-            discard_pile, read = CardPile.from_vector(vector[values_read:])
-            values_read += read
-        except ValueError as e:
-            raise ValueError("Error reading discard pile from Player vector:", e)
+    @staticmethod
+    def from_vector(vector: tuple[int, ...]) -> tuple[Player, int]:
+        # TODO: Make draw_pile() empty by default
 
-        return (
-            ID_TO_PLAYER[character.id](
-                name="Player",
-                id=character.id,
-                hp=character.hp,
-                block=character.block,
-                energy=energy,
-                effects=character.effects,
-                draw_pile=draw_pile,
-                hand=hand,
-                discard_pile=discard_pile,
-                player_turn_callback=None,
-            ),
-            values_read,
-        )
+        # hp is intentionally omitted so the subclass's default applies;
+        # mypy can't know that every registered subclass defines those defaults.
+        player = ID_TO_PLAYER[vector[0]](name="Player", id=0, player_turn_callback=None, draw_pile=CardPile())  # type: ignore[call-arg]
+        read = player.read_vector(vector)
+        return player, read
 
     def __str__(self) -> str:
         return f"{super().__str__()}\nHand: {self.hand}\nDraw: {self.draw_pile}\nDiscard: {self.discard_pile}"

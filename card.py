@@ -185,18 +185,23 @@ class CardPile:
             base[card.id] = cnt
         return base
 
-    @staticmethod
-    def from_vector(vector: tuple[int, ...]) -> tuple[CardPile, int]:
+    def read_vector(self, vector: tuple[int, ...]) -> int:
         min_length = max(ID_TO_CARD) + 1
         if len(vector) < min_length:
             raise ValueError(f"Not enough values CardPile vector: expected {min_length}, got {len(vector)}")
 
-        cards: Counter[Card] = Counter()
+        self.cards = Counter()
         for card_id, cnt in enumerate(vector[:min_length]):
             if cnt > 0:
-                cards[ID_TO_CARD[card_id]()] = cnt
+                self.cards[ID_TO_CARD[card_id]()] = cnt
 
-        return CardPile(cards=cards), min_length
+        return min_length
+
+    @staticmethod
+    def from_vector(vector: tuple[int, ...]) -> tuple[CardPile, int]:
+        card_pile = CardPile()
+        read = card_pile.read_vector(vector)
+        return card_pile, read
 
     def __add__(self, other: CardPile):
         if type(other) is not CardPile:
