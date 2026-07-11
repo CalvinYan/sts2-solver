@@ -160,7 +160,7 @@ def test_search_truncates_after_finding_lethal():
     assert search_complete
 
     # Search should terminate once it finds that triple Strike is lethal
-    dp_table_expected = {(*fight_vector, Strike().id): {0: Fraction(1)}}
+    dp_table_expected = {(*fight_vector, Strike().id): ({0: Fraction(1)}, True)}
     for state_action_pair, hp_losses in dp_table_expected.items():
         assert hp_losses == dp_table[state_action_pair]
 
@@ -188,11 +188,11 @@ def test_search_computes_unwinnable_turn():
             for _ in range(defends):
                 fight_copy.player.play(Defend())
 
-            dp_table_expected[(*fight_copy.to_vector(), -1)] = {14 - 5 * defends: Fraction(1)}
+            dp_table_expected[(*fight_copy.to_vector(), -1)] = ({14 - 5 * defends: Fraction(1)}, True)
             if strikes < 3 and strikes + defends < 3:
-                dp_table_expected[(*fight_copy.to_vector(), 0)] = {14 - 5 * min(2, 2 - strikes): Fraction(1)}
+                dp_table_expected[(*fight_copy.to_vector(), 0)] = ({14 - 5 * min(2, 2 - strikes): Fraction(1)}, True)
             if defends < 2 and strikes + defends < 3:
-                dp_table_expected[(*fight_copy.to_vector(), 1)] = {9 - 5 * min(1, 2 - strikes): Fraction(1)}
+                dp_table_expected[(*fight_copy.to_vector(), 1)] = ({9 - 5 * min(1, 2 - strikes): Fraction(1)}, True)
 
     hp_losses_expected = {4: Fraction(1)}
     hp_losses_got, search_complete = fight.search_player_turn(dp_table)
@@ -236,9 +236,9 @@ def test_search_uses_cache():
     fight = Fight(player=player, enemies=[enemy], turn=1)
 
     expected = {
-        (*fight.to_vector(), -1): {13: Fraction(1)},
-        (*fight.to_vector(), 0): {8: Fraction(1)},
-        (*fight.to_vector(), 1): {0: Fraction(1, 2), 2: Fraction(1, 2)},
+        (*fight.to_vector(), -1): ({13: Fraction(1)}, True),
+        (*fight.to_vector(), 0): ({8: Fraction(1)}, True),
+        (*fight.to_vector(), 1): ({0: Fraction(1, 2), 2: Fraction(1, 2)}, True),
     }
     got = deepcopy(expected)
 

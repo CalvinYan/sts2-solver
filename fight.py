@@ -66,7 +66,7 @@ class Fight:
     # Whether or not the search was complete (not truncated by hp_limit)
 
     def search_player_turn_start(
-        self, dp_table: dict[tuple, dict[int, Fraction]], hp_limit: int = 0
+        self, dp_table: dict[tuple[int, ...], tuple[dict[int, Fraction], bool]], hp_limit: int = 0
     ) -> tuple[dict[int, Fraction], bool]:
         if self.player.hp <= hp_limit:
             return {0: Fraction(1)}, False
@@ -95,7 +95,7 @@ class Fight:
         return results, search_complete
 
     def search_player_turn(
-        self, dp_table: dict[tuple, dict[int, Fraction]], hp_limit: int = 0
+        self, dp_table: dict[tuple[int, ...], tuple[dict[int, Fraction], bool]], hp_limit: int = 0
     ) -> tuple[dict[int, Fraction], bool]:
 
         def incoming_damage() -> int:
@@ -153,15 +153,13 @@ class Fight:
     # Search after the player has committed to a specific action.
     # The action is the card to be played, or None if the player is ending their turn.
     def search_player_turn_action(
-        self, dp_table: dict[tuple, dict[int, Fraction]], action: Card | None, hp_limit: int = 0
+        self, dp_table: dict[tuple[int, ...], tuple[dict[int, Fraction], bool]], action: Card | None, hp_limit: int = 0
     ) -> tuple[dict[int, Fraction], bool]:
         action_id = action.id if action else -1
         state_action_pair = (*tuple(self.to_vector()), action_id)
-        hp_losses = {}
+        hp_losses: dict[int, Fraction] = {}
         search_complete = True
-        if state_action_pair in dp_table:
-            hp_losses = dp_table[state_action_pair]
-        else:
+        if state_action_pair not in dp_table:
             if action is None:
                 hp_losses, subsearch_complete = self.search_player_turn_end(dp_table, hp_limit)
                 if not subsearch_complete:
@@ -182,13 +180,12 @@ class Fight:
                 self.player.read_vector(player_snapshot)
                 self.enemies[0].read_vector(enemy_snapshot)
 
-            if search_complete:
-                dp_table[state_action_pair] = hp_losses
+            dp_table[state_action_pair] = hp_losses, search_complete
 
-        return hp_losses, search_complete
+        return dp_table[state_action_pair]
 
     def search_player_turn_end(
-        self, dp_table: dict[tuple, dict[int, Fraction]], hp_limit: int = 0
+        self, dp_table: dict[tuple[int, ...], tuple[dict[int, Fraction], bool]], hp_limit: int = 0
     ) -> tuple[dict[int, Fraction], bool]:
         player_snapshot = self.player.to_vector()
         self.player.resolve_end_of_turn()
@@ -197,7 +194,7 @@ class Fight:
         return result
 
     def search_enemy_turn_start(
-        self, dp_table: dict[tuple, dict[int, Fraction]], hp_limit: int = 0
+        self, dp_table: dict[tuple[int, ...], tuple[dict[int, Fraction], bool]], hp_limit: int = 0
     ) -> tuple[dict[int, Fraction], bool]:
         if self.is_over():
             return {0: Fraction(1)}, True
@@ -215,7 +212,7 @@ class Fight:
         return result
 
     def search_enemy_turn(
-        self, dp_table: dict[tuple, dict[int, Fraction]], hp_limit: int = 0
+        self, dp_table: dict[tuple[int, ...], tuple[dict[int, Fraction], bool]], hp_limit: int = 0
     ) -> tuple[dict[int, Fraction], bool]:
         hp_before = self.player.hp
         for enemy in self.enemies:
@@ -227,7 +224,7 @@ class Fight:
         return hp_losses, subsearch_complete
 
     def search_enemy_turn_end(
-        self, dp_table: dict[tuple, dict[int, Fraction]], hp_limit: int = 0
+        self, dp_table: dict[tuple[int, ...], tuple[dict[int, Fraction], bool]], hp_limit: int = 0
     ) -> tuple[dict[int, Fraction], bool]:
         if self.is_over():
             return {0: Fraction(1)}, True
