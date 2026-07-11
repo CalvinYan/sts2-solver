@@ -13,6 +13,10 @@ CARDS = {"strike": Strike(), "defend": Defend(), "bash": Bash()}
 
 # Read the table from file if it exists
 def load_dp_table(fname: str):
+
+    def is_valid(key: tuple, value: dict[int, Fraction]) -> bool:
+        return len(key) == 139 and sum(value.values()) == Fraction(1)
+
     new_table: dict[tuple, dict[int, Fraction]] = {}
     with open(fname, "r") as file:
         reader = csv.reader(file, delimiter=",")
@@ -21,7 +25,9 @@ def load_dp_table(fname: str):
                 lambda field: eval(field, {"__builtins__": {}, "Fraction": Fraction}),
                 row,
             )
-            new_table[state_action_pair] = data
+
+            if is_valid(state_action_pair, data):
+                new_table[state_action_pair] = data
 
     return new_table
 
