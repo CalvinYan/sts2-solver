@@ -179,11 +179,11 @@ class CardPile:
         # Convert tuples to CardPiles and counts to probabilities
         return [(CardPile(cards=Counter(k)), Fraction(v, sum(combinations.values()))) for k, v in combinations.items()]
 
-    def to_vector(self) -> list[int]:
+    def to_vector(self) -> tuple[int, ...]:
         base = [0] * (max(ID_TO_CARD.keys()) + 1)
         for card, cnt in self.cards.items():
             base[card.id] = cnt
-        return base
+        return tuple(base)
 
     def read_vector(self, vector: tuple[int, ...]) -> int:
         min_length = max(ID_TO_CARD) + 1

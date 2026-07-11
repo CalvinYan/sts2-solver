@@ -34,8 +34,8 @@ class Intent:
     def next_intents(self) -> list[tuple[Intent, Fraction]]:
         return [(self.next(), Fraction(1))]
 
-    def to_vector(self) -> list[int]:
-        return [self.id]
+    def to_vector(self) -> tuple[int, ...]:
+        return (self.id,)
 
     def __str__(self) -> str:
         return type(self).__name__
@@ -99,10 +99,10 @@ class Enemy(Character):
     #
     # A nonexistent enemy (None) is encoded as all zeroes.
     # TODO: This signature override is disgusting. Find another way to do it
-    def to_vector(self: Enemy | None) -> list[int]:
+    def to_vector(self: Enemy | None) -> tuple[int, ...]:
         if self is None:
-            return [0, *Character.to_vector(None), 0]
-        return [1, *super(Enemy, self).to_vector(), *self.intent.to_vector()]
+            return (0, *Character.to_vector(None), 0)
+        return (1, *super(Enemy, self).to_vector(), *self.intent.to_vector())
 
     def read_vector(self, vector: tuple[int, ...]) -> int:
         try:

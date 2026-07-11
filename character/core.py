@@ -81,10 +81,10 @@ class Character:
 
         self.receive_effects(move.action.actor_effects)
 
-    def to_vector(self: Character | None) -> list[int]:
+    def to_vector(self: Character | None) -> tuple[int, ...]:
         if self is None:
-            return [0, 0, 0, *Effect.effects_to_vector(list())]
-        return [self.id, self.hp, self.block, *Effect.effects_to_vector(self.effects)]
+            return (0, 0, 0, *Effect.effects_to_vector(list()))
+        return (self.id, self.hp, self.block, *Effect.effects_to_vector(self.effects))
 
     def read_vector(self, vector: tuple[int, ...]) -> int:
         if len(vector) < 3:

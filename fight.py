@@ -273,9 +273,9 @@ class Fight:
     # - The vector representation of the player
     # - For n in 1..5: the vector representation of the nth enemy, or all zeroes if it doesn't exist
     # - The number of the current turn
-    def to_vector(self) -> list[int]:
+    def to_vector(self) -> tuple[int, ...]:
         enemies_padded = self.enemies + [None] * (MAX_ENEMIES - len(self.enemies))
-        return [*self.player.to_vector(), *[i for enemy in enemies_padded for i in Enemy.to_vector(enemy)], self.turn]
+        return (*self.player.to_vector(), *[i for enemy in enemies_padded for i in Enemy.to_vector(enemy)], self.turn)
 
     @staticmethod
     def from_vector(vector: tuple) -> tuple[Fight, int]:

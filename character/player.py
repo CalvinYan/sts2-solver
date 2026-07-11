@@ -124,14 +124,14 @@ class Player(Character):
 
         return result
 
-    def to_vector(self) -> list[int]:
-        return [
+    def to_vector(self) -> tuple[int, ...]:
+        return (
             *super().to_vector(),
             self.energy,
             *self.draw_pile.to_vector(),
             *self.hand.to_vector(),
             *self.discard_pile.to_vector(),
-        ]
+        )
 
     def read_vector(self, vector: tuple[int, ...]) -> int:
         values_read = 0
