@@ -121,13 +121,13 @@ def test_effects_list_encodes_to_vector():
         Vulnerable(duration=4),
         Weak(duration=1),
     ]
-    expected = (2, 0, 2, 0, 0, 4, 0, 1, 0, 0, 0, 0)
+    expected = (1, 2, 0, 1, 2, 0, 1, 0, 4, 1, 0, 1, 0, 0, 0, 0, 0, 0)
     got = Effect.effects_to_vector(effects)
     assert np.array_equal(expected, got)
 
 
 def test_effects_list_decodes_from_vector():
-    vector = (2, 0, 2, 0, 0, 4, 0, 1, 0, 0, 0, 0)
+    vector = (1, 2, 0, 1, 2, 0, 1, 0, 4, 1, 0, 1, 0, 0, 0, 0, 0, 0)
     expected = [
         Strength(power=2),
         Thorns(power=2),
@@ -140,7 +140,7 @@ def test_effects_list_decodes_from_vector():
 
 
 def test_no_effects_decodes_from_vector():
-    vector = (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+    vector = (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
     expected = []
     got, _ = Effect.effects_from_vector(vector)
     assert expected == got

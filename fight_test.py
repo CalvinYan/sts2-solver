@@ -9,6 +9,7 @@ from character.enemies import Nibbit, ShrinkerBeetle, SludgeSpinner
 from character.enemies.nibbit import HesitantSlice, Hiss
 from character.enemies.shrinker_beetle import Stomp
 from character.enemies.sludge_spinner import Slam
+from character.enemy import Enemy
 from character.player import Ironclad
 from fight import MAX_ENEMIES, Fight
 from util.core import Action
@@ -25,7 +26,7 @@ def test_fight_encodes_to_vector():
         [
             player.to_vector(),
             enemy_vector,
-            np.zeros(len(enemy_vector) * (MAX_ENEMIES - 1), dtype=int),
+            *[Enemy.to_vector(None) for _ in range(MAX_ENEMIES - 1)],
             [fight.turn],
         ]
     )

@@ -33,16 +33,6 @@ class Effect:
 
         return True
 
-    def to_vector(self: Effect) -> np.ndarray:
-        # This positional encoding ensures that the vector of a list of effects is equal to the sum of the vectors of each effect
-        arr = np.zeros((max(ID_TO_EFFECT.keys()) + 1, 2), dtype=int)
-        arr[self.id] = (
-            self.power if self.power is not None else 0,
-            self.duration if self.duration is not None else 0,
-        )
-
-        return arr.flatten()
-
     def __hash__(self) -> int:
         return hash((self.id, self.power, self.duration))
 
@@ -58,9 +48,13 @@ class Effect:
     @staticmethod
     def effects_to_vector(effects: list[Effect]) -> list[int]:
         # This positional encoding ensures that the vector of a list of effects is equal to the sum of the vectors of each effect
-        arr = [[0, 0] for _ in range(max(ID_TO_EFFECT.keys()) + 1)]
+        # Each effect encodes as (present, power, duration). The leading presence bit distinguishes
+        # an absent effect from one with no power and no duration (e.g. Shrink), and leaves the
+        # stat slots free to hold any value, including negatives (e.g. -1 Strength)
+        arr = [[0, 0, 0] for _ in range(max(ID_TO_EFFECT.keys()) + 1)]
         for effect in effects:
             arr[effect.id] = [
+                1,
                 effect.power if effect.power is not None else 0,
                 effect.duration if effect.duration is not None else 0,
             ]
@@ -69,17 +63,21 @@ class Effect:
 
     @staticmethod
     def effects_from_vector(vector: tuple[int, ...]) -> tuple[list[Effect], int]:
-        min_length = (max(ID_TO_EFFECT.keys()) + 1) * 2
+        min_length = (max(ID_TO_EFFECT.keys()) + 1) * 3
         effects = []
         if len(vector) < min_length:
             raise ValueError(f"Not enough values in Effects vector: expected {min_length}, got {len(vector)}")
 
         for id, effect in ID_TO_EFFECT.items():
-            effect_vector = (vector[id * 2], vector[id * 2 + 1])
-            if effect_vector != (0, 0):
-                power = effect_vector[0] if effect_vector[0] != 0 else None
-                duration = effect_vector[1] if effect_vector[1] != 0 else None
-                effects.append(effect(id=id, power=power, duration=duration))
+            present, power, duration = vector[id * 3], vector[id * 3 + 1], vector[id * 3 + 2]
+            if present:
+                effects.append(
+                    effect(
+                        id=id,
+                        power=power if power != 0 else None,
+                        duration=duration if duration != 0 else None,
+                    )
+                )
 
         return effects, min_length
 

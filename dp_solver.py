@@ -15,7 +15,7 @@ CARDS = {"strike": Strike(), "defend": Defend(), "bash": Bash()}
 def load_dp_table(fname: str):
 
     def is_valid(key: tuple, value: dict[int, Fraction]) -> bool:
-        return len(key) == 139 and sum(value.values()) == Fraction(1)
+        return len(key) == 175 and sum(value.values()) == Fraction(1)
 
     new_table: dict[tuple, dict[int, Fraction]] = {}
     with open(fname, "r") as file:

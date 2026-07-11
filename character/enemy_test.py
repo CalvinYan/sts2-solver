@@ -29,6 +29,12 @@ def test_enemy_encodes_to_tuple():
         0,
         0,
         0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
         enemy.intent.id,
     )
     got = enemy.to_vector()
@@ -54,8 +60,14 @@ def test_enemy_cycles_intents():
     assert isinstance(enemy.intent, AcidGoop1)
 
 
-def test_no_enemy_encodes_to_zeroes():
+def test_no_enemy_encodes_to_vector():
     expected = (
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
         0,
         0,
         0,
@@ -84,6 +96,12 @@ def test_enemy_decodes_from_vector():
         1,
         Seapunk.id,
         48,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
         0,
         0,
         0,

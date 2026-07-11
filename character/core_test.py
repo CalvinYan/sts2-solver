@@ -16,12 +16,18 @@ def test_character_encodes_to_vector():
         0,
         80,
         0,
+        1,
         2,
         0,
         0,
         0,
         0,
+        1,
+        0,
         2,
+        0,
+        0,
+        0,
         0,
         0,
         0,
@@ -40,6 +46,12 @@ def test_character_with_no_effects_encodes_to_vector():
     expected = (
         0,
         80,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
         0,
         0,
         0,
@@ -78,6 +90,12 @@ def test_character_with_negative_hp_encodes_to_vector():
         0,
         0,
         0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
     )
     got = c.to_vector()
 
@@ -101,6 +119,12 @@ def test_no_character_encodes_to_zeroes():
         0,
         0,
         0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
     )
     got = Character.to_vector(None)
 
@@ -108,7 +132,7 @@ def test_no_character_encodes_to_zeroes():
 
 
 def test_character_decodes_from_vector():
-    vector = (0, 40, 10, 7, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0)
+    vector = (0, 40, 10, 1, 7, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0)
     expected = Character(name="Character", id=0, hp=40, block=10, effects=[Strength(power=7), Vulnerable(duration=1)])
     got, read = Character.from_vector(vector)
     assert expected == got
