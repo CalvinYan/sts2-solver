@@ -156,7 +156,7 @@ class Fight:
         self, dp_table: dict[tuple[int, ...], tuple[dict[int, Fraction], bool]], action: Card | None, hp_limit: int = 0
     ) -> tuple[dict[int, Fraction], bool]:
         action_id = action.id if action else -1
-        state_action_pair = (*tuple(self.to_vector()), action_id)
+        state_action_pair = (*self.to_vector(), action_id)
         hp_losses: dict[int, Fraction] = {}
         search_complete = True
         if state_action_pair not in dp_table:
