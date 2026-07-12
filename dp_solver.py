@@ -15,13 +15,13 @@ CARDS = {"strike": Strike(), "defend": Defend(), "bash": Bash()}
 
 # Read the table from file if it exists
 def load_dp_table(fname: str):
-
-    start = perf_counter()
-    with gzip.open(fname, mode="rb") as f:
-        new_table = pickle.load(f)
+    try:
+        with gzip.open(fname, mode="rb") as f:
+            new_table = pickle.load(f)
+    except EOFError, FileNotFoundError:
+        return {}
     dp_table = {k: (v, True) for k, v in new_table.items()}
-    end = perf_counter()
-    print(f"Loaded {len(dp_table)} csv.pkl.gzip rows in {end - start} seconds")
+    return dp_table
 
 
 # Write the table to file
@@ -31,7 +31,12 @@ def dump_dp_table(table: dict[tuple[int, ...], tuple[dict[int, Fraction], bool]]
         pickle.dump(data, f, protocol=pickle.HIGHEST_PROTOCOL)
 
 
-def search(fight: Fight, dp_table: dict[tuple[int, ...], tuple[dict[int, Fraction], bool]], name: str = "") -> None:
+def search(
+    fight: Fight,
+    dp_table: dict[tuple[int, ...], tuple[dict[int, Fraction], bool]],
+    fname: str,
+    name: str = "",
+) -> None:
     cache_size = len(dp_table)
     print(f"Searching fight {name}:")
 
@@ -50,7 +55,7 @@ def search(fight: Fight, dp_table: dict[tuple[int, ...], tuple[dict[int, Fractio
 
         if interrupted:
             print("Search was terminated early, writing partial results to file")
-            dump_dp_table(dp_table, "./data/dp_data.csv")
+            dump_dp_table(dp_table, fname)
             exit()
         else:
             print(f"{"EXPECTED HP LOSS":30}| {sum([loss * prob for loss, prob in hp_losses.items()]):2.2f}")
@@ -68,14 +73,13 @@ def search(fight: Fight, dp_table: dict[tuple[int, ...], tuple[dict[int, Fractio
 
 if __name__ == "__main__":
     for enemy_cls, name in zip([Nibbit, Seapunk, ShrinkerBeetle], ["nibbit", "seapunk", "shrinker_beetle"]):
-        dp_table: dict[tuple[int, ...], tuple[dict[int, Fraction], bool]] = load_dp_table(
-            f"./data/solver/ironclad-base/{name}.csv"
-        )
+        fname = f"./data/solver/ironclad-base/{name}.csv"
+        dp_table: dict[tuple[int, ...], tuple[dict[int, Fraction], bool]] = load_dp_table(fname)
 
         for enemy_hp in range(enemy_cls.min_hp, enemy_cls.max_hp + 1):
             player = Ironclad(name="Player")
             enemy = enemy_cls(name="Enemy", hp=enemy_hp)
             fight = Fight(player=player, enemies=[enemy])
-            search(fight, dp_table, name=f"Ironclad vs {enemy_hp}-HP {enemy_cls.__name__}")
+            search(fight, dp_table, fname, name=f"Ironclad vs {enemy_hp}-HP {enemy_cls.__name__}")
 
-        dump_dp_table(dp_table, f"./data/solver/ironclad-base/{name}.csv")
+        dump_dp_table(dp_table, fname)
