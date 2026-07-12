@@ -142,7 +142,6 @@ def build_fight(
         effects=_build_effects(player_effects or {}),
         hand=_build_pile(hand or {}),
         discard_pile=_build_pile(discard or {}),
-        player_turn_callback=None,
     )
 
     if player_hp is not None:

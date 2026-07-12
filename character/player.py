@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections import Counter
 from dataclasses import dataclass, field
 from fractions import Fraction
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING
 
 from card import (
     AscendersBane,
@@ -40,9 +40,6 @@ class Player(Character):
     hand: CardPile = field(default_factory=CardPile)
     draw_pile: CardPile
     discard_pile: CardPile = field(default_factory=CardPile)
-
-    # TODO: Expose this as an overrideable method instead of a field
-    player_turn_callback: Callable[[Fight], bool] | None
 
     def draw(self, cards: int) -> None:
         for _ in range(cards):
@@ -84,7 +81,7 @@ class Player(Character):
         self.draw(5)
 
     def resolve_turn(self, fight: Fight) -> bool:
-        return self.player_turn_callback(fight) if self.player_turn_callback else True
+        return True
 
     def resolve_end_of_turn(self) -> None:
         super().resolve_end_of_turn()
@@ -160,7 +157,7 @@ class Player(Character):
 
         # hp is intentionally omitted so the subclass's default applies;
         # mypy can't know that every registered subclass defines those defaults.
-        player = ID_TO_PLAYER[vector[0]](name="Player", id=0, player_turn_callback=None, draw_pile=CardPile())  # type: ignore[call-arg]
+        player = ID_TO_PLAYER[vector[0]](name="Player", id=0)  # type: ignore[call-arg]
         read = player.read_vector(vector)
         return player, read
 

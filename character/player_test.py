@@ -14,7 +14,6 @@ def test_player_encodes_to_vector():
         name="Test",
         hp=80,
         energy=3,
-        player_turn_callback=None,
         draw_pile=CardPile(cards=Counter({Defend(): 1})),
         hand=CardPile(cards=Counter({Strike(): 2, Defend(): 1, Bash(): 1, AscendersBane(): 1})),
         discard_pile=CardPile(cards=Counter({Strike(): 3, Defend(): 2})),
@@ -150,7 +149,6 @@ def test_player_decodes_from_vector():
         name="Player",
         hp=80,
         energy=3,
-        player_turn_callback=None,
         draw_pile=CardPile(cards=Counter({Defend(): 1})),
         hand=CardPile(cards=Counter({Strike(): 2, Defend(): 1, Bash(): 1, AscendersBane(): 1})),
         discard_pile=CardPile(cards=Counter({Strike(): 3, Defend(): 2})),
@@ -166,7 +164,6 @@ def test_player_round_trip():
         name="Player",
         hp=64,
         energy=0,
-        player_turn_callback=None,
         draw_pile=CardPile(cards=Counter({Strike(): 2, Defend(): 3, Bash(): 1})),
         hand=CardPile(cards=Counter({Strike(): 1, AscendersBane(): 1})),
         discard_pile=CardPile(cards=Counter({Strike(): 2, Defend(): 1})),
@@ -179,7 +176,6 @@ def test_player_round_trip():
 def test_player_next_states_reshuffle():
     clad = Ironclad(
         name="Test",
-        player_turn_callback=None,
         draw_pile=CardPile(cards=Counter({Strike(): 1})),
         hand=CardPile(),
         discard_pile=CardPile(cards=Counter({Strike(): 4, Defend(): 4, Bash(): 1})),
@@ -201,7 +197,6 @@ def test_player_next_states_reshuffle():
 def test_player_draws_cards_into_hand():
     clad = Ironclad(
         name="Test",
-        player_turn_callback=None,
         draw_pile=CardPile(cards=Counter({Strike(): 5})),
         hand=CardPile(),
     )
@@ -216,7 +211,6 @@ def test_player_draws_cards_into_hand():
 def test_player_draw_reshuffles_discard_when_draw_pile_empty():
     clad = Ironclad(
         name="Test",
-        player_turn_callback=None,
         draw_pile=CardPile(),
         hand=CardPile(),
         discard_pile=CardPile(cards=Counter({Defend(): 4})),
@@ -232,7 +226,6 @@ def test_player_draw_reshuffles_discard_when_draw_pile_empty():
 def test_player_draw_stops_when_hand_full():
     clad = Ironclad(
         name="Test",
-        player_turn_callback=None,
         draw_pile=CardPile(cards=Counter({Strike(): 3})),
         hand=CardPile(cards=Counter({Defend(): 10})),
     )
@@ -249,7 +242,6 @@ def test_player_resolve_start_of_turn():
         name="Test",
         block=5,
         energy=0,
-        player_turn_callback=None,
         draw_pile=CardPile(cards=Counter({Strike(): 10})),
         hand=CardPile(),
     )
@@ -265,7 +257,6 @@ def test_player_resolve_start_of_turn():
 def test_player_resolve_end_of_turn_exhausts_ascenders_bane_and_discards_hand():
     clad = Ironclad(
         name="Test",
-        player_turn_callback=None,
         draw_pile=CardPile(),
         hand=CardPile(cards=Counter({Strike(): 2, AscendersBane(): 1})),
         discard_pile=CardPile(cards=Counter({Defend(): 1})),

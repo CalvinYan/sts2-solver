@@ -17,7 +17,7 @@ from util.effect import Shrink, Strength, Vulnerable, Weak
 
 
 def test_fight_encodes_to_vector():
-    player = Ironclad(name="Test", player_turn_callback=None)
+    player = Ironclad(name="Test")
     enemy = Nibbit(name="Test")
     fight = Fight(player=player, enemies=[enemy])
 
@@ -36,7 +36,7 @@ def test_fight_encodes_to_vector():
 
 
 def test_fight_decodes_from_vector():
-    player = Ironclad(name="Player", player_turn_callback=None)
+    player = Ironclad(name="Player")
     enemy = Nibbit(name="Enemy")
     expected = Fight(player=player, enemies=[enemy])
 
@@ -58,7 +58,6 @@ def test_fight_round_trip():
     player = Ironclad(
         name="Player",
         hp=80,
-        player_turn_callback=None,
         draw_pile=CardPile(cards=Counter({Defend(): 1})),
         hand=CardPile(cards=Counter({Strike(): 2, Defend(): 1, Bash(): 1, AscendersBane(): 1})),
         discard_pile=CardPile(cards=Counter({Strike(): 3, Defend(): 2})),
@@ -84,7 +83,7 @@ def test_fight_round_trip():
 
 
 def test_fight_ends_when_enemies_die():
-    player = Ironclad(name="Test", player_turn_callback=lambda fight: True)
+    player = Ironclad(name="Test")
     enemy1 = Nibbit(name="NibbitOne")
     enemy2 = Nibbit(name="NibbitTwo")
     fight = Fight(player=player, enemies=[enemy1, enemy2])
@@ -98,7 +97,7 @@ def test_fight_ends_when_enemies_die():
 
 
 def test_fight_ends_if_player_dies():
-    player = Ironclad(name="Test", player_turn_callback=lambda fight: True, hp=100)
+    player = Ironclad(name="Test")
     enemy = Nibbit(name="Test")
     fight = Fight(player=player, enemies=[enemy])
 
@@ -110,28 +109,28 @@ def test_fight_ends_if_player_dies():
 
 
 def test_simulate_nibbit_fight():
+    class Testclad(Ironclad):
+        def resolve_turn(self, fight: Fight) -> bool:
+            if fight.turn == 1:
+                fight.player.act(fight.enemies[0], Action(damage=6))
+                fight.player.act(fight.enemies[0], Action(block=5))
+                fight.player.act(fight.enemies[0], Action(block=5))
+            elif fight.turn == 2:
+                fight.player.act(fight.enemies[0], Action(damage=8, target_effects=[Vulnerable(duration=2)]))
+                fight.player.act(fight.enemies[0], Action(block=5))
+            elif fight.turn == 3:
+                fight.player.act(fight.enemies[0], Action(damage=6))
+                fight.player.act(fight.enemies[0], Action(damage=6))
+                fight.player.act(fight.enemies[0], Action(damage=6))
+            elif fight.turn == 4:
+                fight.player.act(fight.enemies[0], Action(damage=8, target_effects=[Vulnerable(duration=2)]))
+                fight.player.act(fight.enemies[0], Action(damage=6))
+            else:
+                raise AssertionError("Fight should have ended by now")
 
-    def ironclad_premove(fight: Fight) -> bool:
-        if fight.turn == 1:
-            fight.player.act(fight.enemies[0], Action(damage=6))
-            fight.player.act(fight.enemies[0], Action(block=5))
-            fight.player.act(fight.enemies[0], Action(block=5))
-        elif fight.turn == 2:
-            fight.player.act(fight.enemies[0], Action(damage=8, target_effects=[Vulnerable(duration=2)]))
-            fight.player.act(fight.enemies[0], Action(block=5))
-        elif fight.turn == 3:
-            fight.player.act(fight.enemies[0], Action(damage=6))
-            fight.player.act(fight.enemies[0], Action(damage=6))
-            fight.player.act(fight.enemies[0], Action(damage=6))
-        elif fight.turn == 4:
-            fight.player.act(fight.enemies[0], Action(damage=8, target_effects=[Vulnerable(duration=2)]))
-            fight.player.act(fight.enemies[0], Action(damage=6))
-        else:
-            raise AssertionError("Fight should have ended by now")
+            return True
 
-        return True
-
-    player = Ironclad(name="Test", player_turn_callback=ironclad_premove)
+    player = Testclad(name="Test")
     enemy = Nibbit(name="Test")
     fight = Fight(player=player, enemies=[enemy])
 
@@ -147,7 +146,6 @@ def test_search_truncates_after_finding_lethal():
         hp=1,
         hand=CardPile(cards=Counter({Strike(): 3, Defend(): 2})),
         effects=[Shrink()],
-        player_turn_callback=lambda fight: True,
     )
     enemy = ShrinkerBeetle(name="Enemy", hp=15, intent=Stomp(), effects=[Vulnerable(duration=2)])
 
@@ -172,7 +170,6 @@ def test_search_computes_unwinnable_turn():
         hp=1,
         hand=CardPile(cards=Counter({Strike(): 3, Defend(): 2})),
         effects=[Shrink()],
-        player_turn_callback=lambda fight: True,
     )
     enemy = ShrinkerBeetle(name="Enemy", hp=20, intent=Stomp(), effects=[Vulnerable(duration=2)])
 
@@ -210,7 +207,6 @@ def test_search_computes_draw_order_probability():
         hp=1,
         hand=CardPile(cards=Counter({Strike(): 2, Defend(): 3})),
         draw_pile=CardPile(cards=Counter({Strike(): 3, Defend(): 1, Bash(): 1, AscendersBane(): 1})),
-        player_turn_callback=lambda fight: True,
     )
     enemy = Nibbit(name="Enemy", hp=18)
 
@@ -230,7 +226,6 @@ def test_search_uses_cache():
         hp=1,
         hand=CardPile(cards=Counter({Strike(): 2, Defend(): 3})),
         draw_pile=CardPile(cards=Counter({Strike(): 3, Defend(): 1, Bash(): 1, AscendersBane(): 1})),
-        player_turn_callback=lambda fight: True,
     )
     enemy = Nibbit(name="Enemy", hp=18)
     fight = Fight(player=player, enemies=[enemy], turn=1)
@@ -252,7 +247,6 @@ def test_search_terminates_at_hp_limit():
     dp_table = dict()
     player = Ironclad(
         name="Player",
-        player_turn_callback=lambda fight: True,
     )
     enemy = Nibbit(name="Enemy", hp=20)
 
@@ -268,7 +262,6 @@ def test_search_no_defend_on_empty_turn():
         name="Player",
         hand=CardPile(cards=Counter({Bash(): 1, Strike(): 1, AscendersBane(): 1, Defend(): 2})),
         draw_pile=CardPile(cards=Counter({Strike(): 4, Defend(): 2})),
-        player_turn_callback=lambda fight: True,
     )
     enemy = Nibbit(name="Enemy", hp=15, intent=Hiss())
 
@@ -287,7 +280,6 @@ def test_search_no_overblock():
         energy=1,
         hand=CardPile(cards=Counter({Bash(): 1, Strike(): 1, Defend(): 1})),
         draw_pile=CardPile(cards=Counter({Strike(): 4, Defend(): 1})),
-        player_turn_callback=lambda fight: True,
     )
     enemy = Nibbit(name="Enemy", hp=12, intent=HesitantSlice())
 

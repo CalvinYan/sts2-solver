@@ -61,98 +61,96 @@ def has_lethal(fight: Fight) -> bool:
 
 
 # Attack, attack, attack! Prioritize cards in the following order: Bash, Strike, Defend. Spend all energy.
-def unga_bunga_ironclad(fight: Fight) -> bool:
-    player = fight.player
-    # print("Draw:", player.draw_pile, "Hand:", player.hand, "Discard:", player.discard_pile)
-    if has_lethal(fight):
-        return True
+class Ironchad(Ironclad):
+    def resolve_turn(self, fight: Fight) -> bool:
+        player = fight.player
+        # print("Draw:", player.draw_pile, "Hand:", player.hand, "Discard:", player.discard_pile)
+        if has_lethal(fight):
+            return True
 
-    bash = Bash()
-    strike = Strike()
-    defend = Defend()
+        bash = Bash()
+        strike = Strike()
+        defend = Defend()
 
-    if player.hand.cards[bash] > 0 and player.can_play(bash):
-        player.play(bash, target=fight.enemies[0])
+        if player.hand.cards[bash] > 0 and player.can_play(bash):
+            player.play(bash, target=fight.enemies[0])
 
-    elif player.hand.cards[strike] > 0 and player.can_play(strike):
-        player.play(strike, target=fight.enemies[0])
+        elif player.hand.cards[strike] > 0 and player.can_play(strike):
+            player.play(strike, target=fight.enemies[0])
 
-    elif player.hand.cards[defend] > 0 and player.can_play(defend):
-        player.play(defend, target=None)
+        elif player.hand.cards[defend] > 0 and player.can_play(defend):
+            player.play(defend, target=None)
 
-    return player.energy == 0 or player.hand.cards.total() == 0  # End turn if no energy left or hand is empty
+        return player.energy == 0 or player.hand.cards.total() == 0  # End turn if no energy left or hand is empty
 
 
 # The way an inexperienced player might play - block all incoming damage, then priotize Bash, then Strike.
-def noob_ironclad(fight: Fight) -> bool:
-    player = fight.player
-    # print("Draw:", player.draw_pile, "Hand:", player.hand, "Discard:", player.discard_pile)
-    if has_lethal(fight):
-        return True
+class Ironsad(Ironclad):
+    def resolve_turn(self, fight: Fight) -> bool:
+        player = fight.player
+        # print("Draw:", player.draw_pile, "Hand:", player.hand, "Discard:", player.discard_pile)
+        if has_lethal(fight):
+            return True
 
-    bash = Bash()
-    strike = Strike()
-    defend = Defend()
+        bash = Bash()
+        strike = Strike()
+        defend = Defend()
 
-    if incoming_damage(fight) > player.block and player.hand.cards[defend] > 0 and player.can_play(defend):
-        player.play(defend, target=None)
+        if incoming_damage(fight) > player.block and player.hand.cards[defend] > 0 and player.can_play(defend):
+            player.play(defend, target=None)
 
-    elif player.hand.cards[bash] > 0 and player.can_play(bash):
-        player.play(bash, target=fight.enemies[0])
+        elif player.hand.cards[bash] > 0 and player.can_play(bash):
+            player.play(bash, target=fight.enemies[0])
 
-    elif player.hand.cards[strike] > 0 and player.can_play(strike):
-        player.play(strike, target=fight.enemies[0])
+        elif player.hand.cards[strike] > 0 and player.can_play(strike):
+            player.play(strike, target=fight.enemies[0])
 
-    else:
-        return True  # End turn if no cards can be played
+        else:
+            return True  # End turn if no cards can be played
 
-    return player.energy == 0 or player.hand.cards.total() == 0  # End turn if no energy left or hand is empty
+        return player.energy == 0 or player.hand.cards.total() == 0  # End turn if no energy left or hand is empty
 
 
 # A more balanced approach - Play Bash if it's in hand, then block if it would save 5 HP, otherwise play Strike.
-def balanced_ironclad(fight: Fight) -> bool:
-    player = fight.player
-    # print("Draw:", player.draw_pile, "Hand:", player.hand, "Discard:", player.discard_pile)
-    if has_lethal(fight):
-        return True
+class Ironglad(Ironclad):
+    def resolve_turn(self, fight: Fight) -> bool:
+        player = fight.player
+        # print("Draw:", player.draw_pile, "Hand:", player.hand, "Discard:", player.discard_pile)
+        if has_lethal(fight):
+            return True
 
-    bash = Bash()
-    strike = Strike()
-    defend = Defend()
+        bash = Bash()
+        strike = Strike()
+        defend = Defend()
 
-    if player.hand.cards[bash] > 0 and player.can_play(bash):
-        player.play(bash, target=fight.enemies[0])
+        if player.hand.cards[bash] > 0 and player.can_play(bash):
+            player.play(bash, target=fight.enemies[0])
 
-    elif incoming_damage(fight) >= player.block + 5 and player.hand.cards[defend] > 0 and player.can_play(defend):
-        player.play(defend, target=None)
+        elif incoming_damage(fight) >= player.block + 5 and player.hand.cards[defend] > 0 and player.can_play(defend):
+            player.play(defend, target=None)
 
-    elif player.hand.cards[strike] > 0 and player.can_play(strike):
-        player.play(strike, target=fight.enemies[0])
+        elif player.hand.cards[strike] > 0 and player.can_play(strike):
+            player.play(strike, target=fight.enemies[0])
 
-    else:
-        return True  # End turn if no cards can be played
+        else:
+            return True  # End turn if no cards can be played
 
-    return player.energy == 0 or player.hand.cards.total() == 0  # End turn if no energy left or hand is empty
+        return player.energy == 0 or player.hand.cards.total() == 0  # End turn if no energy left or hand is empty
 
 
 def main():
     hp_losses = defaultdict(lambda: defaultdict(list))
 
     for encounter in ALL_ENCOUNTERS:
-        for name, callback in zip(
-            ["Chad", "Virgin", "Balanced"],
-            [unga_bunga_ironclad, noob_ironclad, balanced_ironclad],
-        ):
-            for _ in range(100000):
-                player = Ironclad(name=name, player_turn_callback=callback)
+        for cls in [Ironchad, Ironsad, Ironglad]:
+            name = cls.__name__
+            for _ in range(10000):
+                player = cls(name=name)
                 starting_hp = player.hp
                 fight = Fight(player=player, enemies=encounter())
                 fight.start()
 
                 hp_losses[name][encounter].append(starting_hp - player.hp)
-
-    for encounter in ALL_ENCOUNTERS:
-        for name in ["Chad", "Virgin", "Balanced"]:
             print(
                 f"Average HP loss of {name} against {encounter.__name__}: {sum(hp_losses[name][encounter]) / len(hp_losses[name][encounter])}"
             )
