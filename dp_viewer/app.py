@@ -66,6 +66,57 @@ def index():
     )
 
 
+def _form_fields(form: dict) -> dict[str, int]:
+    """Flatten describe_form() output into {form-input-name: value} for the front end."""
+    fields: dict[str, int] = {
+        name: form[name]
+        for name in (
+            "player",
+            "enemy",
+            "turn",
+            "player_hp",
+            "player_block",
+            "player_energy",
+            "enemy_hp",
+            "enemy_block",
+            "enemy_intent",
+        )
+    }
+    for prefix in ("draw", "hand", "discard"):
+        for card_id, count in form[prefix].items():
+            fields[f"{prefix}_{card_id}"] = count
+    effect_meta = state_bridge.effect_types()
+    for prefix, key in (("peff", "player_effects"), ("eeff", "enemy_effects")):
+        for effect_id, vals in form[key].items():
+            if effect_meta[effect_id]["power"]:
+                fields[f"{prefix}_{effect_id}_power"] = vals["power"]
+            if effect_meta[effect_id]["duration"]:
+                fields[f"{prefix}_{effect_id}_duration"] = vals["duration"]
+    return fields
+
+
+@app.route("/advance", methods=["POST"])
+def advance():
+    payload = request.get_json(silent=True) or {}
+    try:
+        state_key = tuple(int(x) for x in payload["state_key"])
+        action_id = int(payload["action_id"])
+        result = state_bridge.advance_state(state_key, action_id)
+    except (ValueError, KeyError, TypeError, IndexError) as e:
+        return jsonify({"error": str(e)}), 400
+
+    outcomes = [
+        {
+            "prob": float(o["prob"]),
+            "prob_str": str(o["prob"]),
+            "label": o["label"],
+            "form": _form_fields(o["form"]),
+        }
+        for o in result["outcomes"]
+    ]
+    return jsonify({"hp_lost": result["hp_lost"], "terminal": result["terminal"], "outcomes": outcomes})
+
+
 @app.route("/query")
 def query():
     try:

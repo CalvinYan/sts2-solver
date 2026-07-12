@@ -82,7 +82,7 @@ button[type="submit"] {
 }
 button[type="submit"]:hover { filter: brightness(1.08); }
 
-#results { margin-top: 2rem; }
+#results, #advance { margin-top: 2rem; }
 #results-body { display: flex; flex-direction: column; gap: .9rem; }
 
 .action {
@@ -99,3 +99,29 @@ button[type="submit"]:hover { filter: brightness(1.08); }
 table.dist { margin-top: .5rem; border-collapse: collapse; width: 100%; max-width: 320px; }
 table.dist th, table.dist td { padding: .2rem .5rem; text-align: left; }
 table.dist thead th { color: var(--muted); font-weight: 600; border-bottom: 1px solid var(--border); }
+
+button.play {
+  padding: .35rem .9rem;
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--accent);
+  font: 600 13px/1 inherit;
+  cursor: pointer;
+  white-space: nowrap;
+}
+button.play:hover { background: var(--accent); color: var(--bg); }
+
+#advance-body { display: flex; flex-direction: column; gap: .5rem; }
+button.outcome {
+  padding: .55rem .8rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--panel);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+button.outcome:hover { border-color: var(--accent); }
+.outcome-prob { display: inline-block; min-width: 3.5rem; font-weight: 700; color: var(--accent); }

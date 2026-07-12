@@ -14,6 +14,7 @@ from __future__ import annotations
 import os
 import sys
 from collections import Counter
+from fractions import Fraction
 
 # Allow importing the engine modules that live in the repository root.
 _REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -22,6 +23,8 @@ if _REPO_ROOT not in sys.path:
 
 import character.enemies  # noqa: F401  (imported for its enemy-registration side effects)
 from card import ID_TO_CARD, CardPile
+from character.core import Character
+from character.enemies import SludgeSpinner
 from character.enemy import ID_TO_ENEMY, Enemy
 from character.player import ID_TO_PLAYER, Player
 from fight import Fight
@@ -166,3 +169,140 @@ def action_label(action_id: int) -> str:
     if action_id == END_TURN_ACTION:
         return "End turn"
     return ID_TO_CARD[action_id].__name__ if action_id in ID_TO_CARD else f"Action {action_id}"
+
+
+def describe_form(fight: Fight) -> dict:
+    """Decompose a Fight back into the values of the web form's fields, so a successor state
+    can be loaded into the form and re-queried."""
+    player = fight.player
+    enemy = fight.enemies[0]
+
+    def effect_specs(character: Character) -> dict[int, dict[str, int]]:
+        specs = {eid: {"power": 0, "duration": 0} for eid in effect_types()}
+        for effect in character.effects:
+            if effect.id in specs:
+                specs[effect.id] = {"power": effect.power or 0, "duration": effect.duration or 0}
+        return specs
+
+    def pile_counts(pile: CardPile) -> dict[int, int]:
+        counts = {cid: 0 for cid in ID_TO_CARD}
+        for card, count in pile.cards.items():
+            counts[card.id] = count
+        return counts
+
+    return {
+        "player": player.id,
+        "enemy": enemy.id,
+        "turn": fight.turn,
+        "player_hp": player.hp,
+        "player_block": player.block,
+        "player_energy": player.energy,
+        "enemy_hp": enemy.hp,
+        "enemy_block": enemy.block,
+        "enemy_intent": enemy.intent.id,
+        "player_effects": effect_specs(player),
+        "enemy_effects": effect_specs(enemy),
+        "draw": pile_counts(player.draw_pile),
+        "hand": pile_counts(player.hand),
+        "discard": pile_counts(player.discard_pile),
+    }
+
+
+def _pile_label(pile: CardPile) -> str:
+    parts = [
+        f"{card} ×{count}" if count > 1 else str(card)
+        for card, count in sorted(pile.cards.items(), key=lambda item: item[0].id)
+    ]
+    return ", ".join(parts) if parts else "nothing"
+
+
+def _outcome(fight: Fight, prob: Fraction, label: str) -> dict:
+    return {
+        "prob": prob,
+        "state_key": tuple(int(x) for x in fight.to_vector()),
+        "label": label,
+        "form": describe_form(fight),
+    }
+
+
+def advance_state(state_key: tuple[int, ...], action_id: int) -> dict:
+    """Advance a state by one action, returning the distribution of successor states.
+
+    Mirrors the sequencing of the search methods in fight.py (search_player_turn_action →
+    search_player_turn_end → search_enemy_turn_start/…/_end → search_player_turn_start),
+    calling the same engine methods in the same order, so successor keys match the keys the
+    solver wrote into the dp table.
+
+    Returns {"hp_lost": int, "terminal": "victory" | "defeat" | None, "outcomes": [...]}.
+    A card play yields one outcome; ending the turn branches over enemy intents (SludgeSpinner)
+    and the player's possible draws.
+    """
+    fight, _ = Fight.from_vector(tuple(state_key))
+    player = fight.player
+    hp_start = player.hp
+
+    if action_id != END_TURN_ACTION:
+        if action_id not in ID_TO_CARD:
+            raise ValueError(f"Unknown action id {action_id}")
+        card = ID_TO_CARD[action_id]()
+        if player.hand.cards[card] == 0:
+            raise ValueError(f"{card} is not in the player's hand")
+        if not player.can_play(card):
+            raise ValueError(f"Not enough energy to play {card}")
+
+        player.play(card, fight.enemies[0])
+        hp_lost = hp_start - player.hp
+        if fight.is_over():
+            terminal = "defeat" if player.hp <= 0 else "victory"
+            return {"hp_lost": hp_lost, "terminal": terminal, "outcomes": []}
+        return {
+            "hp_lost": hp_lost,
+            "terminal": None,
+            "outcomes": [_outcome(fight, Fraction(1), f"After playing {card}")],
+        }
+
+    # End turn: player end-of-turn, then the enemies' full turn.
+    player.resolve_end_of_turn()
+    if fight.is_over():
+        return {"hp_lost": 0, "terminal": "victory", "outcomes": []}
+
+    for enemy in fight.enemies:
+        enemy.resolve_start_of_turn()
+    for enemy in fight.enemies:
+        enemy.resolve_turn(fight)
+    hp_lost = hp_start - player.hp
+    if fight.is_over():
+        return {"hp_lost": hp_lost, "terminal": "defeat", "outcomes": []}
+
+    # Intent transition, exactly as search_enemy_turn_end branches it: a lone SludgeSpinner
+    # rolls its next intent; every other enemy advances deterministically via end-of-turn.
+    if len(fight.enemies) == 1 and isinstance(fight.enemies[0], SludgeSpinner):
+        intent_branches = fight.enemies[0].intent.next_intents()
+        branching_intents = True
+    else:
+        for enemy in fight.enemies:
+            enemy.resolve_end_of_turn()
+        intent_branches = [(None, Fraction(1))]
+        branching_intents = False
+
+    mid_vector = fight.to_vector()
+    outcomes = []
+    for next_intent, intent_prob in intent_branches:
+        branch, _ = Fight.from_vector(mid_vector)
+        if next_intent is not None:
+            branch.enemies[0].intent = next_intent
+
+        # Player turn start, as search_player_turn_start stages it.
+        branch.turn += 1
+        branch.player.energy = 3
+        Character.resolve_start_of_turn(branch.player)
+        for draw_pile, hand, discard_pile, draw_prob in branch.player.next_states():
+            branch.player.draw_pile = draw_pile
+            branch.player.hand = hand
+            branch.player.discard_pile = discard_pile
+            label = f"Draw {_pile_label(hand)}"
+            if branching_intents:
+                label += f" — intent: {next_intent}"
+            outcomes.append(_outcome(branch, intent_prob * draw_prob, label))
+
+    return {"hp_lost": hp_lost, "terminal": None, "outcomes": outcomes}

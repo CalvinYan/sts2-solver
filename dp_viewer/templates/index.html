@@ -94,6 +94,11 @@
     <button type="submit">Calculate</button>
   </form>
 
+  <section id="advance" hidden>
+    <h2>Last action <span class="muted" id="advance-note"></span></h2>
+    <div id="advance-body"></div>
+  </section>
+
   <section id="results" hidden>
     <h2>Actions <span class="muted" id="results-note"></span></h2>
     <div id="results-body"></div>
@@ -122,9 +127,84 @@
     const results = document.getElementById('results');
     const resultsBody = document.getElementById('results-body');
     const resultsNote = document.getElementById('results-note');
+    const advance = document.getElementById('advance');
+    const advanceBody = document.getElementById('advance-body');
+    const advanceNote = document.getElementById('advance-note');
+
+    let lastStateKey = null;
+    let keepAdvancePanel = false;
+
+    function applyOutcome(outcome) {
+      keepAdvancePanel = true;
+      // Set the enemy first so refreshIntents() builds the right intent options before
+      // enemy_intent is assigned along with everything else.
+      form.elements['enemy'].value = outcome.form['enemy'];
+      refreshIntents();
+      for (const [name, value] of Object.entries(outcome.form)) {
+        const field = form.elements[name];
+        if (field) field.value = value;
+      }
+      advanceBody.innerHTML = '';
+      form.requestSubmit();
+    }
+
+    async function playAction(actionId, label) {
+      advance.hidden = false;
+      advanceNote.textContent = `${label} — resolving…`;
+      advanceBody.innerHTML = '';
+
+      let data;
+      try {
+        const resp = await fetch('/advance', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ state_key: lastStateKey, action_id: actionId }),
+        });
+        data = await resp.json();
+        if (!resp.ok) throw new Error(data.error || 'Request failed');
+      } catch (err) {
+        advanceNote.textContent = '';
+        advanceBody.innerHTML = `<p class="error">${err.message}</p>`;
+        return;
+      }
+
+      const hpNote = data.hp_lost > 0 ? `, lost ${data.hp_lost} HP` : '';
+      if (data.terminal) {
+        advanceNote.textContent = `${label}${hpNote}`;
+        advanceBody.innerHTML = data.terminal === 'victory'
+          ? '<p>Fight won! The enemy is dead.</p>'
+          : '<p class="error">Fight lost — the player is dead.</p>';
+        results.hidden = true;
+        return;
+      }
+
+      if (data.outcomes.length === 1) {
+        advanceNote.textContent = `${label}${hpNote}`;
+        applyOutcome(data.outcomes[0]);
+        return;
+      }
+
+      advanceNote.textContent = `${label}${hpNote} — pick what the RNG does:`;
+      for (const outcome of data.outcomes) {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'outcome';
+        btn.innerHTML = `<span class="outcome-prob">${(outcome.prob * 100).toFixed(1)}%</span> ${outcome.label}`;
+        btn.title = outcome.prob_str;
+        btn.addEventListener('click', () => applyOutcome(outcome));
+        advanceBody.appendChild(btn);
+      }
+      advance.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
+      if (!keepAdvancePanel) {
+        advance.hidden = true;
+        advanceNote.textContent = '';
+        advanceBody.innerHTML = '';
+      }
+      keepAdvancePanel = false;
       const params = new URLSearchParams(new FormData(form));
       resultsNote.textContent = 'loading…';
       results.hidden = false;
@@ -141,6 +221,8 @@
         return;
       }
 
+      lastStateKey = data.state_key;
+
       if (!data.found) {
         resultsNote.textContent = '';
         resultsBody.innerHTML = '<p class="error">No data for this state. It may be unreachable ' +
@@ -148,7 +230,7 @@
         return;
       }
 
-      resultsNote.textContent = `(lowest expected HP loss first)`;
+      resultsNote.textContent = `(lowest expected HP loss first — click Play to advance)`;
       for (const action of data.actions) {
         const card = document.createElement('div');
         card.className = 'action' + (action.best ? ' best' : '');
@@ -159,11 +241,13 @@
           <div class="action-head">
             <span class="action-name">${action.label}${action.best ? ' &#9733;' : ''}</span>
             <span class="expected">E[HP loss] = ${action.expected_loss.toFixed(3)}</span>
+            <button type="button" class="play">Play &#9656;</button>
           </div>
           <table class="dist">
             <thead><tr><th>HP loss</th><th>Prob</th><th></th></tr></thead>
             <tbody>${rows}</tbody>
           </table>`;
+        card.querySelector('.play').addEventListener('click', () => playAction(action.action_id, action.label));
         resultsBody.appendChild(card);
       }
     });
