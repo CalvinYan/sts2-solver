@@ -23,13 +23,25 @@ app = Flask(__name__)
 dp_table = DpTable.load(DATA_PATH)
 
 
+def _expected(distribution: dict[int, Fraction]) -> Fraction:
+    return sum((Fraction(loss) * prob for loss, prob in distribution.items()), start=Fraction(0))
+
+
 def _distribution_payload(distribution: dict[int, Fraction]) -> dict:
     """Turn a {hp_loss: Fraction} distribution into JSON-friendly, display-ready data."""
-    expected = sum((Fraction(loss) * prob for loss, prob in distribution.items()), start=Fraction(0))
     outcomes = [
         {"hp_loss": loss, "prob": float(prob), "prob_str": str(prob)} for loss, prob in sorted(distribution.items())
     ]
-    return {"expected_loss": float(expected), "outcomes": outcomes}
+    return {"expected_loss": float(_expected(distribution)), "outcomes": outcomes}
+
+
+def _state_value_payload(state_key: tuple[int, ...]) -> dict:
+    """The solved value of a state: the HP-loss distribution of its best stored action."""
+    stored = dp_table.actions_for(state_key)
+    if not stored:
+        return {"found": False}
+    best_id, best_dist = min(stored.items(), key=lambda item: _expected(item[1]))
+    return {"found": True, "best_action": state_bridge.action_label(best_id), **_distribution_payload(best_dist)}
 
 
 def _pile_from_request(prefix: str) -> dict[int, int]:
@@ -111,6 +123,7 @@ def advance():
             "prob_str": str(o["prob"]),
             "label": o["label"],
             "form": _form_fields(o["form"]),
+            "value": _state_value_payload(o["state_key"]),
         }
         for o in result["outcomes"]
     ]

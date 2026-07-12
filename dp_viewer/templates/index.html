@@ -186,13 +186,37 @@
 
       advanceNote.textContent = `${label}${hpNote} — pick what the RNG does:`;
       for (const outcome of data.outcomes) {
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'outcome';
-        btn.innerHTML = `<span class="outcome-prob">${(outcome.prob * 100).toFixed(1)}%</span> ${outcome.label}`;
-        btn.title = outcome.prob_str;
-        btn.addEventListener('click', () => applyOutcome(outcome));
-        advanceBody.appendChild(btn);
+        const card = document.createElement('div');
+        card.className = 'outcome';
+        card.setAttribute('role', 'button');
+        card.tabIndex = 0;
+        card.title = outcome.prob_str;
+
+        let valueHtml;
+        if (outcome.value.found) {
+          const rows = outcome.value.outcomes.map(o =>
+            `<tr><td>${o.hp_loss}</td><td>${o.prob_str}</td><td>${(o.prob * 100).toFixed(1)}%</td></tr>`
+          ).join('');
+          valueHtml = `
+            <div class="outcome-value">E[HP loss] = ${outcome.value.expected_loss.toFixed(3)}
+              <span class="muted">(best: ${outcome.value.best_action})</span></div>
+            <table class="dist">
+              <thead><tr><th>HP loss</th><th>Prob</th><th></th></tr></thead>
+              <tbody>${rows}</tbody>
+            </table>`;
+        } else {
+          valueHtml = '<div class="outcome-value muted">No solved data for this state</div>';
+        }
+
+        card.innerHTML = `
+          <div class="outcome-head">
+            <span><span class="outcome-prob">${(outcome.prob * 100).toFixed(1)}%</span> ${outcome.label}</span>
+          </div>` + valueHtml;
+        card.addEventListener('click', () => applyOutcome(outcome));
+        card.addEventListener('keydown', (ev) => {
+          if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); applyOutcome(outcome); }
+        });
+        advanceBody.appendChild(card);
       }
       advance.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }

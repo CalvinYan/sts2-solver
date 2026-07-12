@@ -113,15 +113,15 @@ button.play {
 button.play:hover { background: var(--accent); color: var(--bg); }
 
 #advance-body { display: flex; flex-direction: column; gap: .5rem; }
-button.outcome {
+.outcome {
   padding: .55rem .8rem;
   border: 1px solid var(--border);
   border-radius: 8px;
   background: var(--panel);
   color: var(--text);
-  font: inherit;
-  text-align: left;
   cursor: pointer;
 }
-button.outcome:hover { border-color: var(--accent); }
+.outcome:hover, .outcome:focus-visible { border-color: var(--accent); outline: none; }
+.outcome-head { font-weight: 600; }
 .outcome-prob { display: inline-block; min-width: 3.5rem; font-weight: 700; color: var(--accent); }
+.outcome-value { margin-top: .35rem; color: var(--text); font-size: .95em; }
