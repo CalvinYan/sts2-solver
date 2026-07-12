@@ -127,7 +127,9 @@ class Fight:
                     expected_value = sum(
                         (hp_loss * prob_hp_loss for hp_loss, prob_hp_loss in hp_losses.items()), start=Fraction(0)
                     )
-                    if expected_value < best_value:
+                    if expected_value < best_value or (
+                        expected_value == best_value and not search_complete and subsearch_complete
+                    ):
                         best_distribution = hp_losses
                         best_value = expected_value
                         search_complete = subsearch_complete
