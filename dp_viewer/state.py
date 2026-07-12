@@ -112,28 +112,24 @@ def _build_effects(specs: dict[int, dict[str, int]]) -> list[Effect]:
     return effects
 
 
-def build_state_key(
+def build_fight(
     *,
     player_id: int,
     enemy_id: int,
-    turn: int,
-    player_hp: int,
-    player_block: int,
-    player_energy: int,
-    enemy_hp: int,
-    enemy_block: int,
-    enemy_intent: int,
-    draw: dict[int, int],
-    hand: dict[int, int],
-    discard: dict[int, int],
+    turn: int = 0,
+    player_hp: int | None = None,
+    player_block: int = 0,
+    player_energy: int = 3,
+    enemy_hp: int | None = None,
+    enemy_block: int = 0,
+    enemy_intent: int | None = None,
+    draw: dict[int, int] | None = None,
+    hand: dict[int, int] | None = None,
+    discard: dict[int, int] | None = None,
     player_effects: dict[int, dict[str, int]] | None = None,
     enemy_effects: dict[int, dict[str, int]] | None = None,
 ) -> tuple[int, ...]:
-    """Reconstruct a Fight from form inputs and return its `to_vector()` state key.
-
-    Reuses the engine's own serialization so the key is guaranteed to match how the solver
-    wrote it.
-    """
+    """Reconstruct a Fight from form inputs."""
     if player_id not in ID_TO_PLAYER:
         raise ValueError(f"No engine support for player id {player_id}")
     if enemy_id not in ID_TO_ENEMY:
@@ -141,27 +137,33 @@ def build_state_key(
 
     player: Player = ID_TO_PLAYER[player_id](
         name="Player",
-        hp=player_hp,
         block=player_block,
         energy=player_energy,
         effects=_build_effects(player_effects or {}),
-        draw_pile=_build_pile(draw),
-        hand=_build_pile(hand),
-        discard_pile=_build_pile(discard),
+        hand=_build_pile(hand or {}),
+        discard_pile=_build_pile(discard or {}),
         player_turn_callback=None,
     )
+
+    if player_hp is not None:
+        player.hp = player_hp
+    if draw is not None:
+        player.draw_pile = _build_pile(draw)
 
     enemy_cls = ID_TO_ENEMY[enemy_id]
     enemy: Enemy = enemy_cls(
         name="Enemy",
-        hp=enemy_hp,
         block=enemy_block,
         effects=_build_effects(enemy_effects or {}),
-        intent=enemy_cls.id_to_intent(enemy_intent),
     )
 
-    fight = Fight(player=player, enemies=[enemy], turn=turn)
-    return tuple(int(x) for x in fight.to_vector())
+    if enemy_hp is not None:
+        enemy.hp = enemy_hp
+    if enemy_intent is not None:
+        enemy.intent = enemy_cls.id_to_intent(enemy_intent)
+
+    fight = Fight(player=player, enemies=[enemy], turn=turn or 0)
+    return fight
 
 
 def action_label(action_id: int) -> str:
@@ -243,14 +245,13 @@ def _turn_start_outcomes(fight: Fight, prob: Fraction = Fraction(1), label_suffi
     return outcomes
 
 
-def start_of_turn(state_key: tuple[int, ...]) -> dict:
+def start_of_turn(fight: Fight) -> dict:
     """Resolve the start of the player's turn directly from a state, without playing an action.
 
     Lets the user view every possible draw from the current fight state — e.g. all opening
     hands, by staging from the pre-first-turn state (turn 0, full draw pile, empty hand).
     Returns the same shape as advance_state, plus the number of the turn being started.
     """
-    fight, _ = Fight.from_vector(tuple(state_key))
     if fight.is_over():
         raise ValueError("The fight is already over in this state")
     outcomes = _turn_start_outcomes(fight)

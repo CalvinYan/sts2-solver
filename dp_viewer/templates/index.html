@@ -94,6 +94,7 @@
     <div class="actions">
       <button type="submit">Calculate</button>
       <button type="button" class="secondary" id="start-turn">Calculate start of turn</button>
+      <button type="button" class="secondary" id="reset">Reset encounter</button>
     </div>
   </form>
 
@@ -137,7 +138,7 @@
     let lastStateKey = null;
     let keepAdvancePanel = false;
 
-    function applyOutcome(outcome) {
+    function updateForm(outcome) {
       keepAdvancePanel = true;
       // Set the enemy first so refreshIntents() builds the right intent options before
       // enemy_intent is assigned along with everything else.
@@ -148,6 +149,10 @@
         if (field) field.value = value;
       }
       advanceBody.innerHTML = '';
+    }
+
+    function applyOutcome(outcome) {
+      updateForm(outcome);
       form.requestSubmit();
     }
 
@@ -238,6 +243,12 @@
       const data = await fetchAdvance('Start of turn', () => fetch('/start_turn?' + params.toString()));
       if (data) renderAdvanceResult(`Start of turn ${data.turn}`, data);
     });
+
+    document.getElementById('reset').addEventListener('click', async () => {
+      const params = new URLSearchParams(new FormData(form));
+      const data = await fetchAdvance('Reset encounter', () => fetch('/reset?' + params.toString()));
+      if (data) updateForm(data.outcomes[0]);
+    })
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();

@@ -15,6 +15,8 @@ import state as state_bridge
 from flask import Flask, jsonify, render_template, request
 from table import DpTable
 
+from fight import Fight
+
 DATA_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "dp_data.csv")
 
 app = Flask(__name__)
@@ -120,8 +122,8 @@ def _outcomes_payload(outcomes: list[dict]) -> list[dict]:
     ]
 
 
-def _state_key_from_request() -> tuple[int, ...]:
-    return state_bridge.build_state_key(
+def _fight_from_request() -> Fight:
+    return state_bridge.build_fight(
         player_id=request.args.get("player", type=int),
         enemy_id=request.args.get("enemy", type=int),
         turn=request.args.get("turn", 1, type=int),
@@ -161,8 +163,8 @@ def advance():
 @app.route("/start_turn")
 def start_turn():
     try:
-        state_key = _state_key_from_request()
-        result = state_bridge.start_of_turn(state_key)
+        fight = _fight_from_request()
+        result = state_bridge.start_of_turn(fight)
     except (ValueError, KeyError, TypeError, IndexError) as e:
         return jsonify({"error": str(e)}), 400
 
@@ -176,14 +178,32 @@ def start_turn():
     )
 
 
+@app.route("/reset")
+def reset_encounter():
+    try:
+        fight = state_bridge.build_fight(
+            player_id=request.args.get("player", type=int), enemy_id=request.args.get("enemy", type=int)
+        )
+        result = state_bridge._outcome(fight, Fraction(1), "Start of fight")
+    except (ValueError, KeyError, TypeError, IndexError) as e:
+        return jsonify({"error": str(e)}), 400
+
+    return jsonify(
+        {
+            "outcomes": _outcomes_payload([result]),
+        }
+    )
+
+
 @app.route("/query")
 def query():
     try:
-        state_key = _state_key_from_request()
+        fight = _fight_from_request()
+        state_key = fight.to_vector()
+        stored = dp_table.actions_for(state_key)
     except (ValueError, KeyError, TypeError) as e:
         return jsonify({"error": str(e)}), 400
 
-    stored = dp_table.actions_for(state_key)
     actions = [
         {"action_id": action_id, "label": state_bridge.action_label(action_id), **_distribution_payload(dist)}
         for action_id, dist in stored.items()
