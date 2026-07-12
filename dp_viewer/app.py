@@ -17,7 +17,13 @@ from table import DpTable
 
 from fight import Fight
 
-DATA_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "dp_data.csv")
+DATA_PATH = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+    "data",
+    "solver",
+    "ironclad-base",
+    "fuzzy_wurm_crawler.csv.pkl.gz",
+)
 
 app = Flask(__name__)
 

@@ -3,7 +3,8 @@
 
 from __future__ import annotations
 
-import csv
+import gzip
+import pickle
 from fractions import Fraction
 
 # Restricted eval namespaces mirroring dp_solver.load_dp_table.
@@ -12,7 +13,7 @@ _VAL_GLOBALS = {"__builtins__": {}, "Fraction": Fraction}
 
 
 class DpTable:
-    """In-memory index of the dp data, keyed by the 138-int state vector (action stripped off)."""
+    """In-memory index of the dp data, keyed by the state vector (action stripped off)."""
 
     def __init__(self, by_state: dict[tuple, dict[int, dict[int, Fraction]]]):
         self._by_state = by_state
@@ -24,12 +25,11 @@ class DpTable:
     @classmethod
     def load(cls, fname: str) -> "DpTable":
         by_state: dict[tuple, dict[int, dict[int, Fraction]]] = {}
-        with open(fname, "r") as file:
-            for row in csv.reader(file):
-                key = eval(row[0], _KEY_GLOBALS)
-                distribution = eval(row[1], _VAL_GLOBALS)
-                state, action = key[:-1], key[-1]
-                by_state.setdefault(state, {})[action] = distribution
+        with gzip.open(fname, mode="rb", compresslevel=6) as f:
+            new_table = pickle.load(f)
+        for state_action, distribution in new_table.items():
+            state, action = state_action[:-1], state_action[-1]
+            by_state.setdefault(state, {})[action] = distribution
         return cls(by_state)
 
     def actions_for(self, state: tuple) -> dict[int, dict[int, Fraction]]:
