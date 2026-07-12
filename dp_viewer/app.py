@@ -107,6 +107,38 @@ def _form_fields(form: dict) -> dict[str, int]:
     return fields
 
 
+def _outcomes_payload(outcomes: list[dict]) -> list[dict]:
+    return [
+        {
+            "prob": float(o["prob"]),
+            "prob_str": str(o["prob"]),
+            "label": o["label"],
+            "form": _form_fields(o["form"]),
+            "value": _state_value_payload(o["state_key"]),
+        }
+        for o in outcomes
+    ]
+
+
+def _state_key_from_request() -> tuple[int, ...]:
+    return state_bridge.build_state_key(
+        player_id=request.args.get("player", type=int),
+        enemy_id=request.args.get("enemy", type=int),
+        turn=request.args.get("turn", 1, type=int),
+        player_hp=request.args.get("player_hp", 0, type=int),
+        player_block=request.args.get("player_block", 0, type=int),
+        player_energy=request.args.get("player_energy", 0, type=int),
+        enemy_hp=request.args.get("enemy_hp", 0, type=int),
+        enemy_block=request.args.get("enemy_block", 0, type=int),
+        enemy_intent=request.args.get("enemy_intent", 0, type=int),
+        draw=_pile_from_request("draw"),
+        hand=_pile_from_request("hand"),
+        discard=_pile_from_request("discard"),
+        player_effects=_effects_from_request("peff"),
+        enemy_effects=_effects_from_request("eeff"),
+    )
+
+
 @app.route("/advance", methods=["POST"])
 def advance():
     payload = request.get_json(silent=True) or {}
@@ -117,38 +149,37 @@ def advance():
     except (ValueError, KeyError, TypeError, IndexError) as e:
         return jsonify({"error": str(e)}), 400
 
-    outcomes = [
+    return jsonify(
         {
-            "prob": float(o["prob"]),
-            "prob_str": str(o["prob"]),
-            "label": o["label"],
-            "form": _form_fields(o["form"]),
-            "value": _state_value_payload(o["state_key"]),
+            "hp_lost": result["hp_lost"],
+            "terminal": result["terminal"],
+            "outcomes": _outcomes_payload(result["outcomes"]),
         }
-        for o in result["outcomes"]
-    ]
-    return jsonify({"hp_lost": result["hp_lost"], "terminal": result["terminal"], "outcomes": outcomes})
+    )
+
+
+@app.route("/start_turn")
+def start_turn():
+    try:
+        state_key = _state_key_from_request()
+        result = state_bridge.start_of_turn(state_key)
+    except (ValueError, KeyError, TypeError, IndexError) as e:
+        return jsonify({"error": str(e)}), 400
+
+    return jsonify(
+        {
+            "hp_lost": result["hp_lost"],
+            "terminal": result["terminal"],
+            "turn": result["turn"],
+            "outcomes": _outcomes_payload(result["outcomes"]),
+        }
+    )
 
 
 @app.route("/query")
 def query():
     try:
-        state_key = state_bridge.build_state_key(
-            player_id=request.args.get("player", type=int),
-            enemy_id=request.args.get("enemy", type=int),
-            turn=request.args.get("turn", 1, type=int),
-            player_hp=request.args.get("player_hp", 0, type=int),
-            player_block=request.args.get("player_block", 0, type=int),
-            player_energy=request.args.get("player_energy", 0, type=int),
-            enemy_hp=request.args.get("enemy_hp", 0, type=int),
-            enemy_block=request.args.get("enemy_block", 0, type=int),
-            enemy_intent=request.args.get("enemy_intent", 0, type=int),
-            draw=_pile_from_request("draw"),
-            hand=_pile_from_request("hand"),
-            discard=_pile_from_request("discard"),
-            player_effects=_effects_from_request("peff"),
-            enemy_effects=_effects_from_request("eeff"),
-        )
+        state_key = _state_key_from_request()
     except (ValueError, KeyError, TypeError) as e:
         return jsonify({"error": str(e)}), 400
 

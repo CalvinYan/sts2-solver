@@ -70,8 +70,9 @@ table.effects thead th { color: var(--muted); font-weight: 600; }
 table.effects tbody th { text-align: left; font-weight: 600; }
 table.effects input { max-width: 4.5rem; }
 
+.actions { display: flex; gap: .6rem; flex-wrap: wrap; }
+
 button[type="submit"] {
-  align-self: flex-start;
   padding: .6rem 1.4rem;
   border: none;
   border-radius: 8px;
@@ -81,6 +82,17 @@ button[type="submit"] {
   cursor: pointer;
 }
 button[type="submit"]:hover { filter: brightness(1.08); }
+
+button.secondary {
+  padding: .6rem 1.4rem;
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--accent);
+  font: 600 15px/1 inherit;
+  cursor: pointer;
+}
+button.secondary:hover { background: var(--accent); color: var(--bg); }
 
 #results, #advance { margin-top: 2rem; }
 #results-body { display: flex; flex-direction: column; gap: .9rem; }

@@ -225,6 +225,38 @@ def _outcome(fight: Fight, prob: Fraction, label: str) -> dict:
     }
 
 
+def _turn_start_outcomes(fight: Fight, prob: Fraction = Fraction(1), label_suffix: str = "") -> list[dict]:
+    """Stage the player's turn start on a fight and branch over the possible draws.
+
+    Mirrors search_player_turn_start in fight.py: the turn advances, energy resets to 3, block
+    resets, and each draw from next_states() becomes one outcome. Mutates the given fight.
+    """
+    fight.turn += 1
+    fight.player.energy = 3
+    Character.resolve_start_of_turn(fight.player)
+    outcomes = []
+    for draw_pile, hand, discard_pile, draw_prob in fight.player.next_states():
+        fight.player.draw_pile = draw_pile
+        fight.player.hand = hand
+        fight.player.discard_pile = discard_pile
+        outcomes.append(_outcome(fight, prob * draw_prob, f"Draw {_pile_label(hand)}" + label_suffix))
+    return outcomes
+
+
+def start_of_turn(state_key: tuple[int, ...]) -> dict:
+    """Resolve the start of the player's turn directly from a state, without playing an action.
+
+    Lets the user view every possible draw from the current fight state — e.g. all opening
+    hands, by staging from the pre-first-turn state (turn 0, full draw pile, empty hand).
+    Returns the same shape as advance_state, plus the number of the turn being started.
+    """
+    fight, _ = Fight.from_vector(tuple(state_key))
+    if fight.is_over():
+        raise ValueError("The fight is already over in this state")
+    outcomes = _turn_start_outcomes(fight)
+    return {"hp_lost": 0, "terminal": None, "turn": fight.turn, "outcomes": outcomes}
+
+
 def advance_state(state_key: tuple[int, ...], action_id: int) -> dict:
     """Advance a state by one action, returning the distribution of successor states.
 
@@ -291,18 +323,7 @@ def advance_state(state_key: tuple[int, ...], action_id: int) -> dict:
         branch, _ = Fight.from_vector(mid_vector)
         if next_intent is not None:
             branch.enemies[0].intent = next_intent
-
-        # Player turn start, as search_player_turn_start stages it.
-        branch.turn += 1
-        branch.player.energy = 3
-        Character.resolve_start_of_turn(branch.player)
-        for draw_pile, hand, discard_pile, draw_prob in branch.player.next_states():
-            branch.player.draw_pile = draw_pile
-            branch.player.hand = hand
-            branch.player.discard_pile = discard_pile
-            label = f"Draw {_pile_label(hand)}"
-            if branching_intents:
-                label += f" — intent: {next_intent}"
-            outcomes.append(_outcome(branch, intent_prob * draw_prob, label))
+        suffix = f" — intent: {next_intent}" if branching_intents else ""
+        outcomes.extend(_turn_start_outcomes(branch, intent_prob, suffix))
 
     return {"hp_lost": hp_lost, "terminal": None, "outcomes": outcomes}
