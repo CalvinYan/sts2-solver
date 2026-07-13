@@ -306,11 +306,10 @@ def advance_state(state_key: tuple[int, ...], action_id: int) -> dict:
         intent_branches = fight.enemies[0].intent.next_intents()
         branching_intents = True
     else:
-        for enemy in fight.enemies:
-            enemy.resolve_end_of_turn()
         intent_branches = [(None, Fraction(1))]
         branching_intents = False
-
+    for enemy in fight.enemies:
+        enemy.resolve_end_of_turn()
     mid_vector = fight.to_vector()
     outcomes = []
     for next_intent, intent_prob in intent_branches:
