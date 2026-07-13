@@ -3,12 +3,13 @@ from copy import deepcopy
 from fractions import Fraction
 
 import numpy as np
+from mock import patch
 
 from card import AscendersBane, Bash, CardPile, Defend, Strike
 from character.enemies import Nibbit, ShrinkerBeetle, SludgeSpinner
 from character.enemies.nibbit import HesitantSlice, Hiss
 from character.enemies.shrinker_beetle import Stomp
-from character.enemies.sludge_spinner import Slam
+from character.enemies.sludge_spinner import Rage, Slam
 from character.enemy import Enemy
 from character.player import Ironclad
 from fight import MAX_ENEMIES, Fight
@@ -27,7 +28,6 @@ def test_fight_encodes_to_vector():
             player.to_vector(),
             enemy_vector,
             *[Enemy.to_vector(None) for _ in range(MAX_ENEMIES - 1)],
-            [fight.turn],
         ]
     )
     got = fight.to_vector()
@@ -41,14 +41,11 @@ def test_fight_decodes_from_vector():
     expected = Fight(player=player, enemies=[enemy])
 
     enemy_vector = enemy.to_vector()
-    vector = np.concatenate(
-        [
-            player.to_vector(),
-            enemy_vector,
-            np.zeros(len(enemy_vector) * (MAX_ENEMIES - 1), dtype=int),
-            [expected.turn],
-        ]
-    )
+    vector = [
+        *player.to_vector(),
+        *enemy_vector,
+        *(0 for _ in range(len(enemy_vector) * (MAX_ENEMIES - 1))),
+    ]
     got, read = Fight.from_vector(vector)
     assert expected == got
     assert len(vector) == read
@@ -77,7 +74,7 @@ def test_fight_round_trip():
         effects=[Strength(power=3)],
         intent=Slam(),
     )
-    expected = Fight(player=player, enemies=[enemy1, enemy2], turn=2)
+    expected = Fight(player=player, enemies=[enemy1, enemy2])
     got, _ = Fight.from_vector(tuple(expected.to_vector()))
     assert expected == got
 
@@ -288,3 +285,50 @@ def test_search_no_overblock():
     fight.search_player_turn(dp_table)
     # Search should not ever consider playing Defend
     assert not any(vector[-1] == Defend.id for vector in dp_table.keys())
+
+
+def test_single_enemy_all_intents_searched():
+    next_intents = set()
+
+    def search_player_turn_start(
+        self, dp_table: dict[tuple[int, ...], tuple[dict[int, Fraction], bool]], hp_limit: int = 0
+    ) -> tuple[dict[int, Fraction], bool]:
+        next_intents.add(self.enemies[0].intent)
+        return ({0: Fraction(1)}, True)
+
+    dp_table = dict()
+    player = Ironclad(
+        name="Player",
+        draw_pile=CardPile(cards=Counter({Strike(): 4, Bash(): 1})),
+    )
+    enemy = SludgeSpinner(name="Enemy")
+    fight = Fight(player=player, enemies=[enemy], turn=1)
+    with patch.object(Fight, "search_player_turn_start", search_player_turn_start):
+        fight.search_enemy_turn_end(dp_table)
+
+    assert next_intents == {Slam(), Rage()}
+
+
+def test_multiple_enemies_all_intents_searched():
+    intent_combos = set()
+
+    def search_player_turn_start(
+        self, dp_table: dict[tuple[int, ...], tuple[dict[int, Fraction], bool]], hp_limit: int = 0
+    ) -> tuple[dict[int, Fraction], bool]:
+        intent_combos.add(tuple(enemy.intent for enemy in self.enemies))
+        return ({0: Fraction(1)}, True)
+
+    dp_table = dict()
+    player = Ironclad(
+        name="Player",
+        hp=1,
+        hand=CardPile(),
+        draw_pile=CardPile(cards=Counter({Strike(): 4, Bash(): 1})),
+    )
+    tweedle_dee = SludgeSpinner(name="Tweedle Dee")
+    tweedle_dum = SludgeSpinner(name="Tweedle Dum")
+    fight = Fight(player=player, enemies=[tweedle_dee, tweedle_dum], turn=1)
+    with patch.object(Fight, "search_player_turn_start", search_player_turn_start):
+        fight.search_enemy_turn_end(dp_table)
+
+    assert intent_combos == {(Slam(), Slam()), (Slam(), Rage()), (Rage(), Slam()), (Rage(), Rage())}

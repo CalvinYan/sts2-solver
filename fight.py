@@ -5,10 +5,10 @@ from __future__ import annotations
 from collections import defaultdict
 from dataclasses import dataclass
 from fractions import Fraction
+from itertools import product
 
 from card import Card, Defend
 from character.core import Character
-from character.enemies import SludgeSpinner
 from character.enemy import Enemy
 from character.player import Player
 from util.core import Move
@@ -231,31 +231,28 @@ class Fight:
         if self.is_over():
             return {0: Fraction(1)}, True
 
+        enemy_snapshots = [enemy.to_vector() for enemy in self.enemies]
+        next_intents = [enemy.intent.next_intents() for enemy in self.enemies]
+        for enemy in self.enemies:
+            enemy.resolve_end_of_turn()
+
         search_complete = True
-        # TODO: Eventually I will have to deal with multiple enemies with random intents but
-        # don't feel like doing it right now
-        if len(self.enemies) == 1 and isinstance(self.enemies[0], SludgeSpinner):
-            results: dict[int, Fraction] = defaultdict(Fraction)
-            current_intent = self.enemies[0].intent
+        result: defaultdict[int, Fraction] = defaultdict(Fraction)
+        for next_intents_product in product(*next_intents):
+            prob_intents = Fraction(1)
+            for enemy, (intent, prob_intent) in zip(self.enemies, next_intents_product):
+                prob_intents *= prob_intent
+                enemy.intent = intent
 
-            for next_intent, prob_next_intent in self.enemies[0].intent.next_intents():
-                self.enemies[0].intent = next_intent
-                hp_losses, subsearch_complete = self.search_player_turn_start(dp_table, hp_limit)
-                for hp_loss, prob_hp_loss in hp_losses.items():
-                    results[hp_loss] += prob_next_intent * prob_hp_loss
-                if not subsearch_complete:
-                    search_complete = False
-                self.enemies[0].intent = current_intent
+            sub_result, subsearch_complete = self.search_player_turn_start(dp_table, hp_limit)
+            for hp_loss, prob_hp_loss in sub_result.items():
+                result[hp_loss] += prob_intents * prob_hp_loss
+            if not subsearch_complete:
+                search_complete = False
 
-            return results, search_complete
-        else:
-            enemy_snapshots = [enemy.to_vector() for enemy in self.enemies]
-            for enemy in self.enemies:
-                enemy.resolve_end_of_turn()
-            result = self.search_player_turn_start(dp_table, hp_limit)
-            for enemy, snapshot in zip(self.enemies, enemy_snapshots):
-                enemy.read_vector(snapshot)
-            return result
+        for enemy, snapshot in zip(self.enemies, enemy_snapshots):
+            enemy.read_vector(snapshot)
+        return result, search_complete
 
     def is_over(self) -> bool:
         # TODO: Check only if len(self.enemies) is 0
@@ -274,7 +271,7 @@ class Fight:
     # - The number of the current turn
     def to_vector(self) -> tuple[int, ...]:
         enemies_padded = self.enemies + [None] * (MAX_ENEMIES - len(self.enemies))
-        return (*self.player.to_vector(), *[i for enemy in enemies_padded for i in Enemy.to_vector(enemy)], self.turn)
+        return (*self.player.to_vector(), *[i for enemy in enemies_padded for i in Enemy.to_vector(enemy)])
 
     @staticmethod
     def from_vector(vector: tuple) -> tuple[Fight, int]:
@@ -295,13 +292,7 @@ class Fight:
                 raise ValueError("Fight vector must contain at least one Enemy")
             indices_read += read
 
-        if len(vector) < indices_read + 1:
-            raise ValueError(
-                f"Not enough values in Fight vector to read turn number: expected {indices_read + 1}, got {indices_read}"
-            )
-        turn: int = vector[indices_read]
-
-        return Fight(player=player, enemies=enemies, turn=turn), indices_read + 1
+        return Fight(player=player, enemies=enemies), indices_read
 
     def __str__(self) -> str:
         return f"\nTurn {self.turn}\n\nEnemies:\n{'\n'.join(str(enemy) for enemy in self.enemies)}\n\nPlayer:\n{self.player}"
