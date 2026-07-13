@@ -26,6 +26,7 @@ class Card:
     id: int
     cost: int | None
     targeting: Targeting
+    star_cost: int = 0
 
     def action(self) -> Action:
         return Action()

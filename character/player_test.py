@@ -4,8 +4,8 @@ from math import comb
 
 import numpy as np
 
-from card import AscendersBane, Bash, CardPile, Defend, Strike
-from character.player import Ironclad, Player
+from card import AscendersBane, Bash, CardPile, Defend, FallingStar, Strike
+from character.player import Ironclad, Player, Regent
 from util.effect import Strength, Thorns, Weak
 
 
@@ -270,3 +270,9 @@ def test_player_resolve_end_of_turn_exhausts_ascenders_bane_and_discards_hand():
     assert clad.discard_pile.cards == Counter({Strike(): 2, Defend(): 1})
     # Effect durations still tick down at end of turn
     assert clad.effects == [Weak(duration=1)]
+
+
+def test_player_cannot_play_falling_star_without_stars():
+    player = Regent(name="Regent", draw_pile=CardPile(cards=Counter({FallingStar(): 1})), stars=0)
+
+    assert not player.can_play(FallingStar())

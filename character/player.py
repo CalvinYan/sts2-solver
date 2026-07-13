@@ -37,6 +37,7 @@ class Player(Character):
     """
 
     energy: int = 3
+    stars: int = 0
     hand: CardPile = field(default_factory=CardPile)
     draw_pile: CardPile
     discard_pile: CardPile = field(default_factory=CardPile)
@@ -54,7 +55,7 @@ class Player(Character):
             self.hand.draw(self.draw_pile)
 
     def can_play(self, card: Card) -> bool:
-        return card.cost is not None and self.energy >= card.cost
+        return card.cost is not None and self.energy >= card.cost and self.stars >= card.star_cost
 
     def play(self, card: Card, target: Character | None = None) -> None:
         if self.hand.cards[card] == 0:
@@ -68,6 +69,7 @@ class Player(Character):
         self.act(target=target, action=card.action())
 
         self.energy -= card.cost  # type: ignore
+        self.stars -= card.star_cost
 
         self.hand.cards[card] -= 1
         if self.hand.cards[card] == 0:
@@ -206,6 +208,7 @@ class Silent(Player):
 class Regent(Player):
     id: int = 0
     hp: int = 60
+    stars: int = 3
     draw_pile: CardPile = field(
         default_factory=lambda: CardPile(
             cards=Counter(
