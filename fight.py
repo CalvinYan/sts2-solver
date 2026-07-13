@@ -7,11 +7,12 @@ from dataclasses import dataclass
 from fractions import Fraction
 from itertools import product
 
-from card import Card, Defend
+from card import Card
 from character.core import Character
 from character.enemy import Enemy
 from character.player import Player
 from util.core import Move
+from util.effect import Thorns
 
 MAX_ENEMIES = 5
 
@@ -98,7 +99,7 @@ class Fight:
         self, dp_table: dict[tuple[int, ...], tuple[dict[int, Fraction], bool]], hp_limit: int = 0
     ) -> tuple[dict[int, Fraction], bool]:
 
-        def incoming_damage() -> int:
+        def is_useless_block(card: Card) -> bool:
             dmg = 0
             for enemy in self.enemies:
                 for action in enemy.intent.actions():
@@ -109,7 +110,19 @@ class Fight:
                         for effect in self.player.effects:
                             effect.resolve(move, is_target=True)
                         dmg += action.damage  # type: ignore
-            return dmg
+
+            # TODO: Find a better way to do this
+            action = card.action()
+            return not action.damage and bool(action.block) and dmg <= self.player.block
+
+        def is_skippable(card: Card) -> bool:
+            if is_useless_block(card):
+                return True
+            if card.action().damage and any(
+                [any([isinstance(effect, Thorns) for effect in enemy.effects]) for enemy in self.enemies]
+            ):
+                return True
+            return False
 
         if self.is_over():
             return {0: Fraction(1)}, True
@@ -121,7 +134,7 @@ class Fight:
         # Try playing each playable card in your hand
         for card in list(self.player.hand.cards.keys()):
             # Optimization: Don't play defends if enemies are not attacking
-            if self.player.can_play(card) and not (isinstance(card, Defend) and incoming_damage() <= self.player.block):
+            if self.player.can_play(card) and not is_useless_block(card):
                 hp_losses, subsearch_complete = self.search_player_turn_action(dp_table, card, hp_limit)
                 if hp_losses:
                     expected_value = sum(
@@ -138,16 +151,19 @@ class Fight:
                     if hp_losses == {0: Fraction(1)}:
                         break
         else:
-            # Try just ending your turn
-            hp_losses, subsearch_complete = self.search_player_turn_action(dp_table, None, hp_limit)
-            if hp_losses:
-                expected_value = sum(
-                    (hp_loss * prob_hp_loss for hp_loss, prob_hp_loss in hp_losses.items()), start=Fraction(0)
-                )
-                if expected_value < best_value:
-                    best_distribution = hp_losses
-                    best_value = expected_value
-                    search_complete = subsearch_complete
+            if not any(
+                [self.player.can_play(card) and not is_skippable(card) for card in self.player.hand.cards.keys()]
+            ):
+                # Try just ending your turn
+                hp_losses, subsearch_complete = self.search_player_turn_action(dp_table, None, hp_limit)
+                if hp_losses:
+                    expected_value = sum(
+                        (hp_loss * prob_hp_loss for hp_loss, prob_hp_loss in hp_losses.items()), start=Fraction(0)
+                    )
+                    if expected_value < best_value:
+                        best_distribution = hp_losses
+                        best_value = expected_value
+                        search_complete = subsearch_complete
 
         # Return the probability distribution with the least expected HP loss
         return best_distribution, search_complete

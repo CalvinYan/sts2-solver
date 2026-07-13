@@ -160,7 +160,7 @@ def test_search_truncates_after_finding_lethal():
         assert hp_losses == dp_table[state_action_pair]
 
 
-def test_search_computes_unwinnable_turn():
+def test_search_fully_computes_unwinnable_turn():
     dp_table = dict()
     player = Ironclad(
         name="Player",
@@ -182,7 +182,8 @@ def test_search_computes_unwinnable_turn():
             for _ in range(defends):
                 fight_copy.player.play(Defend())
 
-            dp_table_expected[(*fight_copy.to_vector(), -1)] = ({14 - 5 * defends: Fraction(1)}, True)
+            if strikes + defends == 3:
+                dp_table_expected[(*fight_copy.to_vector(), -1)] = ({14 - 5 * defends: Fraction(1)}, True)
             if strikes < 3 and strikes + defends < 3:
                 dp_table_expected[(*fight_copy.to_vector(), 0)] = ({14 - 5 * min(2, 2 - strikes): Fraction(1)}, True)
             if defends < 2 and strikes + defends < 3:
