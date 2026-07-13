@@ -21,13 +21,12 @@ DATA_PATH = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
     "data",
     "solver",
-    "ironclad-base",
-    "fuzzy_wurm_crawler.csv.pkl.gz",
+    "all.csv.pkl.gz",
 )
 
 app = Flask(__name__)
 
-# Loaded once at import time (~15s, ~220MB). The dp data never changes at runtime.
+# Loaded once at import time. The dp data never changes at runtime.
 dp_table = DpTable.load(DATA_PATH)
 
 
@@ -65,6 +64,7 @@ def _effects_from_request(prefix: str) -> dict[int, dict[str, int]]:
     specs: dict[int, dict[str, int]] = {}
     for effect_id, meta in state_bridge.effect_types().items():
         entry: dict[str, int] = {}
+        entry["present"] = request.args.get(f"{prefix}_{effect_id}_present", default=False, type=bool)
         if meta["power"]:
             entry["power"] = request.args.get(f"{prefix}_{effect_id}_power", 0, type=int)
         if meta["duration"]:
@@ -108,6 +108,7 @@ def _form_fields(form: dict) -> dict[str, int]:
     effect_meta = state_bridge.effect_types()
     for prefix, key in (("peff", "player_effects"), ("eeff", "enemy_effects")):
         for effect_id, vals in form[key].items():
+            fields[f"{prefix}_{effect_id}_present"] = vals["present"]
             if effect_meta[effect_id]["power"]:
                 fields[f"{prefix}_{effect_id}_power"] = vals["power"]
             if effect_meta[effect_id]["duration"]:

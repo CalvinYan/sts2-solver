@@ -36,11 +36,12 @@
         <label>Energy <input type="number" name="player_energy" min="0" value="3" required /></label>
         <span class="field-label">Effects</span>
         <table class="effects">
-          <thead><tr><th></th><th>Power</th><th>Duration</th></tr></thead>
+          <thead><tr><th></th><th></th><th>Power</th><th>Duration</th></tr></thead>
           <tbody>
             {% for eid, meta in effects.items() %}
             <tr>
               <th>{{ meta.name }}</th>
+              <td><input type="checkbox" name="peff_{{ eid }}_present" /></td>
               <td>{% if meta.power %}<input type="number" name="peff_{{ eid }}_power" value="0" />{% endif %}</td>
               <td>{% if meta.duration %}<input type="number" name="peff_{{ eid }}_duration" min="0" value="0" />{% endif %}</td>
             </tr>
@@ -58,11 +59,12 @@
         </label>
         <span class="field-label">Effects</span>
         <table class="effects">
-          <thead><tr><th></th><th>Power</th><th>Duration</th></tr></thead>
+          <thead><tr><th></th><th></th><th>Power</th><th>Duration</th></tr></thead>
           <tbody>
             {% for eid, meta in effects.items() %}
             <tr>
               <th>{{ meta.name }}</th>
+              <td><input type="checkbox" name="eeff_{{ eid }}_present" /></td>
               <td>{% if meta.power %}<input type="number" name="eeff_{{ eid }}_power" value="0" />{% endif %}</td>
               <td>{% if meta.duration %}<input type="number" name="eeff_{{ eid }}_duration" min="0" value="0" />{% endif %}</td>
             </tr>
@@ -146,7 +148,8 @@
       refreshIntents();
       for (const [name, value] of Object.entries(outcome.form)) {
         const field = form.elements[name];
-        if (field) field.value = value;
+        if (field.type === 'checkbox' ) field.checked = Boolean(value);
+        else if (field) field.value = value;
       }
       advanceBody.innerHTML = '';
     }

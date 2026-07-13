@@ -74,17 +74,14 @@ def effect_types() -> dict[int, dict]:
     effect is parameterized by.
 
     The relevant stat is read from each effect subclass's own annotations (e.g. Strength
-    declares ``power: int``, Vulnerable declares ``duration: int``). Effects that declare
-    neither (e.g. Shrink) are omitted: with a (0, 0) vector slot they are indistinguishable
-    from absence, so there is nothing to input.
+    declares ``power: int``, Vulnerable declares ``duration: int``).
     """
     result: dict[int, dict] = {}
     for eid, cls in sorted(ID_TO_EFFECT.items()):
         own = cls.__dict__.get("__annotations__", {})
         uses_power = "power" in own
         uses_duration = "duration" in own
-        if uses_power or uses_duration:
-            result[eid] = {"name": cls.__name__, "power": uses_power, "duration": uses_duration}
+        result[eid] = {"name": cls.__name__, "power": uses_power, "duration": uses_duration}
     return result
 
 
@@ -97,16 +94,13 @@ def _build_pile(counts: dict[int, int]) -> CardPile:
 
 
 def _build_effects(specs: dict[int, dict[str, int]]) -> list[Effect]:
-    """Build effect objects from {effect_id: {"power": int, "duration": int}} specs.
-
-    Mirrors ``Effect.effects_from_vector``: a 0 (or missing) stat becomes None, and an effect
-    with no nonzero stat is dropped so it round-trips through the vector encoding.
-    """
+    """Build effect objects from {effect_id: {"power": int, "duration": int}} specs."""
     effects: list[Effect] = []
     for eid, vals in specs.items():
+        present = vals.get("present") or False
         power = vals.get("power") or None
         duration = vals.get("duration") or None
-        if power is None and duration is None:
+        if not present:
             continue
         effects.append(ID_TO_EFFECT[eid](id=eid, power=power, duration=duration))
     return effects
@@ -179,10 +173,10 @@ def describe_form(fight: Fight) -> dict:
     enemy = fight.enemies[0]
 
     def effect_specs(character: Character) -> dict[int, dict[str, int]]:
-        specs = {eid: {"power": 0, "duration": 0} for eid in effect_types()}
+        specs = {eid: {"present": False, "power": 0, "duration": 0} for eid in effect_types()}
         for effect in character.effects:
             if effect.id in specs:
-                specs[effect.id] = {"power": effect.power or 0, "duration": effect.duration or 0}
+                specs[effect.id] = {"present": True, "power": effect.power or 0, "duration": effect.duration or 0}
         return specs
 
     def pile_counts(pile: CardPile) -> dict[int, int]:
