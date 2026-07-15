@@ -92,6 +92,7 @@ class Survivor(Card):
 class Venerate(Card):
     id: int = 5
     cost: int = 1
+    stars_gained: int = 2
     targeting: Targeting = Targeting.NONE
 
 

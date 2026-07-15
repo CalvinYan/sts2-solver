@@ -14,6 +14,7 @@ class Action:
 
     damage: int | None = None
     block: int | None = None
+    stars_gained: int = 0
     actor_effects: list[Effect] = field(default_factory=list)
     target_effects: list[Effect] = field(default_factory=list)
 

@@ -66,10 +66,11 @@ class Player(Character):
             print(f"{self.name} tried to play {card} but card is not playable")
             return
 
-        self.act(target=target, action=card.action())
-
         self.energy -= card.cost  # type: ignore
         self.stars -= card.star_cost
+
+        self.act(target=target, action=card.action())
+        self.stars += card.action().stars_gained
 
         self.discard(card)
 
