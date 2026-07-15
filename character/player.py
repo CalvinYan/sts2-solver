@@ -71,6 +71,12 @@ class Player(Character):
         self.energy -= card.cost  # type: ignore
         self.stars -= card.star_cost
 
+        self.discard(card)
+
+    def discard(self, card: Card):
+        if self.hand.cards[card] == 0:
+            raise ValueError(f"{self.name} cannot discard {card} from hand: {self.hand}")
+
         self.hand.cards[card] -= 1
         if self.hand.cards[card] == 0:
             del self.hand.cards[card]
