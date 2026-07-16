@@ -114,7 +114,7 @@ def build_fight(
     player_hp: int | None = None,
     player_block: int = 0,
     player_energy: int = 3,
-    player_stars: int = 0,
+    player_stars: int | None = None,
     enemy_hp: int | None = None,
     enemy_block: int = 0,
     enemy_intent: int | None = None,
@@ -134,7 +134,6 @@ def build_fight(
         name="Player",
         block=player_block,
         energy=player_energy,
-        stars=player_stars,
         effects=_build_effects(player_effects or {}),
         hand=_build_pile(hand or {}),
         discard_pile=_build_pile(discard or {}),
@@ -142,6 +141,8 @@ def build_fight(
 
     if player_hp is not None:
         player.hp = player_hp
+    if player_stars is not None:
+        player.stars = player_stars
     if draw is not None:
         player.draw_pile = _build_pile(draw)
 

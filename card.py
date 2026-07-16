@@ -92,8 +92,10 @@ class Survivor(Card):
 class Venerate(Card):
     id: int = 5
     cost: int = 1
-    stars_gained: int = 2
     targeting: Targeting = Targeting.NONE
+
+    def action(self) -> Action:
+        return Action(stars_gained=2)
 
 
 @dataclass(frozen=True)
@@ -146,6 +148,14 @@ ID_TO_CARD = {
     Strike.id: Strike,
     Defend.id: Defend,
     Bash.id: Bash,
+    Neutralize.id: Neutralize,
+    Survivor.id: Survivor,
+    Venerate.id: Venerate,
+    FallingStar.id: FallingStar,
+    Bodyguard.id: Bodyguard,
+    Unleash.id: Unleash,
+    Zap.id: Zap,
+    Dualcast.id: Dualcast,
     AscendersBane.id: AscendersBane,
 }
 

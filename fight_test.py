@@ -5,13 +5,13 @@ from fractions import Fraction
 import numpy as np
 from mock import patch
 
-from card import AscendersBane, Bash, CardPile, Defend, Strike
+from card import AscendersBane, Bash, CardPile, Defend, FallingStar, Strike, Venerate
 from character.enemies import Nibbit, ShrinkerBeetle, SludgeSpinner
 from character.enemies.nibbit import HesitantSlice, Hiss
 from character.enemies.shrinker_beetle import Stomp
 from character.enemies.sludge_spinner import Rage, Slam
 from character.enemy import Enemy
-from character.player import Ironclad
+from character.player import Ironclad, Regent
 from fight import MAX_ENEMIES, Fight
 from util.core import Action
 from util.effect import Shrink, Strength, Vulnerable, Weak
@@ -333,3 +333,24 @@ def test_multiple_enemies_all_intents_searched():
         fight.search_enemy_turn_end(dp_table)
 
     assert intent_combos == {(Slam(), Slam()), (Slam(), Rage()), (Rage(), Slam()), (Rage(), Rage())}
+
+
+def test_search_computes_regent_turn():
+    dp_table = dict()
+    player = Regent(
+        name="Player",
+        hp=1,
+        stars=0,
+        draw_pile=CardPile(cards=Counter({Strike(): 3, Defend(): 2, AscendersBane(): 1})),
+        hand=CardPile(cards=Counter({Strike(): 1, Defend(): 2, Venerate(): 1, FallingStar(): 1})),
+    )
+    enemy = Nibbit(name="Enemy", hp=20)
+
+    fight = Fight(player=player, enemies=[enemy], turn=1)
+
+    # Turn 1: Venerate -> FallingStar -> Defend x2
+    # Turn 2: Guaranteed lethal
+    hp_losses_expected = {0: Fraction(1)}
+    hp_losses_got, search_complete = fight.search_player_turn(dp_table)
+    assert hp_losses_expected == hp_losses_got
+    assert search_complete

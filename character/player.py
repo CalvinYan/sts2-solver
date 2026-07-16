@@ -134,6 +134,7 @@ class Player(Character):
         return (
             *super().to_vector(),
             self.energy,
+            self.stars,
             *self.draw_pile.to_vector(),
             *self.hand.to_vector(),
             *self.discard_pile.to_vector(),
@@ -147,14 +148,13 @@ class Player(Character):
         except ValueError as e:
             raise ValueError("Error reading Character from Player vector:", e)
 
-        if len(vector) < values_read + 1:
-            raise ValueError(
-                f"Could not read energy from Player vector: expected {values_read + 1} values, got {len(vector)}"
-            )
+        if len(vector) < values_read + 2:
+            raise ValueError(f"Could not read Player vector: expected {values_read + 2} values, got {len(vector)}")
         self.energy = vector[values_read]
-        values_read += 1
+        self.stars = vector[values_read + 1]
+        values_read += 2
 
-        for pile, name in zip([self.draw_pile, self.hand, self.discard_pile], ["draw pile", "hand", "discard pile"]):
+        for pile in [self.draw_pile, self.hand, self.discard_pile]:
             read = pile.read_vector(vector[values_read:])
             values_read += read
 
@@ -194,7 +194,7 @@ class Ironclad(Player):
 
 @dataclass
 class Silent(Player):
-    id: int = 0
+    id: int = 1
     hp: int = 56
     draw_pile: CardPile = field(
         default_factory=lambda: CardPile(
@@ -213,7 +213,7 @@ class Silent(Player):
 
 @dataclass
 class Regent(Player):
-    id: int = 0
+    id: int = 2
     hp: int = 60
     stars: int = 3
     draw_pile: CardPile = field(
@@ -233,7 +233,7 @@ class Regent(Player):
 
 @dataclass
 class Necrobinder(Player):
-    id: int = 0
+    id: int = 3
     hp: int = 52
     draw_pile: CardPile = field(
         default_factory=lambda: CardPile(
@@ -269,4 +269,10 @@ class Defect(Player):
     )
 
 
-ID_TO_PLAYER: dict[int, type[Player]] = {Ironclad.id: Ironclad}
+ID_TO_PLAYER: dict[int, type[Player]] = {
+    Ironclad.id: Ironclad,
+    Silent.id: Silent,
+    Regent.id: Regent,
+    Necrobinder.id: Necrobinder,
+    Defect.id: Defect,
+}
