@@ -171,7 +171,7 @@ class Player(Character):
         return player, read
 
     def __str__(self) -> str:
-        return f"{super().__str__()}\nHand: {self.hand}\nDraw: {self.draw_pile}\nDiscard: {self.discard_pile}"
+        return f"{super().__str__()} {self.energy}E{self.stars}S\nHand: {self.hand}\nDraw: {self.draw_pile}\nDiscard: {self.discard_pile}"
 
 
 @dataclass
