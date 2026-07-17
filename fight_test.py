@@ -6,7 +6,7 @@ import numpy as np
 from mock import patch
 
 from card import AscendersBane, Bash, CardPile, Defend, FallingStar, Strike, Venerate
-from character.enemies import Nibbit, ShrinkerBeetle, SludgeSpinner
+from character.enemies import FuzzyWurmCrawler, Nibbit, ShrinkerBeetle, SludgeSpinner
 from character.enemies.nibbit import HesitantSlice, Hiss
 from character.enemies.shrinker_beetle import Stomp
 from character.enemies.sludge_spinner import Rage, Slam
@@ -354,3 +354,24 @@ def test_search_computes_regent_turn():
     hp_losses_got, search_complete = fight.search_player_turn(dp_table)
     assert hp_losses_expected == hp_losses_got
     assert search_complete
+
+
+def test_long_search_with_hp_limit():
+    dp_table = {}
+    player = Ironclad(name="Ironclad")
+    enemy = FuzzyWurmCrawler(name="FWC", hp=58)
+    fight = Fight(player=player, enemies=[enemy])
+
+    hp_losses_expected = {
+        4: Fraction(9617, 116424),
+        6: Fraction(2377, 3234),
+        8: Fraction(141, 1078),
+        9: Fraction(4751, 145530),
+        11: Fraction(5, 2156),
+        13: Fraction(83, 6468),
+        14: Fraction(67, 17640),
+    }
+    hp_losses_got, search_complete = fight.search_player_turn_start(dp_table, hp_limit=59)
+
+    assert hp_losses_expected == hp_losses_got
+    assert not search_complete
