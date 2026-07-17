@@ -21,7 +21,7 @@ CARDS = {"strike": Strike(), "defend": Defend(), "bash": Bash()}
 
 
 # Read the table from file, creating an empty one if it doesn't exist
-def load_dp_table(fname: str) -> dict[tuple[int, ...], dict[int, Fraction]]:
+def load_dp_table(fname: str) -> dict[tuple[tuple[int, ...], tuple[int, ...]], dict[int, Fraction]]:
     file_path = Path(fname)
     file_path.parent.mkdir(parents=True, exist_ok=True)
     if not file_path.exists() or file_path.stat().st_size == 0:
@@ -32,12 +32,12 @@ def load_dp_table(fname: str) -> dict[tuple[int, ...], dict[int, Fraction]]:
 
 
 # Write the table to file
-def dump_dp_table(table: dict[tuple[int, ...], dict[int, Fraction]], fname: str):
+def dump_dp_table(table: dict[tuple[tuple[int, ...], tuple[int, ...]], dict[int, Fraction]], fname: str):
     with gzip.open(fname, mode="wb", compresslevel=6) as f:
         pickle.dump(table, f, protocol=pickle.HIGHEST_PROTOCOL)
 
 
-def append_dp_table(table: dict[tuple[int, ...], dict[int, Fraction]], fname: str):
+def append_dp_table(table: dict[tuple[tuple[int, ...], tuple[int, ...]], dict[int, Fraction]], fname: str):
     merged = load_dp_table(fname)
     merged.update({k: v for k, v in table.items()})
     dump_dp_table(merged, fname)
@@ -45,7 +45,7 @@ def append_dp_table(table: dict[tuple[int, ...], dict[int, Fraction]], fname: st
 
 def search(
     fight: Fight,
-    dp_table: dict[tuple[int, ...], tuple[dict[int, Fraction], bool]],
+    dp_table: dict[tuple[tuple[int, ...], tuple[int, ...]], tuple[dict[int, Fraction], bool]],
     fname: str,
     name: str = "",
 ) -> None:
@@ -93,7 +93,7 @@ if __name__ == "__main__":
             ["fuzzy_wurm_crawler", "nibbit", "seapunk", "shrinker_beetle", "sludge_spinner"],
         ):
             fname = f"./data/solver/{player_name}-base/{name}.csv.pkl.gz"
-            dp_table: dict[tuple[int, ...], dict[int, Fraction]] = load_dp_table(fname)
+            dp_table: dict[tuple[tuple[int, ...], tuple[int, ...]], dict[int, Fraction]] = load_dp_table(fname)
             search_table = {k: (v, True) for k, v in dp_table.items()}
 
             for enemy_hp in range(enemy_cls.min_hp, enemy_cls.max_hp + 1):  # type: ignore
@@ -104,4 +104,4 @@ if __name__ == "__main__":
 
             dp_table = {k: v[0] for k, v in search_table.items() if v[1]}
             dump_dp_table(dp_table, fname)
-            # append_dp_table(dp_table, "./data/solver/all.csv.pkl.gz")
+            append_dp_table(dp_table, "./data/solver/all.csv.pkl.gz")
