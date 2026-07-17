@@ -138,6 +138,7 @@ def test_simulate_nibbit_fight():
 
 def test_search_truncates_after_finding_lethal():
     dp_table = dict()
+    fully_explored = dict()
     player = Ironclad(
         name="Player",
         hp=1,
@@ -150,18 +151,19 @@ def test_search_truncates_after_finding_lethal():
     fight_vector = tuple(fight.to_vector())
 
     hp_losses_expected = {0: Fraction(1)}
-    hp_losses_got, search_complete = fight.search_player_turn(dp_table)
+    hp_losses_got, search_complete = fight.search_player_turn(dp_table, fully_explored)
     assert hp_losses_expected == hp_losses_got
     assert search_complete
 
     # Search should terminate once it finds that triple Strike is lethal
-    dp_table_expected = {(fight_vector, (Strike().id,)): ({0: Fraction(1)}, True)}
+    dp_table_expected = {(fight_vector, (Strike().id,)): {0: Fraction(1)}}
     for state_action_pair, hp_losses in dp_table_expected.items():
         assert hp_losses == dp_table[state_action_pair]
 
 
 def test_search_fully_computes_unwinnable_turn():
     dp_table = dict()
+    fully_explored = dict()
     player = Ironclad(
         name="Player",
         hp=1,
@@ -183,14 +185,14 @@ def test_search_fully_computes_unwinnable_turn():
                 fight_copy.player.play(Defend())
 
             if strikes + defends == 3:
-                dp_table_expected[(fight_copy.to_vector(), (-1,))] = ({14 - 5 * defends: Fraction(1)}, True)
+                dp_table_expected[(fight_copy.to_vector(), (-1,))] = {14 - 5 * defends: Fraction(1)}
             if strikes < 3 and strikes + defends < 3:
-                dp_table_expected[(fight_copy.to_vector(), (0,))] = ({14 - 5 * min(2, 2 - strikes): Fraction(1)}, True)
+                dp_table_expected[(fight_copy.to_vector(), (0,))] = {14 - 5 * min(2, 2 - strikes): Fraction(1)}
             if defends < 2 and strikes + defends < 3:
-                dp_table_expected[(fight_copy.to_vector(), (1,))] = ({9 - 5 * min(1, 2 - strikes): Fraction(1)}, True)
+                dp_table_expected[(fight_copy.to_vector(), (1,))] = {9 - 5 * min(1, 2 - strikes): Fraction(1)}
 
     hp_losses_expected = {4: Fraction(1)}
-    hp_losses_got, search_complete = fight.search_player_turn(dp_table)
+    hp_losses_got, search_complete = fight.search_player_turn(dp_table, fully_explored)
     assert hp_losses_expected == hp_losses_got
     assert search_complete
 
@@ -200,6 +202,7 @@ def test_search_fully_computes_unwinnable_turn():
 
 def test_search_computes_draw_order_probability():
     dp_table = dict()
+    fully_explored = dict()
     player = Ironclad(
         name="Player",
         hp=1,
@@ -213,7 +216,7 @@ def test_search_computes_draw_order_probability():
     fight = Fight(player=player, enemies=[enemy], turn=1)
 
     hp_losses_expected = {0: Fraction(1, 2), 2: Fraction(1, 2)}
-    hp_losses_got, search_complete = fight.search_player_turn(dp_table)
+    hp_losses_got, search_complete = fight.search_player_turn(dp_table, fully_explored)
     assert hp_losses_expected == hp_losses_got
     assert search_complete
 
@@ -229,13 +232,14 @@ def test_search_uses_cache():
     fight = Fight(player=player, enemies=[enemy], turn=1)
 
     expected = {
-        (fight.to_vector(), (-1,)): ({13: Fraction(1)}, True),
-        (fight.to_vector(), (0,)): ({8: Fraction(1)}, True),
-        (fight.to_vector(), (1,)): ({0: Fraction(1, 2), 2: Fraction(1, 2)}, True),
+        (fight.to_vector(), (-1,)): {13: Fraction(1)},
+        (fight.to_vector(), (0,)): {8: Fraction(1)},
+        (fight.to_vector(), (1,)): {0: Fraction(1, 2), 2: Fraction(1, 2)},
     }
     got = deepcopy(expected)
+    fully_explored = deepcopy(expected)
 
-    fight.search_player_turn(got)
+    fight.search_player_turn(got, fully_explored)
 
     # Should not contain additional search states even if a blank-slate search would turn them up
     assert expected == got
@@ -243,6 +247,7 @@ def test_search_uses_cache():
 
 def test_search_terminates_at_hp_limit():
     dp_table = dict()
+    fully_explored = dict()
     player = Ironclad(
         name="Player",
     )
@@ -250,12 +255,37 @@ def test_search_terminates_at_hp_limit():
 
     fight = Fight(player=player, enemies=[enemy], turn=1)
 
-    _, search_complete = fight.search_player_turn_start(dp_table, hp_limit=57)
+    _, search_complete = fight.search_player_turn_start(dp_table, fully_explored, hp_limit=57)
     assert not search_complete
+
+
+def test_search_no_cache_incomplete_results():
+    player = Ironclad(
+        name="player",
+        hp=50,
+        energy=1,
+        hand=CardPile(cards=Counter({Strike(): 1, Defend(): 1})),
+        draw_pile=CardPile(cards=Counter({Strike(): 4, Defend(): 1})),
+    )
+    enemy = FuzzyWurmCrawler(name="FWC", hp=12)
+    fight = Fight(player=player, enemies=[enemy], turn=1)
+    vector = fight.to_vector()
+
+    dp_table = dict()
+    fully_explored = dict()
+
+    fight.search_player_turn(dp_table, fully_explored, hp_limit=48)
+
+    assert (vector, (Strike().id,)) in dp_table
+    assert (vector, (Defend().id,)) in dp_table
+
+    assert (vector, (Strike().id,)) not in fully_explored
+    assert (vector, (Defend().id,)) in fully_explored
 
 
 def test_search_no_defend_on_empty_turn():
     dp_table = dict()
+    fully_explored = dict()
     player = Ironclad(
         name="Player",
         hand=CardPile(cards=Counter({Bash(): 1, Strike(): 1, AscendersBane(): 1, Defend(): 2})),
@@ -265,13 +295,14 @@ def test_search_no_defend_on_empty_turn():
 
     fight = Fight(player=player, enemies=[enemy], turn=3)
 
-    fight.search_player_turn(dp_table)
+    fight.search_player_turn(dp_table, fully_explored)
     # Search should not ever consider playing Defend
     assert not any(vector[-1] == Defend.id for vector in dp_table.keys())
 
 
 def test_search_no_overblock():
     dp_table = dict()
+    fully_explored = dict()
     player = Ironclad(
         name="Player",
         block=10,
@@ -283,21 +314,44 @@ def test_search_no_overblock():
 
     fight = Fight(player=player, enemies=[enemy], turn=2)
 
-    fight.search_player_turn(dp_table)
+    fight.search_player_turn(dp_table, fully_explored)
     # Search should not ever consider playing Defend
     assert not any(vector[-1] == Defend.id for vector in dp_table.keys())
+
+
+def test_search_no_premature_end_turn():
+    player = Ironclad(
+        name="player",
+        hand=CardPile(cards=Counter({Strike(): 1, Defend(): 1})),
+        draw_pile=CardPile(cards=Counter({Strike(): 4, Defend(): 1})),
+    )
+    enemy = FuzzyWurmCrawler(name="FWC", hp=12)
+    fight = Fight(player=player, enemies=[enemy], turn=1)
+    vector = fight.to_vector()
+
+    dp_table = dict()
+    fully_explored = dict()
+
+    fight.search_player_turn(dp_table, fully_explored, hp_limit=48)
+
+    assert (vector, (-1,)) not in dp_table
+    assert (vector, (-1,)) not in fully_explored
 
 
 def test_single_enemy_all_intents_searched():
     next_intents = set()
 
     def search_player_turn_start(
-        self, dp_table: dict[tuple[int, ...], tuple[dict[int, Fraction], bool]], hp_limit: int = 0
+        self,
+        dp_table: dict[tuple[int, ...], dict[int, Fraction]],
+        fully_explored: dict[tuple[int, ...], dict[int, Fraction]],
+        hp_limit: int = 0,
     ) -> tuple[dict[int, Fraction], bool]:
         next_intents.add(self.enemies[0].intent)
         return ({0: Fraction(1)}, True)
 
     dp_table = dict()
+    fully_explored = dict()
     player = Ironclad(
         name="Player",
         draw_pile=CardPile(cards=Counter({Strike(): 4, Bash(): 1})),
@@ -305,7 +359,7 @@ def test_single_enemy_all_intents_searched():
     enemy = SludgeSpinner(name="Enemy")
     fight = Fight(player=player, enemies=[enemy], turn=1)
     with patch.object(Fight, "search_player_turn_start", search_player_turn_start):
-        fight.search_enemy_turn_end(dp_table)
+        fight.search_enemy_turn_end(dp_table, fully_explored)
 
     assert next_intents == {Slam(), Rage()}
 
@@ -314,12 +368,16 @@ def test_multiple_enemies_all_intents_searched():
     intent_combos = set()
 
     def search_player_turn_start(
-        self, dp_table: dict[tuple[int, ...], tuple[dict[int, Fraction], bool]], hp_limit: int = 0
+        self,
+        dp_table: dict[tuple[int, ...], dict[int, Fraction]],
+        fully_explored: dict[tuple[int, ...], dict[int, Fraction]],
+        hp_limit: int = 0,
     ) -> tuple[dict[int, Fraction], bool]:
         intent_combos.add(tuple(enemy.intent for enemy in self.enemies))
         return ({0: Fraction(1)}, True)
 
     dp_table = dict()
+    fully_explored = dict()
     player = Ironclad(
         name="Player",
         hp=1,
@@ -330,13 +388,14 @@ def test_multiple_enemies_all_intents_searched():
     tweedle_dum = SludgeSpinner(name="Tweedle Dum")
     fight = Fight(player=player, enemies=[tweedle_dee, tweedle_dum], turn=1)
     with patch.object(Fight, "search_player_turn_start", search_player_turn_start):
-        fight.search_enemy_turn_end(dp_table)
+        fight.search_enemy_turn_end(dp_table, fully_explored)
 
     assert intent_combos == {(Slam(), Slam()), (Slam(), Rage()), (Rage(), Slam()), (Rage(), Rage())}
 
 
 def test_search_computes_regent_turn():
     dp_table = dict()
+    fully_explored = dict()
     player = Regent(
         name="Player",
         hp=1,
@@ -351,13 +410,14 @@ def test_search_computes_regent_turn():
     # Turn 1: Venerate -> FallingStar -> Defend x2
     # Turn 2: Guaranteed lethal
     hp_losses_expected = {0: Fraction(1)}
-    hp_losses_got, search_complete = fight.search_player_turn(dp_table)
+    hp_losses_got, search_complete = fight.search_player_turn(dp_table, fully_explored)
     assert hp_losses_expected == hp_losses_got
     assert search_complete
 
 
 def test_long_search_with_hp_limit():
-    dp_table = {}
+    dp_table = dict()
+    fully_explored = dict()
     player = Ironclad(name="Ironclad")
     enemy = FuzzyWurmCrawler(name="FWC", hp=58)
     fight = Fight(player=player, enemies=[enemy])
@@ -371,7 +431,7 @@ def test_long_search_with_hp_limit():
         13: Fraction(83, 6468),
         14: Fraction(67, 17640),
     }
-    hp_losses_got, search_complete = fight.search_player_turn_start(dp_table, hp_limit=59)
+    hp_losses_got, search_complete = fight.search_player_turn_start(dp_table, fully_explored, hp_limit=59)
 
     assert hp_losses_expected == hp_losses_got
     assert not search_complete

@@ -2,6 +2,7 @@
 
 import gzip
 import pickle
+from copy import deepcopy
 from fractions import Fraction
 from pathlib import Path
 from time import perf_counter
@@ -45,32 +46,33 @@ def append_dp_table(table: dict[tuple[tuple[int, ...], tuple[int, ...]], dict[in
 
 def search(
     fight: Fight,
-    dp_table: dict[tuple[tuple[int, ...], tuple[int, ...]], tuple[dict[int, Fraction], bool]],
+    fully_explored: dict[tuple[tuple[int, ...], tuple[int, ...]], dict[int, Fraction]],
     fname: str,
     name: str = "",
 ) -> None:
-    cache_size = len(dp_table)
+    dp_table = deepcopy(fully_explored)
+    cache_size = len(fully_explored)
     print(f"Searching fight {name}:")
 
     interrupted = True
     start = perf_counter()
     try:
-        hp_losses, search_complete = fight.search_player_turn_start(dp_table)
+        hp_losses, search_complete = fight.search_player_turn_start(dp_table, fully_explored)
         interrupted = False
     except BaseException as e:
         tb = e.__traceback__
         raise BaseException("Error running DP search").with_traceback(tb)
     finally:
         end = perf_counter()
-        complete = sum([value[1] for value in dp_table.values()])
 
         print("=" * 30 + "RESULTS" + "=" * 30)
         print(f"{"TIME ELAPSED":30}| {end - start:.3f}s")
-        print(f"{"NEW FULLY EXPLORED ACTIONS":30}| {complete - cache_size}")
+        print(f"{"NEW FULLY EXPLORED ACTIONS":30}| {len(fully_explored) - cache_size}")
+        print(f"{"PARTIALLY EXPLORED ACTIONS":30}| {len(dp_table) - len(fully_explored)}")
 
         if interrupted:
             print("Search was terminated early, writing partial results to file")
-            dump_dp_table({k: v[0] for k, v in search_table.items() if v[1]}, fname)
+            dump_dp_table(fully_explored, fname)
             exit()
         else:
             print(f"{"EXPECTED HP LOSS":30}| {sum([loss * prob for loss, prob in hp_losses.items()]):2.2f}")
@@ -93,15 +95,15 @@ if __name__ == "__main__":
             ["fuzzy_wurm_crawler", "nibbit", "seapunk", "shrinker_beetle", "sludge_spinner"],
         ):
             fname = f"./data/solver/{player_name}-base/{name}.csv.pkl.gz"
-            dp_table: dict[tuple[tuple[int, ...], tuple[int, ...]], dict[int, Fraction]] = load_dp_table(fname)
-            search_table = {k: (v, True) for k, v in dp_table.items()}
+            fully_explored: dict[tuple[tuple[int, ...], tuple[int, ...]], dict[int, Fraction]] = load_dp_table(fname)
 
             for enemy_hp in range(enemy_cls.min_hp, enemy_cls.max_hp + 1):  # type: ignore
                 player = player_cls(name="Player")
                 enemy = enemy_cls(name="Enemy", hp=enemy_hp)
                 fight = Fight(player=player, enemies=[enemy])
-                search(fight, search_table, fname, name=f"{player_cls.__name__} vs {enemy_hp}-HP {enemy_cls.__name__}")
+                search(
+                    fight, fully_explored, fname, name=f"{player_cls.__name__} vs {enemy_hp}-HP {enemy_cls.__name__}"
+                )
 
-            dp_table = {k: v[0] for k, v in search_table.items() if v[1]}
-            dump_dp_table(dp_table, fname)
-            append_dp_table(dp_table, "./data/solver/all.csv.pkl.gz")
+            dump_dp_table(fully_explored, fname)
+            append_dp_table(fully_explored, "./data/solver/all.csv.pkl.gz")

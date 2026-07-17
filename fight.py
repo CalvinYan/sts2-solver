@@ -68,7 +68,8 @@ class Fight:
 
     def search_player_turn_start(
         self,
-        dp_table: dict[tuple[tuple[int, ...], tuple[int, ...]], tuple[dict[int, Fraction], bool]],
+        dp_table: dict[tuple[tuple[int, ...], tuple[int, ...]], dict[int, Fraction]],
+        fully_explored: dict[tuple[tuple[int, ...], tuple[int, ...]], dict[int, Fraction]],
         hp_limit: int = 0,
     ) -> tuple[dict[int, Fraction], bool]:
         if self.player.hp <= hp_limit:
@@ -86,7 +87,7 @@ class Fight:
             self.player.draw_pile = draw_pile_next
             self.player.hand = hand_next
             self.player.discard_pile = discard_pile_next
-            hp_losses, subsearch_complete = self.search_player_turn(dp_table, hp_limit)
+            hp_losses, subsearch_complete = self.search_player_turn(dp_table, fully_explored, hp_limit)
             for hp_loss, prob_hp_loss in hp_losses.items():
                 results[hp_loss] += prob_hp_loss * prob_next_player
             if not subsearch_complete:
@@ -99,7 +100,8 @@ class Fight:
 
     def search_player_turn(
         self,
-        dp_table: dict[tuple[tuple[int, ...], tuple[int, ...]], tuple[dict[int, Fraction], bool]],
+        dp_table: dict[tuple[tuple[int, ...], tuple[int, ...]], dict[int, Fraction]],
+        fully_explored: dict[tuple[tuple[int, ...], tuple[int, ...]], dict[int, Fraction]],
         hp_limit: int = 0,
     ) -> tuple[dict[int, Fraction], bool]:
 
@@ -139,7 +141,7 @@ class Fight:
         for card in list(self.player.hand.cards.keys()):
             # Optimization: Don't play defends if enemies are not attacking
             if self.player.can_play(card) and not is_useless_block(card):
-                hp_losses, subsearch_complete = self.search_player_turn_action(dp_table, card, hp_limit)
+                hp_losses, subsearch_complete = self.search_player_turn_action(dp_table, fully_explored, card, hp_limit)
                 if hp_losses:
                     expected_value = sum(
                         (hp_loss * prob_hp_loss for hp_loss, prob_hp_loss in hp_losses.items()), start=Fraction(0)
@@ -159,7 +161,7 @@ class Fight:
                 [self.player.can_play(card) and not is_skippable(card) for card in self.player.hand.cards.keys()]
             ):
                 # Try just ending your turn
-                hp_losses, subsearch_complete = self.search_player_turn_action(dp_table, None, hp_limit)
+                hp_losses, subsearch_complete = self.search_player_turn_action(dp_table, fully_explored, None, hp_limit)
                 if hp_losses:
                     expected_value = sum(
                         (hp_loss * prob_hp_loss for hp_loss, prob_hp_loss in hp_losses.items()), start=Fraction(0)
@@ -176,7 +178,8 @@ class Fight:
     # The action is the card to be played, or None if the player is ending their turn.
     def search_player_turn_action(
         self,
-        dp_table: dict[tuple[tuple[int, ...], tuple[int, ...]], tuple[dict[int, Fraction], bool]],
+        dp_table: dict[tuple[tuple[int, ...], tuple[int, ...]], dict[int, Fraction]],
+        fully_explored: dict[tuple[tuple[int, ...], tuple[int, ...]], dict[int, Fraction]],
         action: Card | None,
         hp_limit: int = 0,
     ) -> tuple[dict[int, Fraction], bool]:
@@ -186,7 +189,7 @@ class Fight:
         search_complete = True
         if state_action_pair not in dp_table:
             if action is None:
-                hp_losses, subsearch_complete = self.search_player_turn_end(dp_table, hp_limit)
+                hp_losses, subsearch_complete = self.search_player_turn_end(dp_table, fully_explored, hp_limit)
                 if not subsearch_complete:
                     search_complete = False
             else:
@@ -197,7 +200,7 @@ class Fight:
                 self.player.play(action, self.enemies[0])
 
                 hp_after = self.player.hp
-                hp_losses, subsearch_complete = self.search_player_turn(dp_table, hp_limit)
+                hp_losses, subsearch_complete = self.search_player_turn(dp_table, fully_explored, hp_limit)
                 hp_losses = {hp_loss + hp_before - hp_after: prob for hp_loss, prob in hp_losses.items()}
                 if not subsearch_complete:
                     search_complete = False
@@ -205,24 +208,31 @@ class Fight:
                 self.player.read_vector(player_snapshot)
                 self.enemies[0].read_vector(enemy_snapshot)
 
-            dp_table[state_action_pair] = hp_losses, search_complete
+            dp_table[state_action_pair] = hp_losses
+            if search_complete:
+                fully_explored[state_action_pair] = hp_losses
 
-        return dp_table[state_action_pair]
+        else:
+            search_complete = state_action_pair in fully_explored
+
+        return dp_table[state_action_pair], search_complete
 
     def search_player_turn_end(
         self,
-        dp_table: dict[tuple[tuple[int, ...], tuple[int, ...]], tuple[dict[int, Fraction], bool]],
+        dp_table: dict[tuple[tuple[int, ...], tuple[int, ...]], dict[int, Fraction]],
+        fully_explored: dict[tuple[tuple[int, ...], tuple[int, ...]], dict[int, Fraction]],
         hp_limit: int = 0,
     ) -> tuple[dict[int, Fraction], bool]:
         player_snapshot = self.player.to_vector()
         self.player.resolve_end_of_turn()
-        result = self.search_enemy_turn_start(dp_table, hp_limit)
+        result = self.search_enemy_turn_start(dp_table, fully_explored, hp_limit)
         self.player.read_vector(player_snapshot)
         return result
 
     def search_enemy_turn_start(
         self,
-        dp_table: dict[tuple[tuple[int, ...], tuple[int, ...]], tuple[dict[int, Fraction], bool]],
+        dp_table: dict[tuple[tuple[int, ...], tuple[int, ...]], dict[int, Fraction]],
+        fully_explored: dict[tuple[tuple[int, ...], tuple[int, ...]], dict[int, Fraction]],
         hp_limit: int = 0,
     ) -> tuple[dict[int, Fraction], bool]:
         if self.is_over():
@@ -234,7 +244,7 @@ class Fight:
         for enemy in self.enemies:
             enemy.resolve_start_of_turn()
 
-        result = self.search_enemy_turn(dp_table, hp_limit)
+        result = self.search_enemy_turn(dp_table, fully_explored, hp_limit)
 
         for enemy, snapshot in zip(self.enemies, enemy_snapshots):
             enemy.read_vector(snapshot)
@@ -242,7 +252,8 @@ class Fight:
 
     def search_enemy_turn(
         self,
-        dp_table: dict[tuple[tuple[int, ...], tuple[int, ...]], tuple[dict[int, Fraction], bool]],
+        dp_table: dict[tuple[tuple[int, ...], tuple[int, ...]], dict[int, Fraction]],
+        fully_explored: dict[tuple[tuple[int, ...], tuple[int, ...]], dict[int, Fraction]],
         hp_limit: int = 0,
     ) -> tuple[dict[int, Fraction], bool]:
         hp_before = self.player.hp
@@ -250,13 +261,14 @@ class Fight:
             enemy.resolve_turn(self)
         hp_after = self.player.hp
 
-        hp_losses, subsearch_complete = self.search_enemy_turn_end(dp_table, hp_limit)
+        hp_losses, subsearch_complete = self.search_enemy_turn_end(dp_table, fully_explored, hp_limit)
         hp_losses = {hp_loss + hp_before - hp_after: prob for hp_loss, prob in hp_losses.items()}
         return hp_losses, subsearch_complete
 
     def search_enemy_turn_end(
         self,
-        dp_table: dict[tuple[tuple[int, ...], tuple[int, ...]], tuple[dict[int, Fraction], bool]],
+        dp_table: dict[tuple[tuple[int, ...], tuple[int, ...]], dict[int, Fraction]],
+        fully_explored: dict[tuple[tuple[int, ...], tuple[int, ...]], dict[int, Fraction]],
         hp_limit: int = 0,
     ) -> tuple[dict[int, Fraction], bool]:
         if self.is_over():
@@ -275,7 +287,7 @@ class Fight:
                 prob_intents *= prob_intent
                 enemy.intent = intent
 
-            sub_result, subsearch_complete = self.search_player_turn_start(dp_table, hp_limit)
+            sub_result, subsearch_complete = self.search_player_turn_start(dp_table, fully_explored, hp_limit)
             for hp_loss, prob_hp_loss in sub_result.items():
                 result[hp_loss] += prob_intents * prob_hp_loss
             if not subsearch_complete:
