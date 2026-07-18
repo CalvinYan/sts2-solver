@@ -15,7 +15,7 @@ _VAL_GLOBALS = {"__builtins__": {}, "Fraction": Fraction}
 class DpTable:
     """In-memory index of the dp data, keyed by the state vector (action stripped off)."""
 
-    def __init__(self, by_state: dict[tuple, dict[int, dict[int, Fraction]]]):
+    def __init__(self, by_state: dict[tuple, dict[tuple[int, ...], dict[int, Fraction]]]):
         self._by_state = by_state
 
     @property
@@ -24,14 +24,13 @@ class DpTable:
 
     @classmethod
     def load(cls, fname: str) -> "DpTable":
-        by_state: dict[tuple, dict[int, dict[int, Fraction]]] = {}
+        by_state: dict[tuple[int, ...], dict[tuple[int, ...], dict[int, Fraction]]] = {}
         with gzip.open(fname, mode="rb", compresslevel=6) as f:
             new_table = pickle.load(f)
-        for state_action, distribution in new_table.items():
-            state, action = state_action[:-1], state_action[-1]
+        for (state, action), distribution in new_table.items():
             by_state.setdefault(state, {})[action] = distribution
         return cls(by_state)
 
-    def actions_for(self, state: tuple) -> dict[int, dict[int, Fraction]]:
+    def actions_for(self, state: tuple) -> dict[tuple[int, ...], dict[int, Fraction]]:
         """All stored actions for a state, mapped to their hp-loss distribution. Empty if unknown."""
         return self._by_state.get(state, {})

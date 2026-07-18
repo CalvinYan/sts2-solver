@@ -232,11 +232,11 @@
       advance.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
-    async function playAction(actionId, label) {
+    async function playAction(action, label) {
       const data = await fetchAdvance(label, () => fetch('/advance', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ state_key: lastStateKey, action_id: actionId }),
+        body: JSON.stringify({ state_key: lastStateKey, action: action }),
       }));
       if (data) renderAdvanceResult(label, data);
     }
@@ -304,7 +304,7 @@
             <thead><tr><th>HP loss</th><th>Prob</th><th></th></tr></thead>
             <tbody>${rows}</tbody>
           </table>`;
-        card.querySelector('.play').addEventListener('click', () => playAction(action.action_id, action.label));
+        card.querySelector('.play').addEventListener('click', () => playAction(action.action, action.label));
         resultsBody.appendChild(card);
       }
     });

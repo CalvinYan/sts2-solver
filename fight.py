@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from fractions import Fraction
 from itertools import product
 
-from card import Card
+from card import Card, Targeting
 from character.core import Character
 from character.enemy import Enemy
 from character.player import Player
@@ -141,8 +141,15 @@ class Fight:
         for card in list(self.player.hand.cards.keys()):
             # Optimization: Don't play defends if enemies are not attacking
             if self.player.can_play(card) and not is_useless_block(card):
-                hp_losses, subsearch_complete = self.search_player_turn_action(dp_table, fully_explored, card, hp_limit)
-                if hp_losses:
+                action_target_combos = (
+                    [(card, i) for i in range(len(self.enemies))]
+                    if card.targeting == Targeting.ENEMY_SINGLE
+                    else [(card, None)]
+                )
+                for card, target_index in action_target_combos:
+                    hp_losses, subsearch_complete = self.search_player_turn_action(
+                        dp_table, fully_explored, card, target_index, hp_limit
+                    )
                     expected_value = sum(
                         (hp_loss * prob_hp_loss for hp_loss, prob_hp_loss in hp_losses.items()), start=Fraction(0)
                     )
@@ -155,13 +162,15 @@ class Fight:
 
                     # Optimization; terminate if lethal is found
                     if hp_losses == {0: Fraction(1)}:
-                        break
+                        return hp_losses, True
         else:
             if not any(
                 [self.player.can_play(card) and not is_skippable(card) for card in self.player.hand.cards.keys()]
             ):
                 # Try just ending your turn
-                hp_losses, subsearch_complete = self.search_player_turn_action(dp_table, fully_explored, None, hp_limit)
+                hp_losses, subsearch_complete = self.search_player_turn_action(
+                    dp_table, fully_explored, action=None, hp_limit=hp_limit
+                )
                 if hp_losses:
                     expected_value = sum(
                         (hp_loss * prob_hp_loss for hp_loss, prob_hp_loss in hp_losses.items()), start=Fraction(0)
@@ -181,10 +190,18 @@ class Fight:
         dp_table: dict[tuple[tuple[int, ...], tuple[int, ...]], dict[int, Fraction]],
         fully_explored: dict[tuple[tuple[int, ...], tuple[int, ...]], dict[int, Fraction]],
         action: Card | None,
+        target_index: int | None = None,
         hp_limit: int = 0,
     ) -> tuple[dict[int, Fraction], bool]:
-        action_id = action.id if action else -1
-        state_action_pair = (self.to_vector(), (action_id,))
+        action_vector: tuple[int, ...]
+        if action:
+            if target_index is not None:
+                action_vector = (action.id, target_index)
+            else:
+                action_vector = (action.id,)
+        else:
+            action_vector = (-1,)
+        state_action_pair = (self.to_vector(), action_vector)
         hp_losses: dict[int, Fraction] = {}
         search_complete = True
         if state_action_pair not in dp_table:
@@ -194,10 +211,15 @@ class Fight:
                     search_complete = False
             else:
                 player_snapshot = self.player.to_vector()
-                enemy_snapshot = self.enemies[0].to_vector()
+                enemies_snapshot = [enemy.to_vector() for enemy in self.enemies]
                 hp_before = self.player.hp
 
-                self.player.play(action, self.enemies[0])
+                if action.targeting == Targeting.NONE:
+                    self.player.play(action)
+                elif action.targeting == Targeting.ENEMY_SINGLE:
+                    if target_index is None:
+                        raise ValueError("Must specify target_index when playing targeted card", action)
+                    self.player.play(action, self.enemies[target_index])
 
                 hp_after = self.player.hp
                 hp_losses, subsearch_complete = self.search_player_turn(dp_table, fully_explored, hp_limit)
@@ -206,12 +228,12 @@ class Fight:
                     search_complete = False
 
                 self.player.read_vector(player_snapshot)
-                self.enemies[0].read_vector(enemy_snapshot)
+                for enemy, snapshot in zip(self.enemies, enemies_snapshot):
+                    enemy.read_vector(snapshot)
 
             dp_table[state_action_pair] = hp_losses
             if search_complete:
                 fully_explored[state_action_pair] = hp_losses
-
         else:
             search_complete = state_action_pair in fully_explored
 

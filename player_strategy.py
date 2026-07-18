@@ -11,57 +11,91 @@ from dp_solver import load_dp_table
 from fight import Fight
 
 CARDS: dict[str, Card] = {"s": Strike(), "d": Defend(), "b": Bash()}
-dp_table: dict[tuple, dict[int, Fraction]] = load_dp_table("./data/dp_data.csv")
+dp_table: dict[tuple[tuple[int, ...], tuple[int, ...]], dict[int, Fraction]] = load_dp_table(
+    "./data/solver/all.csv.pkl.gz"
+)
 
 
 # Play your way! Displays your hand, draw pile, and discard pile, and reads the next decision from user input.
 class Customclad(Ironclad):
     def resolve_turn(self, fight: Fight) -> bool:
-        player = fight.player
-
         print(fight)
 
         print("Lines:")
         for card in CARDS.values():
-            state_action = (*fight.to_vector(), card.id)
-            if state_action in dp_table:
-                print(card.__class__.__name__, dp_table[state_action])
+            state_action: tuple[tuple[int, ...], tuple[int, ...]]
+            if card.targeting == Targeting.ENEMY_SINGLE:
+                for i in range(len(fight.enemies)):
+                    state_action = (fight.to_vector(), (card.id, i))
+                    if state_action in dp_table:
+                        print(f"{card.__class__.__name__} on enemy {i}: {dp_table[state_action]}")
+            else:
+                state_action = (fight.to_vector(), (card.id,))
+                if state_action in dp_table:
+                    print(f"{card.__class__.__name__}: {dp_table[state_action]}")
+        state_action = (fight.to_vector(), (-1,))
+        if state_action in dp_table:
+            print(f"End turn: {dp_table[state_action]}")
 
         if has_lethal(fight):
             print("YOU HAVE LETHAL!")
             return True
 
-        cmds = input(
-            'To play a card in your hand, enter its first letter\nTo end your turn, type "e"\nFor example: "b d e"\n'
-        ).split()
+        cmds = input("""
+To play a card in your hand, enter its first letter
+For multi-enemy fights, to target an enemy, type its position number (0-4)
+To end your turn, type "e"
+For example: "b 0 d e"
+""").split()
 
         print()
 
-        for i, cmd in enumerate(cmds):
+        i = 0
+        while i < len(cmds):
+            cmd = cmds[i]
             if cmd == "e":
                 if i != len(cmds) - 1:
                     print(f"The following cards would not be played after ending your turn: {cmds[i+1:]}")
                     return False
+            elif cmd not in CARDS:
+                print(f"Invalid command at position {i}: {cmd}")
+                return False  # Prompt again
             else:
-                if cmd not in CARDS:
-                    print(f"Invalid command at position {i}: {cmd}")
-                    return False  # Prompt again
+                card = CARDS[cmd]
+                if card.targeting == Targeting.ENEMY_SINGLE:
+                    if len(fight.enemies) > 1:
+                        i += 1
+                        if not (i < len(cmds) and cmds[i].isdigit() and int(cmds[i]) in range(len(fight.enemies))):
+                            print(f"Invalid target for card {card.__class__.__name__}")
+                            return False
+            i += 1
 
-        for i, cmd in enumerate(cmds):
+        i = 0
+        while i < len(cmds):
+            cmd = cmds[i]
             if cmd == "e":
                 return True
 
             card = CARDS[cmd]
-            if player.hand.cards[card] > 0 and player.can_play(card):
-                player.play(
-                    card,
-                    target=(None if card.targeting == Targeting.NONE else fight.enemies[0]),
-                )
+            if self.hand.cards[card] > 0 and self.can_play(card):
+                if card.targeting == Targeting.ENEMY_SINGLE:
+                    if len(fight.enemies) > 1:
+                        i += 1
+                        if i < len(cmds) and cmds[i].isdigit() and int(cmds[i]) in range(len(fight.enemies)):
+                            self.play(card, target=fight.enemies[int(cmds[i])])
+                        else:
+                            print(f"Invalid target for card {card.__class__.__name__}")
+                            return False
+                    else:
+                        self.play(card, target=fight.enemies[0])
+                else:
+                    self.play(card)
             else:
                 print(f"Could not play card {card} at position {i}")
                 return False  # Prompt again
+            i += 1
 
-        return player.energy == 0
+        return self.energy == 0
 
 
 if __name__ == "__main__":

@@ -156,7 +156,7 @@ def test_search_truncates_after_finding_lethal():
     assert search_complete
 
     # Search should terminate once it finds that triple Strike is lethal
-    dp_table_expected = {(fight_vector, (Strike().id,)): {0: Fraction(1)}}
+    dp_table_expected = {(fight_vector, (Strike().id, 0)): {0: Fraction(1)}}
     for state_action_pair, hp_losses in dp_table_expected.items():
         assert hp_losses == dp_table[state_action_pair]
 
@@ -187,9 +187,11 @@ def test_search_fully_computes_unwinnable_turn():
             if strikes + defends == 3:
                 dp_table_expected[(fight_copy.to_vector(), (-1,))] = {14 - 5 * defends: Fraction(1)}
             if strikes < 3 and strikes + defends < 3:
-                dp_table_expected[(fight_copy.to_vector(), (0,))] = {14 - 5 * min(2, 2 - strikes): Fraction(1)}
+                dp_table_expected[(fight_copy.to_vector(), (Strike().id, 0))] = {
+                    14 - 5 * min(2, 2 - strikes): Fraction(1)
+                }
             if defends < 2 and strikes + defends < 3:
-                dp_table_expected[(fight_copy.to_vector(), (1,))] = {9 - 5 * min(1, 2 - strikes): Fraction(1)}
+                dp_table_expected[(fight_copy.to_vector(), (Defend().id,))] = {9 - 5 * min(1, 2 - strikes): Fraction(1)}
 
     hp_losses_expected = {4: Fraction(1)}
     hp_losses_got, search_complete = fight.search_player_turn(dp_table, fully_explored)
@@ -233,8 +235,8 @@ def test_search_uses_cache():
 
     expected = {
         (fight.to_vector(), (-1,)): {13: Fraction(1)},
-        (fight.to_vector(), (0,)): {8: Fraction(1)},
-        (fight.to_vector(), (1,)): {0: Fraction(1, 2), 2: Fraction(1, 2)},
+        (fight.to_vector(), (Strike().id, 0)): {8: Fraction(1)},
+        (fight.to_vector(), (Defend().id,)): {0: Fraction(1, 2), 2: Fraction(1, 2)},
     }
     got = deepcopy(expected)
     fully_explored = deepcopy(expected)
@@ -276,10 +278,10 @@ def test_search_no_cache_incomplete_results():
 
     fight.search_player_turn(dp_table, fully_explored, hp_limit=48)
 
-    assert (vector, (Strike().id,)) in dp_table
+    assert (vector, (Strike().id, 0)) in dp_table
     assert (vector, (Defend().id,)) in dp_table
 
-    assert (vector, (Strike().id,)) not in fully_explored
+    assert (vector, (Strike().id, 0)) not in fully_explored
     assert (vector, (Defend().id,)) in fully_explored
 
 

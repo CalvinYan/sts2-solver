@@ -47,8 +47,8 @@ def _state_value_payload(state_key: tuple[int, ...]) -> dict:
     stored = dp_table.actions_for(state_key)
     if not stored:
         return {"found": False}
-    best_id, best_dist = min(stored.items(), key=lambda item: _expected(item[1]))
-    return {"found": True, "best_action": state_bridge.action_label(best_id), **_distribution_payload(best_dist)}
+    best_action, best_dist = min(stored.items(), key=lambda item: _expected(item[1]))
+    return {"found": True, "best_action": state_bridge.action_label(best_action), **_distribution_payload(best_dist)}
 
 
 def _pile_from_request(prefix: str) -> dict[int, int]:
@@ -155,8 +155,8 @@ def advance():
     payload = request.get_json(silent=True) or {}
     try:
         state_key = tuple(int(x) for x in payload["state_key"])
-        action_id = int(payload["action_id"])
-        result = state_bridge.advance_state(state_key, action_id)
+        action = tuple(int(x) for x in payload["action"])
+        result = state_bridge.advance_state(state_key, action)
     except (ValueError, KeyError, TypeError, IndexError) as e:
         return jsonify({"error": str(e)}), 400
 
@@ -214,8 +214,8 @@ def query():
         return jsonify({"error": str(e)}), 400
 
     actions = [
-        {"action_id": action_id, "label": state_bridge.action_label(action_id), **_distribution_payload(dist)}
-        for action_id, dist in stored.items()
+        {"action": action, "label": state_bridge.action_label(action), **_distribution_payload(dist)}
+        for action, dist in stored.items()
     ]
     actions.sort(key=lambda a: a["expected_loss"])
     if actions:

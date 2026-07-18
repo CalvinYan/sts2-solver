@@ -5,7 +5,8 @@ Everything that knows about the engine's object model and its `to_vector()` seri
 lives here, so `app.py` only ever deals with plain dicts and the resulting state key.
 
 The state key produced here must match the keys stored in ``data/dp_data.csv``: a tuple of
-138 ints (the `Fight.to_vector()` representation) which, combined with a trailing action id,
+138 ints (the `Fight.to_vector()` representation) which, combined with an action tuple —
+``(action_id,)`` for untargeted actions, ``(action_id, target_index)`` for targeted ones —
 forms a full state-action key in the dp table.
 """
 
@@ -22,7 +23,7 @@ if _REPO_ROOT not in sys.path:
     sys.path.insert(0, _REPO_ROOT)
 
 import character.enemies  # noqa: F401  (imported for its enemy-registration side effects)
-from card import ID_TO_CARD, CardPile
+from card import ID_TO_CARD, CardPile, Targeting
 from character.core import Character
 from character.enemies import SludgeSpinner
 from character.enemy import ID_TO_ENEMY, Enemy
@@ -30,8 +31,8 @@ from character.player import ID_TO_PLAYER, Player
 from fight import Fight
 from util.effect import ID_TO_EFFECT, Effect
 
-# The action id stored for "end your turn" rather than playing a card.
-END_TURN_ACTION = -1
+# The action tuple stored for "end your turn" rather than playing a card.
+END_TURN_ACTION = (-1,)
 
 
 def player_classes() -> dict[int, str]:
@@ -162,11 +163,15 @@ def build_fight(
     return fight
 
 
-def action_label(action_id: int) -> str:
-    """Human-readable label for a stored action id."""
-    if action_id == END_TURN_ACTION:
+def action_label(action: tuple[int, ...]) -> str:
+    """Human-readable label for a stored action tuple: (action_id,) or (action_id, target_index)."""
+    if tuple(action) == END_TURN_ACTION:
         return "End turn"
-    return ID_TO_CARD[action_id].__name__ if action_id in ID_TO_CARD else f"Action {action_id}"
+    action_id = action[0]
+    label = ID_TO_CARD[action_id].__name__ if action_id in ID_TO_CARD else f"Action {action_id}"
+    if len(action) > 1:
+        label += f" → enemy {action[1]}"
+    return label
 
 
 def describe_form(fight: Fight) -> dict:
@@ -255,8 +260,11 @@ def start_of_turn(fight: Fight) -> dict:
     return {"hp_lost": 0, "terminal": None, "turn": fight.turn, "outcomes": outcomes}
 
 
-def advance_state(state_key: tuple[int, ...], action_id: int) -> dict:
+def advance_state(state_key: tuple[int, ...], action: tuple[int, ...]) -> dict:
     """Advance a state by one action, returning the distribution of successor states.
+
+    The action is (action_id,) for untargeted actions, (action_id, target_index) for targeted
+    ones, or END_TURN_ACTION.
 
     Mirrors the sequencing of the search methods in fight.py (search_player_turn_action →
     search_player_turn_end → search_enemy_turn_start/…/_end → search_player_turn_start),
@@ -271,7 +279,9 @@ def advance_state(state_key: tuple[int, ...], action_id: int) -> dict:
     player = fight.player
     hp_start = player.hp
 
-    if action_id != END_TURN_ACTION:
+    if action != END_TURN_ACTION:
+        action_id = action[0]
+        target_index = action[1] if len(action) > 1 else None
         if action_id not in ID_TO_CARD:
             raise ValueError(f"Unknown action id {action_id}")
         card = ID_TO_CARD[action_id]()
@@ -280,7 +290,12 @@ def advance_state(state_key: tuple[int, ...], action_id: int) -> dict:
         if not player.can_play(card):
             raise ValueError(f"Not enough energy to play {card}")
 
-        player.play(card, fight.enemies[0])
+        if card.targeting == Targeting.ENEMY_SINGLE:
+            if target_index is None or not 0 <= target_index < len(fight.enemies):
+                raise ValueError(f"{card} requires an enemy target, got {target_index}")
+            player.play(card, fight.enemies[target_index])
+        else:
+            player.play(card)
         hp_lost = hp_start - player.hp
         if fight.is_over():
             terminal = "defeat" if player.hp <= 0 else "victory"
