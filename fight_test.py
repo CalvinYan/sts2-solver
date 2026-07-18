@@ -13,6 +13,7 @@ from character.enemies.sludge_spinner import Rage, Slam
 from character.enemy import Enemy
 from character.player import Ironclad, Regent
 from fight import MAX_ENEMIES, Fight
+from search.table import QTable
 from util.core import Action
 from util.effect import Shrink, Strength, Vulnerable, Weak
 
@@ -137,8 +138,8 @@ def test_simulate_nibbit_fight():
 
 
 def test_search_truncates_after_finding_lethal():
-    dp_table = dict()
-    fully_explored = dict()
+    dp_table = QTable()
+    fully_explored = QTable()
     player = Ironclad(
         name="Player",
         hp=1,
@@ -156,14 +157,14 @@ def test_search_truncates_after_finding_lethal():
     assert search_complete
 
     # Search should terminate once it finds that triple Strike is lethal
-    dp_table_expected = {(fight_vector, (Strike().id, 0)): {0: Fraction(1)}}
+    dp_table_expected = QTable({(fight_vector, (Strike().id, 0)): {0: Fraction(1)}})
     for state_action_pair, hp_losses in dp_table_expected.items():
         assert hp_losses == dp_table[state_action_pair]
 
 
 def test_search_fully_computes_unwinnable_turn():
-    dp_table = dict()
-    fully_explored = dict()
+    dp_table = QTable()
+    fully_explored = QTable()
     player = Ironclad(
         name="Player",
         hp=1,
@@ -174,7 +175,7 @@ def test_search_fully_computes_unwinnable_turn():
 
     # Precalculate the expected DP table
     fight = Fight(player=player, enemies=[enemy], turn=2)
-    dp_table_expected = dict()
+    dp_table_expected = QTable()
 
     for strikes in range(4):
         for defends in range(min(2, 3 - strikes) + 1):
@@ -203,8 +204,8 @@ def test_search_fully_computes_unwinnable_turn():
 
 
 def test_search_computes_draw_order_probability():
-    dp_table = dict()
-    fully_explored = dict()
+    dp_table = QTable()
+    fully_explored = QTable()
     player = Ironclad(
         name="Player",
         hp=1,
@@ -248,8 +249,8 @@ def test_search_uses_cache():
 
 
 def test_search_terminates_at_hp_limit():
-    dp_table = dict()
-    fully_explored = dict()
+    dp_table = QTable()
+    fully_explored = QTable()
     player = Ironclad(
         name="Player",
     )
@@ -273,8 +274,8 @@ def test_search_no_cache_incomplete_results():
     fight = Fight(player=player, enemies=[enemy], turn=1)
     vector = fight.to_vector()
 
-    dp_table = dict()
-    fully_explored = dict()
+    dp_table = QTable()
+    fully_explored = QTable()
 
     fight.search_player_turn(dp_table, fully_explored, hp_limit=48)
 
@@ -286,8 +287,8 @@ def test_search_no_cache_incomplete_results():
 
 
 def test_search_no_defend_on_empty_turn():
-    dp_table = dict()
-    fully_explored = dict()
+    dp_table = QTable()
+    fully_explored = QTable()
     player = Ironclad(
         name="Player",
         hand=CardPile(cards=Counter({Bash(): 1, Strike(): 1, AscendersBane(): 1, Defend(): 2})),
@@ -303,8 +304,8 @@ def test_search_no_defend_on_empty_turn():
 
 
 def test_search_no_overblock():
-    dp_table = dict()
-    fully_explored = dict()
+    dp_table = QTable()
+    fully_explored = QTable()
     player = Ironclad(
         name="Player",
         block=10,
@@ -331,8 +332,8 @@ def test_search_no_premature_end_turn():
     fight = Fight(player=player, enemies=[enemy], turn=1)
     vector = fight.to_vector()
 
-    dp_table = dict()
-    fully_explored = dict()
+    dp_table = QTable()
+    fully_explored = QTable()
 
     fight.search_player_turn(dp_table, fully_explored, hp_limit=48)
 
@@ -345,15 +346,15 @@ def test_single_enemy_all_intents_searched():
 
     def search_player_turn_start(
         self,
-        dp_table: dict[tuple[int, ...], dict[int, Fraction]],
-        fully_explored: dict[tuple[int, ...], dict[int, Fraction]],
+        dp_table: QTable,
+        fully_explored: QTable,
         hp_limit: int = 0,
     ) -> tuple[dict[int, Fraction], bool]:
         next_intents.add(self.enemies[0].intent)
         return ({0: Fraction(1)}, True)
 
-    dp_table = dict()
-    fully_explored = dict()
+    dp_table = QTable()
+    fully_explored = QTable()
     player = Ironclad(
         name="Player",
         draw_pile=CardPile(cards=Counter({Strike(): 4, Bash(): 1})),
@@ -371,15 +372,15 @@ def test_multiple_enemies_all_intents_searched():
 
     def search_player_turn_start(
         self,
-        dp_table: dict[tuple[int, ...], dict[int, Fraction]],
-        fully_explored: dict[tuple[int, ...], dict[int, Fraction]],
+        dp_table: QTable,
+        fully_explored: QTable,
         hp_limit: int = 0,
     ) -> tuple[dict[int, Fraction], bool]:
         intent_combos.add(tuple(enemy.intent for enemy in self.enemies))
         return ({0: Fraction(1)}, True)
 
-    dp_table = dict()
-    fully_explored = dict()
+    dp_table = QTable()
+    fully_explored = QTable()
     player = Ironclad(
         name="Player",
         hp=1,
@@ -396,8 +397,8 @@ def test_multiple_enemies_all_intents_searched():
 
 
 def test_search_computes_regent_turn():
-    dp_table = dict()
-    fully_explored = dict()
+    dp_table = QTable()
+    fully_explored = QTable()
     player = Regent(
         name="Player",
         hp=1,
@@ -418,8 +419,8 @@ def test_search_computes_regent_turn():
 
 
 def test_long_search_with_hp_limit():
-    dp_table = dict()
-    fully_explored = dict()
+    dp_table = QTable()
+    fully_explored = QTable()
     player = Ironclad(name="Ironclad")
     enemy = FuzzyWurmCrawler(name="FWC", hp=58)
     fight = Fight(player=player, enemies=[enemy])

@@ -11,6 +11,7 @@ from card import Card, Targeting
 from character.core import Character
 from character.enemy import Enemy
 from character.player import Player
+from search.table import QTable
 from util.core import Move
 from util.effect import Thorns
 
@@ -68,8 +69,8 @@ class Fight:
 
     def search_player_turn_start(
         self,
-        dp_table: dict[tuple[tuple[int, ...], tuple[int, ...]], dict[int, Fraction]],
-        fully_explored: dict[tuple[tuple[int, ...], tuple[int, ...]], dict[int, Fraction]],
+        dp_table: QTable,
+        fully_explored: QTable,
         hp_limit: int = 0,
     ) -> tuple[dict[int, Fraction], bool]:
         if self.player.hp <= hp_limit:
@@ -100,8 +101,8 @@ class Fight:
 
     def search_player_turn(
         self,
-        dp_table: dict[tuple[tuple[int, ...], tuple[int, ...]], dict[int, Fraction]],
-        fully_explored: dict[tuple[tuple[int, ...], tuple[int, ...]], dict[int, Fraction]],
+        dp_table: QTable,
+        fully_explored: QTable,
         hp_limit: int = 0,
     ) -> tuple[dict[int, Fraction], bool]:
 
@@ -187,8 +188,8 @@ class Fight:
     # The action is the card to be played, or None if the player is ending their turn.
     def search_player_turn_action(
         self,
-        dp_table: dict[tuple[tuple[int, ...], tuple[int, ...]], dict[int, Fraction]],
-        fully_explored: dict[tuple[tuple[int, ...], tuple[int, ...]], dict[int, Fraction]],
+        dp_table: QTable,
+        fully_explored: QTable,
         action: Card | None,
         target_index: int | None = None,
         hp_limit: int = 0,
@@ -241,8 +242,8 @@ class Fight:
 
     def search_player_turn_end(
         self,
-        dp_table: dict[tuple[tuple[int, ...], tuple[int, ...]], dict[int, Fraction]],
-        fully_explored: dict[tuple[tuple[int, ...], tuple[int, ...]], dict[int, Fraction]],
+        dp_table: QTable,
+        fully_explored: QTable,
         hp_limit: int = 0,
     ) -> tuple[dict[int, Fraction], bool]:
         player_snapshot = self.player.to_vector()
@@ -253,8 +254,8 @@ class Fight:
 
     def search_enemy_turn_start(
         self,
-        dp_table: dict[tuple[tuple[int, ...], tuple[int, ...]], dict[int, Fraction]],
-        fully_explored: dict[tuple[tuple[int, ...], tuple[int, ...]], dict[int, Fraction]],
+        dp_table: QTable,
+        fully_explored: QTable,
         hp_limit: int = 0,
     ) -> tuple[dict[int, Fraction], bool]:
         if self.is_over():
@@ -274,8 +275,8 @@ class Fight:
 
     def search_enemy_turn(
         self,
-        dp_table: dict[tuple[tuple[int, ...], tuple[int, ...]], dict[int, Fraction]],
-        fully_explored: dict[tuple[tuple[int, ...], tuple[int, ...]], dict[int, Fraction]],
+        dp_table: QTable,
+        fully_explored: QTable,
         hp_limit: int = 0,
     ) -> tuple[dict[int, Fraction], bool]:
         hp_before = self.player.hp
@@ -289,8 +290,8 @@ class Fight:
 
     def search_enemy_turn_end(
         self,
-        dp_table: dict[tuple[tuple[int, ...], tuple[int, ...]], dict[int, Fraction]],
-        fully_explored: dict[tuple[tuple[int, ...], tuple[int, ...]], dict[int, Fraction]],
+        dp_table: QTable,
+        fully_explored: QTable,
         hp_limit: int = 0,
     ) -> tuple[dict[int, Fraction], bool]:
         if self.is_over():

@@ -1,10 +1,6 @@
 """Implements dynamic programming to compute the expected HP loss of every state action pair"""
 
-import gzip
-import pickle
 from copy import deepcopy
-from fractions import Fraction
-from pathlib import Path
 from time import perf_counter
 
 from card import Bash, Defend, Strike
@@ -17,36 +13,14 @@ from character.enemies import (
 )
 from character.player import Ironclad, Regent
 from fight import Fight
+from search.table import QTable
 
 CARDS = {"strike": Strike(), "defend": Defend(), "bash": Bash()}
 
 
-# Read the table from file, creating an empty one if it doesn't exist
-def load_dp_table(fname: str) -> dict[tuple[tuple[int, ...], tuple[int, ...]], dict[int, Fraction]]:
-    file_path = Path(fname)
-    file_path.parent.mkdir(parents=True, exist_ok=True)
-    if not file_path.exists() or file_path.stat().st_size == 0:
-        dump_dp_table({}, fname)
-    with gzip.open(fname, mode="rb") as f:
-        dp_table = pickle.load(f)
-    return dp_table
-
-
-# Write the table to file
-def dump_dp_table(table: dict[tuple[tuple[int, ...], tuple[int, ...]], dict[int, Fraction]], fname: str):
-    with gzip.open(fname, mode="wb", compresslevel=6) as f:
-        pickle.dump(table, f, protocol=pickle.HIGHEST_PROTOCOL)
-
-
-def append_dp_table(table: dict[tuple[tuple[int, ...], tuple[int, ...]], dict[int, Fraction]], fname: str):
-    merged = load_dp_table(fname)
-    merged.update({k: v for k, v in table.items()})
-    dump_dp_table(merged, fname)
-
-
 def search(
     fight: Fight,
-    fully_explored: dict[tuple[tuple[int, ...], tuple[int, ...]], dict[int, Fraction]],
+    fully_explored: QTable,
     fname: str,
     name: str = "",
 ) -> None:
@@ -72,7 +46,7 @@ def search(
 
         if interrupted:
             print("Search was terminated early, writing partial results to file")
-            dump_dp_table(fully_explored, fname)
+            fully_explored.dump(fname)
             exit()
         else:
             print(f"{"EXPECTED HP LOSS":30}| {sum([loss * prob for loss, prob in hp_losses.items()]):2.2f}")
@@ -95,7 +69,7 @@ if __name__ == "__main__":
             ["fuzzy_wurm_crawler", "nibbit", "seapunk", "shrinker_beetle", "sludge_spinner"],
         ):
             fname = f"./data/solver/{player_name}-base/{name}.csv.pkl.gz"
-            fully_explored: dict[tuple[tuple[int, ...], tuple[int, ...]], dict[int, Fraction]] = load_dp_table(fname)
+            fully_explored = QTable.load(fname)
 
             for enemy_hp in range(enemy_cls.min_hp, enemy_cls.max_hp + 1):  # type: ignore
                 player = player_cls(name="Player")
@@ -105,5 +79,4 @@ if __name__ == "__main__":
                     fight, fully_explored, fname, name=f"{player_cls.__name__} vs {enemy_hp}-HP {enemy_cls.__name__}"
                 )
 
-            dump_dp_table(fully_explored, fname)
-            append_dp_table(fully_explored, "./data/solver/all.csv.pkl.gz")
+            fully_explored.dump(fname)
