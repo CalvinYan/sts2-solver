@@ -3,5 +3,6 @@ from character.enemies.nibbit import Nibbit
 from character.enemies.seapunk import Seapunk
 from character.enemies.shrinker_beetle import ShrinkerBeetle
 from character.enemies.sludge_spinner import SludgeSpinner
+from character.enemies.toadpole import Toadpole
 
-__all__ = ["FuzzyWurmCrawler", "Nibbit", "Seapunk", "ShrinkerBeetle", "SludgeSpinner"]
+__all__ = ["FuzzyWurmCrawler", "Nibbit", "Seapunk", "ShrinkerBeetle", "SludgeSpinner", "Toadpole"]

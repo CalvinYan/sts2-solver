@@ -6,7 +6,9 @@ from character.enemies import (
     Seapunk,
     ShrinkerBeetle,
     SludgeSpinner,
+    Toadpole,
 )
+from character.enemies.toadpole import Spiken, Whirl
 
 
 def fuzzy_wurm_crawler(verbose: bool = False):
@@ -27,6 +29,13 @@ def shrinker_beetle(verbose: bool = False):
 
 def sludge_spinner(verbose: bool = False):
     return [SludgeSpinner(verbose=verbose)]
+
+
+def toadpoles(verbose: bool = False):
+    return [
+        Toadpole(name="Toadpole 1", intent=Spiken(), verbose=verbose),
+        Toadpole(name="Toadpole 2", intent=Whirl(), verbose=verbose),
+    ]
 
 
 # All Floor 2 encounters, in a canonical order for iterating over benchmarks.
