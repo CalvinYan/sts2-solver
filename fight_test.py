@@ -6,10 +6,17 @@ import numpy as np
 from mock import patch
 
 from card import AscendersBane, Bash, CardPile, Defend, FallingStar, Strike, Venerate
-from character.enemies import FuzzyWurmCrawler, Nibbit, ShrinkerBeetle, SludgeSpinner
+from character.enemies import (
+    FuzzyWurmCrawler,
+    Nibbit,
+    ShrinkerBeetle,
+    SludgeSpinner,
+    Toadpole,
+)
 from character.enemies.nibbit import HesitantSlice, Hiss
 from character.enemies.shrinker_beetle import Stomp
 from character.enemies.sludge_spinner import Rage, Slam
+from character.enemies.toadpole import Spiken, Whirl
 from character.enemy import Enemy
 from character.player import Ironclad, Regent
 from fight import MAX_ENEMIES, Fight
@@ -132,6 +139,16 @@ def test_simulate_nibbit_fight():
     fight.start()
 
     assert player.hp == 59
+
+
+def test_search_no_mutate_fight():
+    player = Ironclad()
+    enemy = FuzzyWurmCrawler(hp=58)
+    fight = Fight(player=player, enemies=[enemy])
+    expected = fight.to_vector()
+    fight.search_player_turn_start(QTable(), QTable(), hp_limit=58)
+
+    assert expected == fight.to_vector()
 
 
 def test_search_truncates_after_finding_lethal():
@@ -377,6 +394,42 @@ def test_multiple_enemies_all_intents_searched():
         fight.search_enemy_turn_end(dp_table, fully_explored)
 
     assert intent_combos == {(Slam(), Slam()), (Slam(), Rage()), (Rage(), Slam()), (Rage(), Rage())}
+
+
+def test_search_multiple_enemies_lethal_found():
+    dp_table = QTable()
+    fully_explored = QTable()
+
+    toadpole_one = Toadpole(name="Toadpole One", hp=6, intent=Spiken())
+    toadpole_two = Toadpole(name="Toadpole Two", hp=17, intent=Whirl())
+
+    player = Regent(hp=1, stars=1, hand=CardPile(Counter({Strike(): 2, Defend(): 1, FallingStar(): 1, Venerate(): 1})))
+
+    fight = Fight(player=player, enemies=[toadpole_one, toadpole_two], turn=1)
+    state_vector = fight.to_vector()
+    hp_losses, search_complete = fight.search_player_turn(dp_table, fully_explored)
+
+    assert search_complete
+    assert hp_losses == {0: Fraction(1)}
+    assert (state_vector, (Strike().id, 0)) in fully_explored
+    assert fully_explored[(state_vector, (Strike().id, 0))] == {0: Fraction(1)}
+
+
+def test_search_multiple_enemies_clear_dead_enemies():
+    dp_table = QTable()
+    fully_explored = QTable()
+
+    toadpole_one = Toadpole(name="Toadpole One", hp=5, intent=Spiken())
+    toadpole_two = Toadpole(name="Toadpole Two", hp=7, intent=Whirl())
+
+    player = Ironclad()
+
+    fight = Fight(player=player, enemies=[toadpole_one, toadpole_two])
+    fight.search_player_turn_start(dp_table, fully_explored)
+
+    for state_vector, _ in fully_explored.keys():
+        state, _ = Fight.from_vector(state_vector)
+        assert not any([enemy.hp <= 0 for enemy in state.enemies])
 
 
 def test_search_computes_regent_turn():

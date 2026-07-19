@@ -212,6 +212,7 @@ class Fight:
                     search_complete = False
             else:
                 player_snapshot = self.player.to_vector()
+                enemies = self.enemies
                 enemies_snapshot = [enemy.to_vector() for enemy in self.enemies]
                 hp_before = self.player.hp
 
@@ -222,6 +223,7 @@ class Fight:
                         raise ValueError("Must specify target_index when playing targeted card", action)
                     self.player.play(action, self.enemies[target_index])
 
+                self.enemies = [enemy for enemy in self.enemies if enemy.hp > 0]
                 hp_after = self.player.hp
                 hp_losses, subsearch_complete = self.search_player_turn(dp_table, fully_explored, hp_limit)
                 hp_losses = {hp_loss + hp_before - hp_after: prob for hp_loss, prob in hp_losses.items()}
@@ -229,8 +231,9 @@ class Fight:
                     search_complete = False
 
                 self.player.read_vector(player_snapshot)
-                for enemy, snapshot in zip(self.enemies, enemies_snapshot):
+                for enemy, snapshot in zip(enemies, enemies_snapshot):
                     enemy.read_vector(snapshot)
+                self.enemies = enemies
 
             dp_table[state_action_pair] = hp_losses
             if search_complete:
