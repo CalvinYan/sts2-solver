@@ -13,9 +13,9 @@ from fractions import Fraction
 
 import state as state_bridge
 from flask import Flask, jsonify, render_template, request
-from table import DpTable
 
 from fight import Fight
+from search.table import QTable
 
 DATA_PATH = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
@@ -27,7 +27,7 @@ DATA_PATH = os.path.join(
 app = Flask(__name__)
 
 # Loaded once at import time. The dp data never changes at runtime.
-dp_table = DpTable.load(DATA_PATH)
+table = QTable.load(DATA_PATH)
 
 
 def _expected(distribution: dict[int, Fraction]) -> Fraction:
@@ -44,7 +44,7 @@ def _distribution_payload(distribution: dict[int, Fraction]) -> dict:
 
 def _state_value_payload(state_key: tuple[int, ...]) -> dict:
     """The solved value of a state: the HP-loss distribution of its best stored action."""
-    stored = dp_table.actions_for(state_key)
+    stored = table.actions_for(state_key)
     if not stored:
         return {"found": False}
     best_action, best_dist = min(stored.items(), key=lambda item: _expected(item[1]))
@@ -82,7 +82,7 @@ def index():
         cards=state_bridge.card_ids(),
         effects=state_bridge.effect_types(),
         intents={eid: state_bridge.enemy_intents(eid) for eid in state_bridge.enemy_classes()},
-        state_count=dp_table.state_count,
+        row_count=len(table),
     )
 
 
@@ -209,7 +209,7 @@ def query():
     try:
         fight = _fight_from_request()
         state_key = fight.to_vector()
-        stored = dp_table.actions_for(state_key)
+        stored = table.actions_for(state_key)
     except (ValueError, KeyError, TypeError) as e:
         return jsonify({"error": str(e)}), 400
 
