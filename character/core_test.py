@@ -6,7 +6,7 @@ from util.effect import Frail, Strength, Thorns, Vulnerable, Weak
 
 
 def test_character_encodes_to_vector():
-    c = Character(name="Test", id=0, hp=80)
+    c = Character(id=0, hp=80)
 
     # Apply some effects
     c.receive_effects([Strength(power=2)])
@@ -41,7 +41,7 @@ def test_character_encodes_to_vector():
 
 
 def test_character_with_no_effects_encodes_to_vector():
-    c = Character(name="Test", id=0, hp=80)
+    c = Character(id=0, hp=80)
 
     expected = (
         0,
@@ -72,7 +72,7 @@ def test_character_with_no_effects_encodes_to_vector():
 
 
 def test_character_with_negative_hp_encodes_to_vector():
-    c = Character(name="Test", id=0, hp=-15)
+    c = Character(id=0, hp=-15)
 
     expected = (
         0,
@@ -133,20 +133,20 @@ def test_no_character_encodes_to_zeroes():
 
 def test_character_decodes_from_vector():
     vector = (0, 40, 10, 1, 7, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0)
-    expected = Character(name="Character", id=0, hp=40, block=10, effects=[Strength(power=7), Vulnerable(duration=1)])
+    expected = Character(id=0, hp=40, block=10, effects=[Strength(power=7), Vulnerable(duration=1)])
     got, read = Character.from_vector(vector)
     assert expected == got
     assert len(vector) == read
 
 
 def test_character_round_trip():
-    expected = Character(name="Character", id=1, hp=24, block=0, effects=[Weak(duration=5)])
+    expected = Character(id=1, hp=24, block=0, effects=[Weak(duration=5)])
     got, _ = Character.from_vector(tuple(expected.to_vector()))
     assert expected == got
 
 
 def test_character_effects_stack():
-    c = Character(name="Test", id=0, hp=80)
+    c = Character(id=0, hp=80)
 
     c.receive_effects([Strength(power=2)])
     c.receive_effects([Strength(power=2)])
@@ -156,7 +156,7 @@ def test_character_effects_stack():
 
 
 def test_character_loses_block():
-    c = Character(name="Test", id=0, hp=80, block=10)
+    c = Character(id=0, hp=80, block=10)
 
     c.resolve_start_of_turn()
 
@@ -164,7 +164,7 @@ def test_character_loses_block():
 
 
 def test_character_effects_tick_down():
-    c = Character(name="Test", id=0, hp=80)
+    c = Character(id=0, hp=80)
 
     c.receive_effects([Weak(duration=2)])
 
@@ -182,7 +182,7 @@ def test_character_effects_tick_down():
 
 
 def test_character_full_block():
-    c = Character(name="Test", id=0, hp=80, block=10)
+    c = Character(id=0, hp=80, block=10)
 
     c.take_damage(7)
 
@@ -190,7 +190,7 @@ def test_character_full_block():
 
 
 def test_character_take_damage():
-    c = Character(name="Test", id=0, hp=80)
+    c = Character(id=0, hp=80)
 
     c.take_damage(10)
 
@@ -198,7 +198,7 @@ def test_character_take_damage():
 
 
 def test_character_take_damage_through_block():
-    c = Character(name="Test", id=0, hp=80, block=29)
+    c = Character(id=0, hp=80, block=29)
 
     c.take_damage(33)
 

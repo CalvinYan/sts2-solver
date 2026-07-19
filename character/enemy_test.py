@@ -10,7 +10,7 @@ from character.enemy import Enemy
 
 
 def test_enemy_encodes_to_tuple():
-    enemy = Nibbit(name="Tibbin")
+    enemy = Nibbit()
 
     expected = (
         1,
@@ -43,7 +43,7 @@ def test_enemy_encodes_to_tuple():
 
 
 def test_enemy_cycles_intents():
-    enemy = FuzzyWurmCrawler(name="FWC")
+    enemy = FuzzyWurmCrawler()
 
     assert isinstance(enemy.intent, AcidGoop1)
 
@@ -117,20 +117,20 @@ def test_enemy_decodes_from_vector():
         0,
         SpinningKick.id,
     )
-    expected = Seapunk(name="Enemy", hp=48, intent=SpinningKick())
+    expected = Seapunk(hp=48, intent=SpinningKick())
     got, read = Enemy.from_vector(vector)
     assert expected == got
     assert len(vector) == read
 
 
 def test_enemy_round_trip():
-    expected = Nibbit(name="Enemy")
+    expected = Nibbit()
     got, _ = Enemy.from_vector(tuple(expected.to_vector()))
     assert expected == got
 
 
 def test_sludge_spinner_doesnt_repeat_moves():
-    enemy = SludgeSpinner(name="Spinner")
+    enemy = SludgeSpinner()
 
     last_intent = None
     # Supppose at any point Sludge Spinner has a .1% chance of repeating a move. Then after 10,000 samples it should
@@ -144,8 +144,8 @@ def test_sludge_spinner_doesnt_repeat_moves():
 
 
 def test_enemy_next_states():
-    nibbit = Nibbit(name="Test", hp=44)
-    expected = [(Nibbit(name="Test", hp=44, intent=HesitantSlice()), Fraction(1))]
+    nibbit = Nibbit(hp=44)
+    expected = [(Nibbit(hp=44, intent=HesitantSlice()), Fraction(1))]
     got = nibbit.next_states()
 
     assert expected == got

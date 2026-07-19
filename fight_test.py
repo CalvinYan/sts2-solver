@@ -19,8 +19,8 @@ from util.effect import Shrink, Strength, Vulnerable, Weak
 
 
 def test_fight_encodes_to_vector():
-    player = Ironclad(name="Test")
-    enemy = Nibbit(name="Test")
+    player = Ironclad()
+    enemy = Nibbit()
     fight = Fight(player=player, enemies=[enemy])
 
     enemy_vector = enemy.to_vector()
@@ -37,8 +37,8 @@ def test_fight_encodes_to_vector():
 
 
 def test_fight_decodes_from_vector():
-    player = Ironclad(name="Player")
-    enemy = Nibbit(name="Enemy")
+    player = Ironclad()
+    enemy = Nibbit()
     expected = Fight(player=player, enemies=[enemy])
 
     enemy_vector = enemy.to_vector()
@@ -54,7 +54,6 @@ def test_fight_decodes_from_vector():
 
 def test_fight_round_trip():
     player = Ironclad(
-        name="Player",
         hp=80,
         draw_pile=CardPile(cards=Counter({Defend(): 1})),
         hand=CardPile(cards=Counter({Strike(): 2, Defend(): 1, Bash(): 1, AscendersBane(): 1})),
@@ -62,14 +61,12 @@ def test_fight_round_trip():
         effects=[Weak(duration=2)],
     )
     enemy1 = Nibbit(
-        name="Enemy",
         hp=32,
         block=6,
         effects=[Strength(power=3), Vulnerable(duration=2)],
         intent=HesitantSlice(),
     )
     enemy2 = SludgeSpinner(
-        name="Enemy",
         hp=19,
         block=0,
         effects=[Strength(power=3)],
@@ -81,7 +78,7 @@ def test_fight_round_trip():
 
 
 def test_fight_ends_when_enemies_die():
-    player = Ironclad(name="Test")
+    player = Ironclad()
     enemy1 = Nibbit(name="NibbitOne")
     enemy2 = Nibbit(name="NibbitTwo")
     fight = Fight(player=player, enemies=[enemy1, enemy2])
@@ -95,8 +92,8 @@ def test_fight_ends_when_enemies_die():
 
 
 def test_fight_ends_if_player_dies():
-    player = Ironclad(name="Test")
-    enemy = Nibbit(name="Test")
+    player = Ironclad()
+    enemy = Nibbit()
     fight = Fight(player=player, enemies=[enemy])
 
     player.take_damage(100)
@@ -128,8 +125,8 @@ def test_simulate_nibbit_fight():
 
             return True
 
-    player = Testclad(name="Test")
-    enemy = Nibbit(name="Test")
+    player = Testclad()
+    enemy = Nibbit()
     fight = Fight(player=player, enemies=[enemy])
 
     fight.start()
@@ -141,12 +138,11 @@ def test_search_truncates_after_finding_lethal():
     dp_table = QTable()
     fully_explored = QTable()
     player = Ironclad(
-        name="Player",
         hp=1,
         hand=CardPile(cards=Counter({Strike(): 3, Defend(): 2})),
         effects=[Shrink()],
     )
-    enemy = ShrinkerBeetle(name="Enemy", hp=15, intent=Stomp(), effects=[Vulnerable(duration=2)])
+    enemy = ShrinkerBeetle(hp=15, intent=Stomp(), effects=[Vulnerable(duration=2)])
 
     fight = Fight(player=player, enemies=[enemy], turn=1)
     fight_vector = tuple(fight.to_vector())
@@ -166,12 +162,11 @@ def test_search_fully_computes_unwinnable_turn():
     dp_table = QTable()
     fully_explored = QTable()
     player = Ironclad(
-        name="Player",
         hp=1,
         hand=CardPile(cards=Counter({Strike(): 3, Defend(): 2})),
         effects=[Shrink()],
     )
-    enemy = ShrinkerBeetle(name="Enemy", hp=20, intent=Stomp(), effects=[Vulnerable(duration=2)])
+    enemy = ShrinkerBeetle(hp=20, intent=Stomp(), effects=[Vulnerable(duration=2)])
 
     # Precalculate the expected DP table
     fight = Fight(player=player, enemies=[enemy], turn=2)
@@ -207,12 +202,11 @@ def test_search_computes_draw_order_probability():
     dp_table = QTable()
     fully_explored = QTable()
     player = Ironclad(
-        name="Player",
         hp=1,
         hand=CardPile(cards=Counter({Strike(): 2, Defend(): 3})),
         draw_pile=CardPile(cards=Counter({Strike(): 3, Defend(): 1, Bash(): 1, AscendersBane(): 1})),
     )
-    enemy = Nibbit(name="Enemy", hp=18)
+    enemy = Nibbit(hp=18)
 
     # Nibbit hits for 13 -> Player must triple defend
     # Nibbit hits for 7 -> Player must draw three strikes (50% chance) or they are dead
@@ -226,12 +220,11 @@ def test_search_computes_draw_order_probability():
 
 def test_search_uses_cache():
     player = Ironclad(
-        name="Player",
         hp=1,
         hand=CardPile(cards=Counter({Strike(): 2, Defend(): 3})),
         draw_pile=CardPile(cards=Counter({Strike(): 3, Defend(): 1, Bash(): 1, AscendersBane(): 1})),
     )
-    enemy = Nibbit(name="Enemy", hp=18)
+    enemy = Nibbit(hp=18)
     fight = Fight(player=player, enemies=[enemy], turn=1)
 
     expected = {
@@ -251,10 +244,8 @@ def test_search_uses_cache():
 def test_search_terminates_at_hp_limit():
     dp_table = QTable()
     fully_explored = QTable()
-    player = Ironclad(
-        name="Player",
-    )
-    enemy = Nibbit(name="Enemy", hp=20)
+    player = Ironclad()
+    enemy = Nibbit(hp=20)
 
     fight = Fight(player=player, enemies=[enemy], turn=1)
 
@@ -264,13 +255,12 @@ def test_search_terminates_at_hp_limit():
 
 def test_search_no_cache_incomplete_results():
     player = Ironclad(
-        name="player",
         hp=50,
         energy=1,
         hand=CardPile(cards=Counter({Strike(): 1, Defend(): 1})),
         draw_pile=CardPile(cards=Counter({Strike(): 4, Defend(): 1})),
     )
-    enemy = FuzzyWurmCrawler(name="FWC", hp=12)
+    enemy = FuzzyWurmCrawler(hp=12)
     fight = Fight(player=player, enemies=[enemy], turn=1)
     vector = fight.to_vector()
 
@@ -290,11 +280,10 @@ def test_search_no_defend_on_empty_turn():
     dp_table = QTable()
     fully_explored = QTable()
     player = Ironclad(
-        name="Player",
         hand=CardPile(cards=Counter({Bash(): 1, Strike(): 1, AscendersBane(): 1, Defend(): 2})),
         draw_pile=CardPile(cards=Counter({Strike(): 4, Defend(): 2})),
     )
-    enemy = Nibbit(name="Enemy", hp=15, intent=Hiss())
+    enemy = Nibbit(hp=15, intent=Hiss())
 
     fight = Fight(player=player, enemies=[enemy], turn=3)
 
@@ -307,13 +296,12 @@ def test_search_no_overblock():
     dp_table = QTable()
     fully_explored = QTable()
     player = Ironclad(
-        name="Player",
         block=10,
         energy=1,
         hand=CardPile(cards=Counter({Bash(): 1, Strike(): 1, Defend(): 1})),
         draw_pile=CardPile(cards=Counter({Strike(): 4, Defend(): 1})),
     )
-    enemy = Nibbit(name="Enemy", hp=12, intent=HesitantSlice())
+    enemy = Nibbit(hp=12, intent=HesitantSlice())
 
     fight = Fight(player=player, enemies=[enemy], turn=2)
 
@@ -324,11 +312,10 @@ def test_search_no_overblock():
 
 def test_search_no_premature_end_turn():
     player = Ironclad(
-        name="player",
         hand=CardPile(cards=Counter({Strike(): 1, Defend(): 1})),
         draw_pile=CardPile(cards=Counter({Strike(): 4, Defend(): 1})),
     )
-    enemy = FuzzyWurmCrawler(name="FWC", hp=12)
+    enemy = FuzzyWurmCrawler(hp=12)
     fight = Fight(player=player, enemies=[enemy], turn=1)
     vector = fight.to_vector()
 
@@ -355,11 +342,8 @@ def test_single_enemy_all_intents_searched():
 
     dp_table = QTable()
     fully_explored = QTable()
-    player = Ironclad(
-        name="Player",
-        draw_pile=CardPile(cards=Counter({Strike(): 4, Bash(): 1})),
-    )
-    enemy = SludgeSpinner(name="Enemy")
+    player = Ironclad(draw_pile=CardPile(cards=Counter({Strike(): 4, Bash(): 1})))
+    enemy = SludgeSpinner()
     fight = Fight(player=player, enemies=[enemy], turn=1)
     with patch.object(Fight, "search_player_turn_start", search_player_turn_start):
         fight.search_enemy_turn_end(dp_table, fully_explored)
@@ -382,7 +366,6 @@ def test_multiple_enemies_all_intents_searched():
     dp_table = QTable()
     fully_explored = QTable()
     player = Ironclad(
-        name="Player",
         hp=1,
         hand=CardPile(),
         draw_pile=CardPile(cards=Counter({Strike(): 4, Bash(): 1})),
@@ -400,13 +383,12 @@ def test_search_computes_regent_turn():
     dp_table = QTable()
     fully_explored = QTable()
     player = Regent(
-        name="Player",
         hp=1,
         stars=0,
         draw_pile=CardPile(cards=Counter({Strike(): 3, Defend(): 2, AscendersBane(): 1})),
         hand=CardPile(cards=Counter({Strike(): 1, Defend(): 2, Venerate(): 1, FallingStar(): 1})),
     )
-    enemy = Nibbit(name="Enemy", hp=20)
+    enemy = Nibbit(hp=20)
 
     fight = Fight(player=player, enemies=[enemy], turn=1)
 
@@ -421,8 +403,8 @@ def test_search_computes_regent_turn():
 def test_long_search_with_hp_limit():
     dp_table = QTable()
     fully_explored = QTable()
-    player = Ironclad(name="Ironclad")
-    enemy = FuzzyWurmCrawler(name="FWC", hp=58)
+    player = Ironclad()
+    enemy = FuzzyWurmCrawler(hp=58)
     fight = Fight(player=player, enemies=[enemy])
 
     hp_losses_expected = {

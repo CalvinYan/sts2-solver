@@ -166,7 +166,7 @@ class Player(Character):
 
         # hp is intentionally omitted so the subclass's default applies;
         # mypy can't know that every registered subclass defines those defaults.
-        player = ID_TO_PLAYER[vector[0]](name="Player", id=0)  # type: ignore[call-arg]
+        player = ID_TO_PLAYER[vector[0]](id=0)  # type: ignore[call-arg]
         read = player.read_vector(vector)
         return player, read
 

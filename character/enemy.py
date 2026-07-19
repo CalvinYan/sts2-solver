@@ -124,7 +124,7 @@ class Enemy(Character):
     def from_vector(vector: tuple[int, ...]) -> tuple[Enemy, int]:
         # min_hp/max_hp are intentionally omitted so the subclass's spawn-range defaults apply;
         # mypy can't know that every registered subclass defines those defaults.
-        enemy: Enemy = ID_TO_ENEMY[vector[1]](name="Enemy", intent=Intent(id=0))  # type: ignore[call-arg]
+        enemy: Enemy = ID_TO_ENEMY[vector[1]](intent=Intent(id=0))  # type: ignore[call-arg]
         read = enemy.read_vector(vector)
         return enemy, read
 

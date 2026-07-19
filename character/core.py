@@ -17,12 +17,16 @@ if TYPE_CHECKING:
 class Character:
     """Represents a player or enemy in the fight."""
 
-    name: str
+    name: str | None = None
     id: int
     hp: int
     block: int = 0
     effects: list[Effect] = field(default_factory=list)
     verbose: bool = False
+
+    def __post_init__(self):
+        if not self.name:
+            self.name = type(self).__name__
 
     def take_damage(self, damage: int) -> None:
         self.hp -= max(0, damage - self.block)
@@ -102,7 +106,7 @@ class Character:
 
     @staticmethod
     def from_vector(vector: tuple[int, ...]) -> tuple[Character, int]:
-        character = Character(name="Character", id=0, hp=0)
+        character = Character(id=0, hp=0)
         read = character.read_vector(vector)
         return character, read
 

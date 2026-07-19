@@ -132,7 +132,6 @@ def build_fight(
         raise ValueError(f"No engine support for enemy id {enemy_id}")
 
     player: Player = ID_TO_PLAYER[player_id](
-        name="Player",
         block=player_block,
         energy=player_energy,
         effects=_build_effects(player_effects or {}),
@@ -148,11 +147,7 @@ def build_fight(
         player.draw_pile = _build_pile(draw)
 
     enemy_cls = ID_TO_ENEMY[enemy_id]
-    enemy: Enemy = enemy_cls(
-        name="Enemy",
-        block=enemy_block,
-        effects=_build_effects(enemy_effects or {}),
-    )
+    enemy: Enemy = enemy_cls(block=enemy_block, effects=_build_effects(enemy_effects or {}))
 
     if enemy_hp is not None:
         enemy.hp = enemy_hp

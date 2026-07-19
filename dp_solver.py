@@ -72,8 +72,8 @@ if __name__ == "__main__":
             fully_explored = QTable.load(fname)
 
             for enemy_hp in range(enemy_cls.min_hp, enemy_cls.max_hp + 1):  # type: ignore
-                player = player_cls(name="Player")
-                enemy = enemy_cls(name="Enemy", hp=enemy_hp)
+                player = player_cls()
+                enemy = enemy_cls(hp=enemy_hp)
                 fight = Fight(player=player, enemies=[enemy])
                 search(
                     fight, fully_explored, fname, name=f"{player_cls.__name__} vs {enemy_hp}-HP {enemy_cls.__name__}"

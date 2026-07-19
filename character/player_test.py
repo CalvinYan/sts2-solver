@@ -11,7 +11,6 @@ from util.effect import Strength, Thorns, Weak
 
 def test_player_encodes_to_vector():
     clad = Ironclad(
-        name="Test",
         hp=80,
         energy=3,
         draw_pile=CardPile(cards=Counter({Defend(): 1})),
@@ -148,7 +147,6 @@ def test_player_decodes_from_vector():
         0,
     )
     expected = Ironclad(
-        name="Player",
         hp=80,
         energy=3,
         draw_pile=CardPile(cards=Counter({Defend(): 1})),
@@ -163,7 +161,6 @@ def test_player_decodes_from_vector():
 
 def test_player_round_trip():
     expected = Ironclad(
-        name="Player",
         hp=64,
         energy=0,
         draw_pile=CardPile(cards=Counter({Strike(): 2, Defend(): 3, Bash(): 1})),
@@ -177,7 +174,6 @@ def test_player_round_trip():
 
 def test_player_next_states_reshuffle():
     clad = Ironclad(
-        name="Test",
         draw_pile=CardPile(cards=Counter({Strike(): 1})),
         hand=CardPile(),
         discard_pile=CardPile(cards=Counter({Strike(): 4, Defend(): 4, Bash(): 1})),
@@ -198,7 +194,6 @@ def test_player_next_states_reshuffle():
 
 def test_player_draws_cards_into_hand():
     clad = Ironclad(
-        name="Test",
         draw_pile=CardPile(cards=Counter({Strike(): 5})),
         hand=CardPile(),
     )
@@ -212,7 +207,6 @@ def test_player_draws_cards_into_hand():
 
 def test_player_draw_reshuffles_discard_when_draw_pile_empty():
     clad = Ironclad(
-        name="Test",
         draw_pile=CardPile(),
         hand=CardPile(),
         discard_pile=CardPile(cards=Counter({Defend(): 4})),
@@ -227,7 +221,6 @@ def test_player_draw_reshuffles_discard_when_draw_pile_empty():
 
 def test_player_draw_stops_when_hand_full():
     clad = Ironclad(
-        name="Test",
         draw_pile=CardPile(cards=Counter({Strike(): 3})),
         hand=CardPile(cards=Counter({Defend(): 10})),
     )
@@ -241,7 +234,6 @@ def test_player_draw_stops_when_hand_full():
 
 def test_player_resolve_start_of_turn():
     clad = Ironclad(
-        name="Test",
         block=5,
         energy=0,
         draw_pile=CardPile(cards=Counter({Strike(): 10})),
@@ -258,7 +250,6 @@ def test_player_resolve_start_of_turn():
 
 def test_player_resolve_end_of_turn_exhausts_ascenders_bane_and_discards_hand():
     clad = Ironclad(
-        name="Test",
         draw_pile=CardPile(),
         hand=CardPile(cards=Counter({Strike(): 2, AscendersBane(): 1})),
         discard_pile=CardPile(cards=Counter({Defend(): 1})),
@@ -275,6 +266,6 @@ def test_player_resolve_end_of_turn_exhausts_ascenders_bane_and_discards_hand():
 
 
 def test_player_cannot_play_falling_star_without_stars():
-    player = Regent(name="Regent", draw_pile=CardPile(cards=Counter({FallingStar(): 1})), stars=0)
+    player = Regent(draw_pile=CardPile(cards=Counter({FallingStar(): 1})), stars=0)
 
     assert not player.can_play(FallingStar())
