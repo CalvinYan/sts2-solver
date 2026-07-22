@@ -10,7 +10,7 @@ class Spiken(Intent):
     id: int = 0
 
     def actions(self) -> list[Action]:
-        return [Action(actor_effects=[Thorns(power=2, duration=2)])]
+        return [Action(actor_effects=[Thorns(power=2)])]
 
     def next(self) -> Intent:
         return SpikeSpit()
@@ -21,7 +21,7 @@ class SpikeSpit(Intent):
     id: int = 1
 
     def actions(self) -> list[Action]:
-        return [Action(damage=4), Action(damage=4), Action(damage=4)]
+        return [Action(damage=4), Action(damage=4), Action(damage=4), Action(actor_effects=[Thorns(power=-2)])]
 
     def next(self) -> Intent:
         return Whirl()
