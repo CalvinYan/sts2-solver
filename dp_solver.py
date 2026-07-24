@@ -1,15 +1,18 @@
 """Implements dynamic programming to compute the expected HP loss of every state action pair"""
 
+import traceback
 from copy import deepcopy
 from time import perf_counter
 
 from card import Bash, Defend, Strike
+from character.encounters import toadpoles
 from character.enemies import (
     FuzzyWurmCrawler,
     Nibbit,
     Seapunk,
     ShrinkerBeetle,
     SludgeSpinner,
+    Toadpole,
 )
 from character.player import Ironclad, Regent
 from fight import Fight
@@ -33,9 +36,9 @@ def search(
     try:
         hp_losses, search_complete = fight.search_player_turn_start(dp_table, fully_explored)
         interrupted = False
-    except BaseException as e:
-        tb = e.__traceback__
-        raise BaseException("Error running DP search").with_traceback(tb)
+    except Exception:
+        print("ERROR RUNNING DP SEARCH")
+        print(traceback.format_exc())
     finally:
         end = perf_counter()
 
@@ -80,3 +83,13 @@ if __name__ == "__main__":
                 )
 
             fully_explored.dump(fname)
+
+        for hp0 in range(Toadpole.min_hp, Toadpole.max_hp + 1):  # type: ignore
+            for hp1 in range(Toadpole.min_hp, Toadpole.max_hp + 1):  # type: ignore
+                fname = f"./data/solver/{player_name}-base/toadpoles_{hp0}_{hp1}.csv.pkl.gz"
+                fully_explored = QTable.load(fname)
+                player = player_cls()
+                fight = Fight(player=player, enemies=toadpoles(enemy_hps=[hp0, hp1]))
+                search(fight, fully_explored, fname, name=f"{player_cls.__name__} vs Toadpoles ({hp0} HP, {hp1} HP)")
+
+                fully_explored.dump(fname)
