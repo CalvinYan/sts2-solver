@@ -1,19 +1,16 @@
 """Simulates Floor 2 fights with user input, allowing you to compare how you stack up against algorithms"""
 
 from collections import defaultdict
-from fractions import Fraction
 
 from card import Bash, Card, Defend, Strike, Targeting
 from character.encounters import ALL_ENCOUNTERS
 from character.player import Ironclad
 from compare_strategies import has_lethal
-from dp_solver import load_dp_table
 from fight import Fight
+from search.table import QTable
 
 CARDS: dict[str, Card] = {"s": Strike(), "d": Defend(), "b": Bash()}
-dp_table: dict[tuple[tuple[int, ...], tuple[int, ...]], dict[int, Fraction]] = load_dp_table(
-    "./data/solver/all.csv.pkl.gz"
-)
+dp_table: QTable = QTable.load("./data/solver/all.csv.pkl.gz")
 
 
 # Play your way! Displays your hand, draw pile, and discard pile, and reads the next decision from user input.
