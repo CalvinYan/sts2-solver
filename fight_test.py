@@ -43,6 +43,18 @@ def test_fight_encodes_to_vector():
     assert np.array_equal(expected, got)
 
 
+def test_full_fight_encodes_to_vector():
+    player = Ironclad()
+    enemies = [Nibbit(hp=40 + i) for i in range(MAX_ENEMIES)]
+    fight = Fight(player=player, enemies=enemies)
+
+    # A fight with every enemy slot occupied needs no padding
+    expected = np.concatenate([player.to_vector(), *[enemy.to_vector() for enemy in enemies]])
+    got = fight.to_vector()
+
+    assert np.array_equal(expected, got)
+
+
 def test_fight_decodes_from_vector():
     player = Ironclad()
     enemy = Nibbit()

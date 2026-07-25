@@ -159,6 +159,9 @@ ID_TO_CARD = {
     AscendersBane.id: AscendersBane,
 }
 
+# Every card occupies a fixed position holding its count, so any pile encodes to a vector of this length.
+PILE_VECTOR_LENGTH = max(ID_TO_CARD) + 1
+
 
 # An abstraction for a pile of cards, such as the player's hand, draw pile, and discard pile.
 @dataclass()
@@ -192,13 +195,13 @@ class CardPile:
         return [(CardPile(cards=Counter(k)), Fraction(v, sum(combinations.values()))) for k, v in combinations.items()]
 
     def to_vector(self) -> tuple[int, ...]:
-        base = [0] * (max(ID_TO_CARD.keys()) + 1)
+        base = [0] * PILE_VECTOR_LENGTH
         for card, cnt in self.cards.items():
             base[card.id] = cnt
         return tuple(base)
 
     def read_vector(self, vector: tuple[int, ...]) -> int:
-        min_length = max(ID_TO_CARD) + 1
+        min_length = PILE_VECTOR_LENGTH
         if len(vector) < min_length:
             raise ValueError(f"Not enough values CardPile vector: expected {min_length}, got {len(vector)}")
 

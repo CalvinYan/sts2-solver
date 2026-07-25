@@ -2,7 +2,16 @@ import numpy as np
 
 from character.core import Character
 from util.core import Action, Move
-from util.effect import Effect, Frail, Shrink, Strength, Thorns, Vulnerable, Weak
+from util.effect import (
+    EFFECTS_VECTOR_LENGTH,
+    Effect,
+    Frail,
+    Shrink,
+    Strength,
+    Thorns,
+    Vulnerable,
+    Weak,
+)
 
 
 def test_strength_increment_damage_dealt():
@@ -123,6 +132,15 @@ def test_effects_list_encodes_to_vector():
     ]
     expected = (1, 2, 0, 1, 2, 0, 1, 0, 4, 1, 0, 1, 0, 0, 0, 0, 0, 0)
     got = Effect.effects_to_vector(effects)
+    assert np.array_equal(expected, got)
+
+
+def test_highest_id_effect_encodes_to_last_slots():
+    # Shrink holds the highest effect id, so it encodes into the final slots of the vector
+    expected = (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0)
+    got = Effect.effects_to_vector([Shrink()])
+
+    assert len(got) == EFFECTS_VECTOR_LENGTH
     assert np.array_equal(expected, got)
 
 
