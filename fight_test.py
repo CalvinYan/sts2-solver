@@ -1,10 +1,9 @@
 from collections import Counter
 from copy import deepcopy
 from fractions import Fraction
+from unittest.mock import patch
 
 import numpy as np
-import pytest
-from mock import patch
 
 from card import AscendersBane, Bash, CardPile, Defend, FallingStar, Strike, Venerate
 from character.enemies import (
@@ -14,10 +13,10 @@ from character.enemies import (
     SludgeSpinner,
     Toadpole,
 )
-from character.enemies.nibbit import HesitantSlice, Hiss
+from character.enemies.nibbit import Butt, HesitantSlice, Hiss
 from character.enemies.shrinker_beetle import Stomp
 from character.enemies.sludge_spinner import Rage, Slam
-from character.enemies.toadpole import Spiken, Whirl
+from character.enemies.toadpole import Spiken, SpikeSpit, Whirl
 from character.enemy import Enemy
 from character.player import Ironclad, Regent
 from fight import MAX_ENEMIES, Fight
@@ -39,6 +38,18 @@ def test_fight_encodes_to_vector():
             *[Enemy.to_vector(None) for _ in range(MAX_ENEMIES - 1)],
         ]
     )
+    got = fight.to_vector()
+
+    assert np.array_equal(expected, got)
+
+
+def test_full_fight_encodes_to_vector():
+    player = Ironclad()
+    enemies = [Nibbit(hp=40 + i) for i in range(MAX_ENEMIES)]
+    fight = Fight(player=player, enemies=enemies)
+
+    # A fight with every enemy slot occupied needs no padding
+    expected = np.concatenate([player.to_vector(), *[enemy.to_vector() for enemy in enemies]])
     got = fight.to_vector()
 
     assert np.array_equal(expected, got)
@@ -140,6 +151,41 @@ def test_fight_ends_if_player_dies():
     fight.loop()
 
     assert fight.is_over()
+
+
+def test_fight_incoming_damage_sums_every_attack():
+    # HesitantSlice deals 7 damage and gains 6 block; only the damage counts
+    slicer = Nibbit(hp=30, intent=HesitantSlice())
+    # SpikeSpit deals 4 damage three times, plus one action that deals no damage
+    spitter = Toadpole(hp=20, intent=SpikeSpit())
+    fight = Fight(player=Ironclad(), enemies=[slicer, spitter])
+
+    assert fight.incoming_damage() == 7 + 4 * 3
+
+
+def test_fight_incoming_damage_applies_effects_of_both_sides():
+    enemy = Nibbit(hp=30, intent=Butt(), effects=[Strength(power=3)])  # Butt deals 13 damage
+    player = Ironclad(effects=[Vulnerable(duration=1)])
+    fight = Fight(player=player, enemies=[enemy])
+
+    assert fight.incoming_damage() == int((13 + 3) * 1.5)
+
+
+def test_fight_incoming_damage_does_not_mutate_the_fight():
+    enemy = Nibbit(hp=30, intent=Butt(), effects=[Strength(power=3)])
+    player = Ironclad(effects=[Vulnerable(duration=1)])
+    fight = Fight(player=player, enemies=[enemy])
+    expected = fight.to_vector()
+
+    # Repeated queries must agree with each other and leave the fight untouched
+    assert fight.incoming_damage() == fight.incoming_damage()
+    assert expected == fight.to_vector()
+
+
+def test_fight_incoming_damage_ignores_non_attacking_intents():
+    fight = Fight(player=Ironclad(), enemies=[Nibbit(hp=30, intent=Hiss())])
+
+    assert fight.incoming_damage() == 0
 
 
 def test_simulate_nibbit_fight():
@@ -329,16 +375,21 @@ def test_search_no_defend_on_empty_turn():
     dp_table = QTable()
     fully_explored = QTable()
     player = Ironclad(
-        hand=CardPile(cards=Counter({Bash(): 1, Strike(): 1, AscendersBane(): 1, Defend(): 2})),
+        hand=CardPile(cards=Counter({Defend(): 1})),
         draw_pile=CardPile(cards=Counter({Strike(): 4, Defend(): 2})),
     )
-    enemy = Nibbit(hp=15, intent=Hiss())
+    enemy = Nibbit(hp=44, intent=Hiss())
 
     fight = Fight(player=player, enemies=[enemy], turn=3)
+    vector = fight.to_vector()
 
-    fight.search_player_turn(dp_table, fully_explored)
-    # Search should not ever consider playing Defend
-    assert not any(vector[-1] == Defend.id for vector in dp_table.keys())
+    # An hp_limit equal to the player's hp truncates the search at the start of the next turn, so
+    # only this turn's actions are explored
+    fight.search_player_turn(dp_table, fully_explored, hp_limit=player.hp)
+
+    # Hiss deals no damage, so the search should end the turn rather than block
+    assert (vector, (Defend().id,)) not in dp_table
+    assert (vector, (-1,)) in dp_table
 
 
 def test_search_no_overblock():
@@ -346,17 +397,37 @@ def test_search_no_overblock():
     fully_explored = QTable()
     player = Ironclad(
         block=10,
-        energy=1,
-        hand=CardPile(cards=Counter({Bash(): 1, Strike(): 1, Defend(): 1})),
+        hand=CardPile(cards=Counter({Defend(): 1})),
         draw_pile=CardPile(cards=Counter({Strike(): 4, Defend(): 1})),
     )
-    enemy = Nibbit(hp=12, intent=HesitantSlice())
+    enemy = Nibbit(hp=44, intent=HesitantSlice())
 
     fight = Fight(player=player, enemies=[enemy], turn=2)
+    vector = fight.to_vector()
 
-    fight.search_player_turn(dp_table, fully_explored)
-    # Search should not ever consider playing Defend
-    assert not any(vector[-1] == Defend.id for vector in dp_table.keys())
+    fight.search_player_turn(dp_table, fully_explored, hp_limit=player.hp)
+
+    # HesitantSlice hits for less than the block the player already has
+    assert (vector, (Defend().id,)) not in dp_table
+    assert (vector, (-1,)) in dp_table
+
+
+def test_search_defends_against_incoming_damage():
+    dp_table = QTable()
+    fully_explored = QTable()
+    player = Ironclad(
+        hand=CardPile(cards=Counter({Defend(): 1})),
+        draw_pile=CardPile(cards=Counter({Strike(): 4, Defend(): 1})),
+    )
+    enemy = Nibbit(hp=44, intent=Butt())
+
+    fight = Fight(player=player, enemies=[enemy], turn=1)
+    vector = fight.to_vector()
+
+    fight.search_player_turn(dp_table, fully_explored, hp_limit=player.hp)
+
+    # Butt hits for more than the player can block, so blocking must still be considered
+    assert (vector, (Defend().id,)) in dp_table
 
 
 def test_search_no_premature_end_turn():

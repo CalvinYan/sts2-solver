@@ -17,6 +17,9 @@ from util.effect import Thorns
 
 MAX_ENEMIES = 5
 
+# The encoding of an empty enemy slot is a constant, so it is computed once and reused as padding.
+EMPTY_ENEMY_VECTOR = Enemy.to_vector(None)
+
 
 @dataclass
 class Fight:
@@ -27,6 +30,23 @@ class Fight:
 
     def __post_init__(self):
         assert len(self.enemies) in range(MAX_ENEMIES + 1)
+
+    # The total damage the enemies would deal to the player if they resolved their current intents now, after every
+    # damage-modifying effect on the attacker and on the player is applied.
+    def incoming_damage(self) -> int:
+        damage = 0
+        for enemy in self.enemies:
+            # Each call to actions() builds fresh Actions, so the effects can resolve into them directly
+            for action in enemy.intent.actions():
+                if action.damage:
+                    move = Move(action, actor=enemy, target=self.player)
+                    for effect in enemy.effects:
+                        effect.resolve(move, is_target=False)
+                    for effect in self.player.effects:
+                        effect.resolve(move, is_target=True)
+                    damage += move.action.damage  # type: ignore
+
+        return damage
 
     def loop(self) -> None:
         self.turn += 1
@@ -106,21 +126,17 @@ class Fight:
         hp_limit: int = 0,
     ) -> tuple[dict[int, Fraction], bool]:
 
-        def is_useless_block(card: Card) -> bool:
-            dmg = 0
-            for enemy in self.enemies:
-                for action in enemy.intent.actions():
-                    if action.damage:
-                        move = Move(action, actor=enemy, target=self.player)
-                        for effect in enemy.effects:
-                            effect.resolve(move, is_target=False)
-                        for effect in self.player.effects:
-                            effect.resolve(move, is_target=True)
-                        dmg += action.damage  # type: ignore
+        if self.is_over():
+            return {0: Fraction(1)}, True
 
+        # The fight is unchanged for the duration of this search (every card play is undone before returning), so the
+        # incoming damage is the same for every card considered below and only needs to be computed once
+        incoming_damage = self.incoming_damage()
+
+        def is_useless_block(card: Card) -> bool:
             # TODO: Find a better way to do this
             action = card.action()
-            return not action.damage and bool(action.block) and dmg <= self.player.block
+            return not action.damage and bool(action.block) and incoming_damage <= self.player.block
 
         def is_skippable(card: Card) -> bool:
             if is_useless_block(card):
@@ -130,9 +146,6 @@ class Fight:
             ):
                 return True
             return False
-
-        if self.is_over():
-            return {0: Fraction(1)}, True
 
         best_distribution = {}
         best_value = Fraction(1 << 32)
@@ -164,22 +177,20 @@ class Fight:
                     # Optimization; terminate if lethal is found
                     if hp_losses == {0: Fraction(1)}:
                         return hp_losses, True
-        else:
-            if not any(
-                [self.player.can_play(card) and not is_skippable(card) for card in self.player.hand.cards.keys()]
-            ):
-                # Try just ending your turn
-                hp_losses, subsearch_complete = self.search_player_turn_action(
-                    dp_table, fully_explored, action=None, hp_limit=hp_limit
+
+        if not any([self.player.can_play(card) and not is_skippable(card) for card in self.player.hand.cards.keys()]):
+            # Try just ending your turn
+            hp_losses, subsearch_complete = self.search_player_turn_action(
+                dp_table, fully_explored, action=None, hp_limit=hp_limit
+            )
+            if hp_losses:
+                expected_value = sum(
+                    (hp_loss * prob_hp_loss for hp_loss, prob_hp_loss in hp_losses.items()), start=Fraction(0)
                 )
-                if hp_losses:
-                    expected_value = sum(
-                        (hp_loss * prob_hp_loss for hp_loss, prob_hp_loss in hp_losses.items()), start=Fraction(0)
-                    )
-                    if expected_value < best_value:
-                        best_distribution = hp_losses
-                        best_value = expected_value
-                        search_complete = subsearch_complete
+                if expected_value < best_value:
+                    best_distribution = hp_losses
+                    best_value = expected_value
+                    search_complete = subsearch_complete
 
         # Return the probability distribution with the least expected HP loss
         return best_distribution, search_complete
@@ -337,10 +348,12 @@ class Fight:
     # The representation is entirely defined by:
     # - The vector representation of the player
     # - For n in 1..5: the vector representation of the nth enemy, or all zeroes if it doesn't exist
-    # - The number of the current turn
     def to_vector(self) -> tuple[int, ...]:
-        enemies_padded = self.enemies + [None] * (MAX_ENEMIES - len(self.enemies))
-        return (*self.player.to_vector(), *[i for enemy in enemies_padded for i in Enemy.to_vector(enemy)])
+        return (
+            *self.player.to_vector(),
+            *[i for enemy in self.enemies for i in enemy.to_vector()],
+            *EMPTY_ENEMY_VECTOR * (MAX_ENEMIES - len(self.enemies)),
+        )
 
     @staticmethod
     def from_vector(vector: tuple) -> tuple[Fight, int]:

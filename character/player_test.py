@@ -181,15 +181,27 @@ def test_player_next_states_reshuffle():
 
     got = clad.next_states()
 
-    for strikes in range(1, 5):
-        for bashes in range(min(1, 5 - strikes)):
+    # The one card left in the draw pile is always drawn, so the hand is that Strike plus four of
+    # the nine reshuffled cards: 1 to 5 Strikes, 0 to 4 Defends, and 0 or 1 Bash
+    expected = []
+    for strikes in range(1, 6):
+        for bashes in range(2):
             defends = 5 - strikes - bashes
-            assert (
-                CardPile(cards=Counter({Strike(): 5 - strikes, Defend(): 4 - defends, Bash(): 1 - bashes})),
-                CardPile(cards=Counter({Strike(): strikes, Defend(): defends, Bash(): bashes})),
-                CardPile(),
-                Fraction(comb(4, strikes - 1) * comb(4, defends), comb(9, 4)),
-            ) in got
+            if defends < 0:
+                continue
+            expected.append(
+                (
+                    CardPile(cards=Counter({Strike(): 5 - strikes, Defend(): 4 - defends, Bash(): 1 - bashes})),
+                    CardPile(cards=Counter({Strike(): strikes, Defend(): defends, Bash(): bashes})),
+                    CardPile(),
+                    Fraction(comb(4, strikes - 1) * comb(4, defends) * comb(1, bashes), comb(9, 4)),
+                )
+            )
+
+    assert len(got) == len(expected)
+    for state in expected:
+        assert state in got
+    assert sum(probability for *_, probability in got) == 1
 
 
 def test_player_draws_cards_into_hand():
