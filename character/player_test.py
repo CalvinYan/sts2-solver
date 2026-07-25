@@ -3,6 +3,7 @@ from fractions import Fraction
 from math import comb
 
 import numpy as np
+import pytest
 
 from card import AscendersBane, Bash, CardPile, Defend, FallingStar, Strike
 from character.player import Ironclad, Player, Regent
@@ -269,3 +270,44 @@ def test_player_cannot_play_falling_star_without_stars():
     player = Regent(draw_pile=CardPile(cards=Counter({FallingStar(): 1})), stars=0)
 
     assert not player.can_play(FallingStar())
+
+
+def test_player_does_not_play_card_missing_from_hand():
+    clad = Ironclad(hand=CardPile(cards=Counter({Strike(): 1})), draw_pile=CardPile())
+
+    clad.play(Defend())
+
+    # Nothing is spent and nothing is discarded
+    assert clad.energy == 3
+    assert clad.hand.cards == Counter({Strike(): 1})
+    assert clad.discard_pile.cards == Counter()
+
+
+def test_player_does_not_play_unaffordable_card():
+    clad = Ironclad(energy=1, hand=CardPile(cards=Counter({Bash(): 1})), draw_pile=CardPile())
+
+    clad.play(Bash())
+
+    assert clad.energy == 1
+    assert clad.hand.cards == Counter({Bash(): 1})
+    assert clad.discard_pile.cards == Counter()
+
+
+def test_player_cannot_discard_card_missing_from_hand():
+    clad = Ironclad(hand=CardPile(cards=Counter({Strike(): 1})), draw_pile=CardPile())
+
+    with pytest.raises(ValueError):
+        clad.discard(Defend())
+
+
+def test_player_decodes_from_short_vector():
+    with pytest.raises(ValueError):
+        Player.from_vector((Ironclad.id, 64, 0))
+
+
+def test_player_decodes_from_vector_without_piles():
+    # Everything up to and including energy and stars, but none of the three card piles
+    vector = tuple(Ironclad(hp=64).to_vector())[:23]
+
+    with pytest.raises(ValueError):
+        Player.from_vector(vector)

@@ -2,6 +2,7 @@ from collections import Counter
 from fractions import Fraction
 
 import numpy as np
+import pytest
 
 from card import AscendersBane, Bash, CardPile, Defend, Strike
 
@@ -79,3 +80,47 @@ def test_card_pile_draws_distribution():
     assert len(got) == len(list(expected))
 
     assert all([draw in got for draw in expected])
+
+
+def test_card_pile_pops_nothing_from_empty_pile():
+    assert CardPile().pop() is None
+
+
+def test_card_pile_cannot_draw_more_cards_than_it_holds():
+    pile = CardPile(cards=Counter({Strike(): 2}))
+
+    with pytest.raises(ValueError):
+        pile.next_hands(3)
+
+
+def test_card_piles_add_and_subtract():
+    pile = CardPile(cards=Counter({Strike(): 2, Defend(): 1}))
+    other = CardPile(cards=Counter({Strike(): 1}))
+
+    assert (pile + other).cards == Counter({Strike(): 3, Defend(): 1})
+    assert (pile - other).cards == Counter({Strike(): 1, Defend(): 1})
+    # The operands are left alone
+    assert pile.cards == Counter({Strike(): 2, Defend(): 1})
+    assert other.cards == Counter({Strike(): 1})
+
+
+def test_card_pile_arithmetic_rejects_other_types():
+    pile = CardPile(cards=Counter({Strike(): 1}))
+
+    with pytest.raises(TypeError):
+        pile + Counter({Strike(): 1})
+
+    with pytest.raises(TypeError):
+        pile - Counter({Strike(): 1})
+
+
+def test_card_pile_decodes_from_short_vector():
+    with pytest.raises(ValueError):
+        CardPile.from_vector((5, 4, 1))
+
+
+def test_card_pile_str_lists_every_card():
+    pile = CardPile(cards=Counter({Strike(): 2, Defend(): 1}))
+
+    assert str(pile) == "[Strike Strike Defend]"
+    assert str(CardPile()) == "[]"
