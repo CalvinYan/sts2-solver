@@ -62,3 +62,39 @@ def test_qtable_actions_for():
         (Defend().id,): {4: Fraction(1, 2), 9: Fraction(1, 3), 15: Fraction(1, 6)},
     }
     assert expected == table.actions_for((0,))
+
+
+def test_qtable_reports_size_and_membership():
+    state_action = ((0, 1, 2, 3, 4), (Strike().id, 0))
+    table = QTable({state_action: {8: Fraction(1)}})
+
+    assert len(table) == 1
+    assert state_action in table
+    assert ((0, 1, 2, 3, 4), (Defend().id,)) not in table
+    assert list(table.values()) == [{8: Fraction(1)}]
+
+
+def test_qtable_update_merges_and_overwrites():
+    shared_key = ((0, 1, 2, 3, 4), (Strike().id, 0))
+    table = QTable({shared_key: {8: Fraction(1)}})
+    other = QTable({shared_key: {6: Fraction(1)}, ((5,), (Defend().id,)): {0: Fraction(1)}})
+
+    table.update(other)
+
+    assert len(table) == 2
+    assert table[shared_key] == {6: Fraction(1)}
+    assert table[((5,), (Defend().id,))] == {0: Fraction(1)}
+
+
+def test_qtable_load_creates_a_missing_file():
+    fname = "tmp_qtable_missing_test.csv.pkl.gz"
+    assert not os.path.exists(fname)
+    try:
+        table = QTable.load(fname)
+
+        # Loading a table that does not exist yet starts an empty one and writes it out
+        assert len(table) == 0
+        assert os.path.exists(fname)
+        assert QTable.load(fname) == table
+    finally:
+        os.remove(fname)

@@ -1,6 +1,7 @@
 from fractions import Fraction
 
 import numpy as np
+import pytest
 
 from character.enemies import FuzzyWurmCrawler, Nibbit, Seapunk, SludgeSpinner
 from character.enemies.fuzzy_wurm_crawler import AcidGoop1, AcidGoop2, Inhale
@@ -149,3 +150,21 @@ def test_enemy_next_states():
     got = nibbit.next_states()
 
     assert expected == got
+
+
+def test_enemy_decodes_from_short_vector():
+    with pytest.raises(ValueError):
+        Enemy.from_vector((1, Nibbit.id, 44))
+
+
+def test_enemy_decodes_from_vector_without_intent():
+    vector = tuple(Nibbit(hp=44).to_vector())
+
+    with pytest.raises(ValueError):
+        Enemy.from_vector(vector[:-1])
+
+
+def test_enemy_str_shows_intent():
+    enemy = Nibbit(name="Nibbit", hp=44, block=3, intent=HesitantSlice())
+
+    assert str(enemy) == "Nibbit (3)44 HesitantSlice"

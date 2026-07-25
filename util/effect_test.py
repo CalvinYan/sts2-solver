@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 
 from character.core import Character
 from util.core import Action, Move
@@ -155,3 +156,28 @@ def test_effects_list_round_trip():
     ]
     got, _ = Effect.effects_from_vector(tuple(Effect.effects_to_vector(expected)))
     assert expected == got
+
+
+def test_effect_does_not_stack_with_a_different_effect():
+    strength = Strength(power=2)
+
+    assert not strength.stack(Weak(duration=1))
+    assert strength == Strength(power=2)
+
+
+def test_effect_stacks_power_and_duration():
+    weak = Weak(duration=1)
+
+    assert weak.stack(Weak(duration=2))
+    assert weak == Weak(duration=3)
+
+
+def test_effect_str_shows_only_the_stats_it_has():
+    assert str(Strength(power=2)) == "Strength 2"
+    assert str(Vulnerable(duration=3)) == "Vulnerable 3"
+    assert str(Shrink()) == "Shrink"
+
+
+def test_effects_decode_from_short_vector():
+    with pytest.raises(ValueError):
+        Effect.effects_from_vector((1, 2, 0))

@@ -1,8 +1,9 @@
 import numpy as np
+import pytest
 
 from character.core import Character
 from util.core import Action
-from util.effect import Frail, Strength, Thorns, Vulnerable, Weak
+from util.effect import Frail, Shrink, Strength, Thorns, Vulnerable, Weak
 
 
 def test_character_encodes_to_vector():
@@ -238,3 +239,26 @@ def test_character_act_apply_effects():
 
     assert attacker.effects == actor_effects
     assert defender.effects == target_effects
+
+
+def test_character_decodes_from_short_vector():
+    with pytest.raises(ValueError):
+        Character.from_vector((0, 40))
+
+
+def test_character_decodes_from_vector_with_incomplete_effects():
+    with pytest.raises(ValueError):
+        Character.from_vector((0, 40, 10, 1, 2, 0))
+
+
+def test_character_str_lists_effects():
+    c = Character(id=0, hp=40, block=5, effects=[Strength(power=2), Weak(duration=1), Shrink()])
+
+    assert str(c) == "Character (5)40 (Strength 2) (Weak 1) (Shrink)"
+
+
+def test_character_resolve_turn_ends_immediately():
+    c = Character(id=0, hp=40)
+
+    # The base character has nothing to do on its turn
+    assert c.resolve_turn(None)
