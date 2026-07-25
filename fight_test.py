@@ -96,6 +96,37 @@ def test_fight_round_trip():
     assert expected == got
 
 
+def test_fight_decodes_multiple_enemies_from_vector():
+    player = Ironclad()
+    enemies = [Nibbit(hp=44), SludgeSpinner(hp=41)]
+    expected = Fight(player=player, enemies=enemies)
+
+    got, read = Fight.from_vector(tuple(expected.to_vector()))
+
+    # Every enemy slot is accounted for, occupied or not
+    assert expected == got
+    assert read == len(expected.to_vector())
+
+
+def test_fight_decodes_from_truncated_vector():
+    vector = tuple(Fight(player=Ironclad(), enemies=[Nibbit(hp=44)]).to_vector())
+
+    # The trailing empty enemy slot is one value short of complete
+    with pytest.raises(ValueError):
+        Fight.from_vector(vector[:-1])
+
+    # The last empty enemy slot is missing entirely
+    with pytest.raises(ValueError):
+        Fight.from_vector(vector[: -len(Enemy.to_vector(None))])
+
+
+def test_fight_decodes_from_vector_without_enemies():
+    vector = (*Ironclad().to_vector(), *(0 for _ in range(len(Enemy.to_vector(None)) * MAX_ENEMIES)))
+
+    with pytest.raises(ValueError):
+        Fight.from_vector(vector)
+
+
 def test_fight_ends_when_enemies_die():
     player = Ironclad()
     enemy1 = Nibbit(name="NibbitOne")

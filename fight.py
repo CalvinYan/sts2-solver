@@ -364,15 +364,31 @@ class Fight:
             raise ValueError("Error reading Player from Fight vector:", e)
         indices_read += read
         enemies = []
+        empty_enemy_length = len(Enemy.to_vector(None))
 
-        for _ in range(MAX_ENEMIES):
-            exists = vector[indices_read]
-            if exists:
-                enemy, read = Enemy.from_vector(vector[indices_read:])
+        for slot in range(MAX_ENEMIES):
+            if len(vector) <= indices_read:
+                raise ValueError(
+                    f"Not enough values in Fight vector to read enemy {slot}: expected more than {indices_read}, got {len(vector)}"
+                )
+            if vector[indices_read]:
+                try:
+                    enemy, read = Enemy.from_vector(vector[indices_read:])
+                except ValueError as e:
+                    raise ValueError(f"Error reading enemy {slot} from Fight vector:", e)
                 enemies.append(enemy)
-            elif not enemies:
-                raise ValueError("Fight vector must contain at least one Enemy")
-            indices_read += read
+                indices_read += read
+            else:
+                if not enemies:
+                    raise ValueError("Fight vector must contain at least one Enemy")
+                # An empty slot is encoded as all zeroes, so there is nothing to read but the slot
+                # still occupies its place in the vector
+                indices_read += empty_enemy_length
+
+        if len(vector) < indices_read:
+            raise ValueError(
+                f"Not enough values in Fight vector to read {MAX_ENEMIES} enemy slots: expected {indices_read}, got {len(vector)}"
+            )
 
         return Fight(player=player, enemies=enemies), indices_read
 
