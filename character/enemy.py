@@ -62,6 +62,7 @@ class Enemy(Character):
         ID_TO_ENEMY[cls.id] = cls
 
     def __post_init__(self):
+        super().__post_init__()
         if self.hp == 0:
             self.hp = randint(self.min_hp, self.max_hp)
 

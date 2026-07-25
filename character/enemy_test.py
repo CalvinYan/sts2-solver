@@ -42,6 +42,26 @@ def test_enemy_encodes_to_tuple():
     assert np.array_equal(expected, got)
 
 
+def test_enemy_name_defaults_to_class_name():
+    enemy = Nibbit(hp=44)
+
+    assert enemy.name == "Nibbit"
+    assert str(enemy) == "Nibbit (0)44 Butt"
+
+
+def test_enemy_keeps_explicit_name():
+    enemy = Nibbit(name="Nibbit the Second", hp=44)
+
+    assert enemy.name == "Nibbit the Second"
+
+
+def test_enemy_rolls_hp_within_spawn_range():
+    for _ in range(20):
+        enemy = Nibbit()
+
+        assert Nibbit.min_hp <= enemy.hp <= Nibbit.max_hp
+
+
 def test_enemy_cycles_intents():
     enemy = FuzzyWurmCrawler()
 
