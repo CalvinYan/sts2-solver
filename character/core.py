@@ -54,7 +54,7 @@ class Character:
         for effect in self.effects:
             if effect.duration is not None:
                 effect.duration -= 1
-            if effect.duration != 0 or effect.power != 0:
+            if effect.duration != 0 and effect.power != 0:
                 new_effects.append(effect)
 
         self.effects = new_effects
