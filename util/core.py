@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from copy import deepcopy
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
@@ -20,6 +21,21 @@ class Action:
 
     def __str__(self) -> str:
         return f"Action({", ".join(f"{k}={v}" for k, v in self.__dict__.items() if v)})"
+
+    # Copying an Action only has to rebuild the action itself and its effects; every other field is
+    # immutable. Skipping the generic dataclass copy protocol makes this considerably cheaper, and
+    # Character.act copies an Action for every card played and every enemy action resolved.
+    def __deepcopy__(self, memo) -> Action:
+        copied = Action(
+            damage=self.damage,
+            block=self.block,
+            stars_gained=self.stars_gained,
+            actor_effects=[deepcopy(effect, memo) for effect in self.actor_effects],
+            target_effects=[deepcopy(effect, memo) for effect in self.target_effects],
+        )
+        memo[id(self)] = copied
+
+        return copied
 
 
 @dataclass
