@@ -18,9 +18,9 @@
           {% for pid, name in players.items() %}<option value="{{ pid }}">{{ name }}</option>{% endfor %}
         </select>
       </label>
-      <label>Enemy
-        <select name="enemy" id="enemy">
-          {% for eid, name in enemies.items() %}<option value="{{ eid }}">{{ name }}</option>{% endfor %}
+      <label>Encounter
+        <select name="encounter" id="encounter">
+          {% for eid, enc in encounters.items() %}<option value="{{ eid }}">{{ enc.name }}</option>{% endfor %}
         </select>
       </label>
       <label>Turn #
@@ -51,12 +51,13 @@
         </table>
       </fieldset>
 
-      <fieldset class="panel">
-        <legend>Enemy</legend>
-        <label>HP <input type="number" name="enemy_hp" min="0" required /></label>
-        <label>Block <input type="number" name="enemy_block" min="0" value="0" required /></label>
+      {% for slot in range(max_slots) %}
+      <fieldset class="panel enemy-panel" id="enemy-panel-{{ slot }}">
+        <legend>Enemy {{ slot + 1 }}</legend>
+        <label>HP <input type="number" name="e{{ slot }}_hp" min="0" required /></label>
+        <label>Block <input type="number" name="e{{ slot }}_block" min="0" value="0" required /></label>
         <label>Intent
-          <select name="enemy_intent" id="enemy_intent"></select>
+          <select name="e{{ slot }}_intent"></select>
         </label>
         <span class="field-label">Effects</span>
         <table class="effects">
@@ -65,14 +66,15 @@
             {% for eid, meta in effects.items() %}
             <tr>
               <th>{{ meta.name }}</th>
-              <td><input type="checkbox" name="eeff_{{ eid }}_present" /></td>
-              <td>{% if meta.power %}<input type="number" name="eeff_{{ eid }}_power" value="0" />{% endif %}</td>
-              <td>{% if meta.duration %}<input type="number" name="eeff_{{ eid }}_duration" min="0" value="0" />{% endif %}</td>
+              <td><input type="checkbox" name="e{{ slot }}eff_{{ eid }}_present" /></td>
+              <td>{% if meta.power %}<input type="number" name="e{{ slot }}eff_{{ eid }}_power" value="0" />{% endif %}</td>
+              <td>{% if meta.duration %}<input type="number" name="e{{ slot }}eff_{{ eid }}_duration" min="0" value="0" />{% endif %}</td>
             </tr>
             {% endfor %}
           </tbody>
         </table>
       </fieldset>
+      {% endfor %}
     </div>
 
     <fieldset class="panel">
@@ -112,25 +114,56 @@
   </section>
 
   <script>
+    const ENCOUNTERS = {{ encounters | tojson }};
     const INTENTS = {{ intents | tojson }};
-
-    const enemySelect = document.getElementById('enemy');
-    const intentSelect = document.getElementById('enemy_intent');
-
-    function refreshIntents() {
-      const options = INTENTS[enemySelect.value] || {};
-      intentSelect.innerHTML = '';
-      for (const [id, name] of Object.entries(options)) {
-        const opt = document.createElement('option');
-        opt.value = id;
-        opt.textContent = `${name} (${id})`;
-        intentSelect.appendChild(opt);
-      }
-    }
-    enemySelect.addEventListener('change', refreshIntents);
-    refreshIntents();
+    const MAX_SLOTS = {{ max_slots }};
 
     const form = document.getElementById('fight-form');
+    const encounterSelect = document.getElementById('encounter');
+
+    // One div (fieldset) exists per enemy slot; the selected encounter decides which are in
+    // use. Divs stay visible for dead enemies (hp 0) — only slots beyond the encounter's size
+    // are hidden, and their fields disabled so they don't submit.
+    function refreshEncounter() {
+      const enemies = ENCOUNTERS[encounterSelect.value].enemies;
+      for (let slot = 0; slot < MAX_SLOTS; slot++) {
+        const panel = document.getElementById(`enemy-panel-${slot}`);
+        const enemy = enemies[slot];
+        panel.hidden = !enemy;
+        for (const field of panel.querySelectorAll('input, select')) field.disabled = !enemy;
+        if (!enemy) continue;
+
+        panel.querySelector('legend').textContent = enemy.name;
+        const intentSelect = form.elements[`e${slot}_intent`];
+        const previous = intentSelect.value;
+        intentSelect.innerHTML = '';
+        for (const [id, name] of Object.entries(INTENTS[enemy.id] || {})) {
+          const opt = document.createElement('option');
+          opt.value = id;
+          opt.textContent = `${name} (${id})`;
+          intentSelect.appendChild(opt);
+        }
+        if (previous && [...intentSelect.options].some(o => o.value === previous)) {
+          intentSelect.value = previous;
+        }
+      }
+      refreshDeadMarkers();
+    }
+
+    // A slot whose hp is 0 belongs to a dead enemy: its div persists, just marked as dead.
+    function refreshDeadMarkers() {
+      for (let slot = 0; slot < MAX_SLOTS; slot++) {
+        const panel = document.getElementById(`enemy-panel-${slot}`);
+        if (panel.hidden) continue;
+        const hp = form.elements[`e${slot}_hp`].value;
+        panel.classList.toggle('dead', hp !== '' && Number(hp) <= 0);
+      }
+    }
+
+    encounterSelect.addEventListener('change', refreshEncounter);
+    form.addEventListener('input', refreshDeadMarkers);
+    refreshEncounter();
+
     const results = document.getElementById('results');
     const resultsBody = document.getElementById('results-body');
     const resultsNote = document.getElementById('results-note');
@@ -139,19 +172,23 @@
     const advanceNote = document.getElementById('advance-note');
 
     let lastStateKey = null;
+    let lastEncounter = null;
+    let lastAliveSlots = null;
     let keepAdvancePanel = false;
 
     function updateForm(outcome) {
       keepAdvancePanel = true;
-      // Set the enemy first so refreshIntents() builds the right intent options before
-      // enemy_intent is assigned along with everything else.
-      form.elements['enemy'].value = outcome.form['enemy'];
-      refreshIntents();
+      // Set the encounter first so refreshEncounter() builds the right enemy panels and
+      // intent options before the per-slot fields are assigned along with everything else.
+      form.elements['encounter'].value = outcome.form['encounter'];
+      refreshEncounter();
       for (const [name, value] of Object.entries(outcome.form)) {
         const field = form.elements[name];
-        if (field.type === 'checkbox' ) field.checked = Boolean(value);
-        else if (field) field.value = value;
+        if (!field) continue;
+        if (field.type === 'checkbox') field.checked = Boolean(value);
+        else field.value = value;
       }
+      refreshDeadMarkers();
       advanceBody.innerHTML = '';
     }
 
@@ -183,7 +220,7 @@
       if (data.terminal) {
         advanceNote.textContent = `${label}${hpNote}`;
         advanceBody.innerHTML = data.terminal === 'victory'
-          ? '<p>Fight won! The enemy is dead.</p>'
+          ? '<p>Fight won! All enemies are dead.</p>'
           : '<p class="error">Fight lost — the player is dead.</p>';
         results.hidden = true;
         return;
@@ -236,7 +273,12 @@
       const data = await fetchAdvance(label, () => fetch('/advance', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ state_key: lastStateKey, action: action }),
+        body: JSON.stringify({
+          state_key: lastStateKey,
+          action: action,
+          encounter: lastEncounter,
+          alive_slots: lastAliveSlots,
+        }),
       }));
       if (data) renderAdvanceResult(label, data);
     }
@@ -279,6 +321,8 @@
       }
 
       lastStateKey = data.state_key;
+      lastEncounter = Number(form.elements['encounter'].value);
+      lastAliveSlots = data.alive_slots;
 
       if (!data.found) {
         resultsNote.textContent = '';
