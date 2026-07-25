@@ -6,29 +6,12 @@ different encounters.
 import argparse
 import cProfile
 from collections import defaultdict
-from copy import deepcopy
 
 from card import Bash, Defend, Strike
 from character.encounters import ALL_ENCOUNTERS
 from character.player import Ironclad
 from fight import Fight
-from util.core import Move
 from util.effect import Shrink, Vulnerable, Weak
-
-
-def incoming_damage(fight: Fight) -> int:
-    dmg = 0
-    for action in fight.enemies[0].intent.actions():
-        if action.damage:
-            new_action = deepcopy(action)
-            move = Move(new_action, actor=fight.enemies[0], target=fight.player)
-            for effect in fight.enemies[0].effects:
-                effect.resolve(move, is_target=False)
-            for effect in fight.player.effects:
-                effect.resolve(move, is_target=True)
-            dmg += new_action.damage  # type: ignore
-
-    return dmg
 
 
 def has_lethal(fight: Fight) -> bool:
@@ -96,7 +79,7 @@ class Ironsad(Ironclad):
         strike = Strike()
         defend = Defend()
 
-        if incoming_damage(fight) > player.block and player.hand.cards[defend] > 0 and player.can_play(defend):
+        if fight.incoming_damage() > player.block and player.hand.cards[defend] > 0 and player.can_play(defend):
             player.play(defend, target=None)
 
         elif player.hand.cards[bash] > 0 and player.can_play(bash):
@@ -126,7 +109,7 @@ class Ironglad(Ironclad):
         if player.hand.cards[bash] > 0 and player.can_play(bash):
             player.play(bash, target=fight.enemies[0])
 
-        elif incoming_damage(fight) >= player.block + 5 and player.hand.cards[defend] > 0 and player.can_play(defend):
+        elif fight.incoming_damage() >= player.block + 5 and player.hand.cards[defend] > 0 and player.can_play(defend):
             player.play(defend, target=None)
 
         elif player.hand.cards[strike] > 0 and player.can_play(strike):

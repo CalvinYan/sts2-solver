@@ -13,10 +13,10 @@ from character.enemies import (
     SludgeSpinner,
     Toadpole,
 )
-from character.enemies.nibbit import HesitantSlice, Hiss
+from character.enemies.nibbit import Butt, HesitantSlice, Hiss
 from character.enemies.shrinker_beetle import Stomp
 from character.enemies.sludge_spinner import Rage, Slam
-from character.enemies.toadpole import Spiken, Whirl
+from character.enemies.toadpole import Spiken, SpikeSpit, Whirl
 from character.enemy import Enemy
 from character.player import Ironclad, Regent
 from fight import MAX_ENEMIES, Fight
@@ -108,6 +108,41 @@ def test_fight_ends_if_player_dies():
     fight.loop()
 
     assert fight.is_over()
+
+
+def test_fight_incoming_damage_sums_every_attack():
+    # HesitantSlice deals 7 damage and gains 6 block; only the damage counts
+    slicer = Nibbit(hp=30, intent=HesitantSlice())
+    # SpikeSpit deals 4 damage three times, plus one action that deals no damage
+    spitter = Toadpole(hp=20, intent=SpikeSpit())
+    fight = Fight(player=Ironclad(), enemies=[slicer, spitter])
+
+    assert fight.incoming_damage() == 7 + 4 * 3
+
+
+def test_fight_incoming_damage_applies_effects_of_both_sides():
+    enemy = Nibbit(hp=30, intent=Butt(), effects=[Strength(power=3)])  # Butt deals 13 damage
+    player = Ironclad(effects=[Vulnerable(duration=1)])
+    fight = Fight(player=player, enemies=[enemy])
+
+    assert fight.incoming_damage() == int((13 + 3) * 1.5)
+
+
+def test_fight_incoming_damage_does_not_mutate_the_fight():
+    enemy = Nibbit(hp=30, intent=Butt(), effects=[Strength(power=3)])
+    player = Ironclad(effects=[Vulnerable(duration=1)])
+    fight = Fight(player=player, enemies=[enemy])
+    expected = fight.to_vector()
+
+    # Repeated queries must agree with each other and leave the fight untouched
+    assert fight.incoming_damage() == fight.incoming_damage()
+    assert expected == fight.to_vector()
+
+
+def test_fight_incoming_damage_ignores_non_attacking_intents():
+    fight = Fight(player=Ironclad(), enemies=[Nibbit(hp=30, intent=Hiss())])
+
+    assert fight.incoming_damage() == 0
 
 
 def test_simulate_nibbit_fight():
