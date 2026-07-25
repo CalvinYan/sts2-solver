@@ -1,9 +1,9 @@
 from collections import Counter
 from copy import deepcopy
 from fractions import Fraction
+from unittest.mock import patch
 
 import numpy as np
-from mock import patch
 
 from card import AscendersBane, Bash, CardPile, Defend, FallingStar, Strike, Venerate
 from character.enemies import (
