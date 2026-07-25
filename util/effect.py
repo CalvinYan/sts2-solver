@@ -49,19 +49,18 @@ class Effect:
         # Each effect encodes as (present, power, duration). The leading presence bit distinguishes
         # an absent effect from one with no power and no duration (e.g. Shrink), and leaves the
         # stat slots free to hold any value, including negatives (e.g. -1 Strength)
-        arr = [[0, 0, 0] for _ in range(max(ID_TO_EFFECT.keys()) + 1)]
+        vector = [0] * EFFECTS_VECTOR_LENGTH
         for effect in effects:
-            arr[effect.id] = [
-                1,
-                effect.power if effect.power is not None else 0,
-                effect.duration if effect.duration is not None else 0,
-            ]
+            start = effect.id * 3
+            vector[start] = 1
+            vector[start + 1] = effect.power if effect.power is not None else 0
+            vector[start + 2] = effect.duration if effect.duration is not None else 0
 
-        return [i for effect in arr for i in effect]
+        return vector
 
     @staticmethod
     def effects_from_vector(vector: tuple[int, ...]) -> tuple[list[Effect], int]:
-        min_length = (max(ID_TO_EFFECT.keys()) + 1) * 3
+        min_length = EFFECTS_VECTOR_LENGTH
         effects = []
         if len(vector) < min_length:
             raise ValueError(f"Not enough values in Effects vector: expected {min_length}, got {len(vector)}")
@@ -147,3 +146,7 @@ ID_TO_EFFECT: dict[int, type[Effect]] = {
     Frail.id: Frail,
     Shrink.id: Shrink,
 }
+
+# Every effect occupies three slots (present, power, duration) at a fixed position, so a list of
+# effects always encodes to a vector of this length.
+EFFECTS_VECTOR_LENGTH = (max(ID_TO_EFFECT) + 1) * 3
