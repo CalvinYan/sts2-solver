@@ -344,16 +344,21 @@ def test_search_no_defend_on_empty_turn():
     dp_table = QTable()
     fully_explored = QTable()
     player = Ironclad(
-        hand=CardPile(cards=Counter({Bash(): 1, Strike(): 1, AscendersBane(): 1, Defend(): 2})),
+        hand=CardPile(cards=Counter({Defend(): 1})),
         draw_pile=CardPile(cards=Counter({Strike(): 4, Defend(): 2})),
     )
-    enemy = Nibbit(hp=15, intent=Hiss())
+    enemy = Nibbit(hp=44, intent=Hiss())
 
     fight = Fight(player=player, enemies=[enemy], turn=3)
+    vector = fight.to_vector()
 
-    fight.search_player_turn(dp_table, fully_explored)
-    # Search should not ever consider playing Defend
-    assert not any(vector[-1] == Defend.id for vector in dp_table.keys())
+    # An hp_limit equal to the player's hp truncates the search at the start of the next turn, so
+    # only this turn's actions are explored
+    fight.search_player_turn(dp_table, fully_explored, hp_limit=player.hp)
+
+    # Hiss deals no damage, so the search should end the turn rather than block
+    assert (vector, (Defend().id,)) not in dp_table
+    assert (vector, (-1,)) in dp_table
 
 
 def test_search_no_overblock():
@@ -361,17 +366,37 @@ def test_search_no_overblock():
     fully_explored = QTable()
     player = Ironclad(
         block=10,
-        energy=1,
-        hand=CardPile(cards=Counter({Bash(): 1, Strike(): 1, Defend(): 1})),
+        hand=CardPile(cards=Counter({Defend(): 1})),
         draw_pile=CardPile(cards=Counter({Strike(): 4, Defend(): 1})),
     )
-    enemy = Nibbit(hp=12, intent=HesitantSlice())
+    enemy = Nibbit(hp=44, intent=HesitantSlice())
 
     fight = Fight(player=player, enemies=[enemy], turn=2)
+    vector = fight.to_vector()
 
-    fight.search_player_turn(dp_table, fully_explored)
-    # Search should not ever consider playing Defend
-    assert not any(vector[-1] == Defend.id for vector in dp_table.keys())
+    fight.search_player_turn(dp_table, fully_explored, hp_limit=player.hp)
+
+    # HesitantSlice hits for less than the block the player already has
+    assert (vector, (Defend().id,)) not in dp_table
+    assert (vector, (-1,)) in dp_table
+
+
+def test_search_defends_against_incoming_damage():
+    dp_table = QTable()
+    fully_explored = QTable()
+    player = Ironclad(
+        hand=CardPile(cards=Counter({Defend(): 1})),
+        draw_pile=CardPile(cards=Counter({Strike(): 4, Defend(): 1})),
+    )
+    enemy = Nibbit(hp=44, intent=Butt())
+
+    fight = Fight(player=player, enemies=[enemy], turn=1)
+    vector = fight.to_vector()
+
+    fight.search_player_turn(dp_table, fully_explored, hp_limit=player.hp)
+
+    # Butt hits for more than the player can block, so blocking must still be considered
+    assert (vector, (Defend().id,)) in dp_table
 
 
 def test_search_no_premature_end_turn():
